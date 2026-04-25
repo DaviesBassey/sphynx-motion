@@ -1,0 +1,48 @@
+{
+  "name": "SPHYNX MOTION",
+  "short_name": "SPHYNX",
+  "description": "Stories That Watch Back. African vertical drama streaming.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#08080A",
+  "background_color": "#08080A",
+  "lang": "en",
+  "categories": ["entertainment", "video"],
+  "icons": [
+    {
+      "src": "SPHYNY_MOTION_FAV.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "App_Cvr_Art.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/posters/image-11.jpg",
+      "sizes": "600x900",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Home screen — trending series"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "For You",
+      "url": "/#foryou",
+      "description": "Your personalised feed"
+    },
+    {
+      "name": "My List",
+      "url": "/#mylist",
+      "description": "Your saved series"
+    }
+  ]
+}

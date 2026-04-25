@@ -1,0 +1,19 @@
+{
+  "name": "sphynx-motion-server",
+  "version": "1.0.0",
+  "description": "SPHYNX MOTION backend — auth, admin, API, uploads",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "multer": "^1.4.5-lts.2"
+  }
+}

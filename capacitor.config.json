@@ -1,0 +1,31 @@
+{
+  "appId": "com.sphynxmotion.app",
+  "appName": "SPHYNX MOTION",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": ["*.supabase.co", "stream.mux.com", "*.mux.com"]
+  },
+  "ios": {
+    "contentInset": "always",
+    "scrollEnabled": false,
+    "backgroundColor": "#08080A"
+  },
+  "android": {
+    "backgroundColor": "#08080A",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#08080A",
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#08080A"
+    }
+  }
+}

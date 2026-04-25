@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SPHYNX MOTION · Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#08080A; --surface:#111114; --surface2:#1A1A1F; --surface3:#222228;
+      --border:rgba(255,255,255,.07); --text:#F0F0F2; --text-dim:#9090A0; --text-faint:#55555F;
+      --red:#E61E24; --red-dark:#8B0F14; --gold:#C68642; --violet:#7B4FC2;
+      --green:#30D158; --danger:#FF453A; --warning:#FF9F0A;
+    }
+    body { background:var(--bg); font-family:'Space Grotesk',system-ui,sans-serif; color:var(--text); min-height:100vh; }
+    .layout { display:flex; min-height:100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { width:220px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .sb-logo { padding:20px 18px 16px; border-bottom:1px solid var(--border); }
+    .sb-logo-text { font-size:14px; font-weight:800; letter-spacing:.04em; }
+    .sb-logo-text span { color:var(--red); }
+    .sb-role { font-size:10px; color:var(--text-faint); letter-spacing:.1em; text-transform:uppercase; margin-top:3px; }
+    .sb-role strong { color:var(--red); }
+    .sb-nav { padding:12px 0; flex:1; }
+    .sb-section { font-size:9px; font-weight:700; color:var(--text-faint); letter-spacing:.14em; text-transform:uppercase; padding:12px 18px 6px; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:10px 18px; cursor:pointer; font-size:13px; color:var(--text-dim); transition:background .12s,color .12s; }
+    .nav-item:hover { background:var(--surface2); color:var(--text); }
+    .nav-item.active { background:rgba(230,30,36,.1); color:var(--red); font-weight:600; }
+    .nav-icon { font-size:15px; width:20px; text-align:center; }
+    .nav-badge { margin-left:auto; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:20px; }
+    .sb-footer { padding:14px 18px; border-top:1px solid var(--border); }
+    .sb-user { font-size:12px; color:var(--text-dim); margin-bottom:6px; }
+    .sb-user strong { color:var(--text); }
+    .btn-logout { display:block; width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; font-size:12px; color:var(--text-dim); font-family:inherit; cursor:pointer; text-align:center; }
+    .btn-logout:hover { border-color:var(--danger); color:var(--danger); }
+
+    /* ── MAIN ── */
+    .main { flex:1; overflow-y:auto; }
+    .page { display:none; padding:28px; max-width:1100px; }
+    .page.active { display:block; }
+    .page-hdr { margin-bottom:24px; }
+    .page-title { font-size:22px; font-weight:800; margin-bottom:4px; }
+    .page-sub { font-size:13px; color:var(--text-dim); }
+
+    /* ── KPI GRID ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+    .kpi { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; position:relative; overflow:hidden; }
+    .kpi::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+    .kpi.gold::after   { background:var(--gold); }
+    .kpi.violet::after { background:var(--violet); }
+    .kpi.green::after  { background:var(--green); }
+    .kpi.red::after    { background:var(--red); }
+    .kpi.warn::after   { background:var(--warning); }
+    .kpi-label { font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; }
+    .kpi-value { font-size:26px; font-weight:800; line-height:1; }
+    .kpi-delta { font-size:11px; color:var(--text-dim); margin-top:6px; }
+    .kpi-delta.up { color:var(--green); } .kpi-delta.down { color:var(--danger); }
+
+    /* ── CARD ── */
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:18px; }
+    .card-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .card-title { font-size:14px; font-weight:700; }
+    .card-action { font-size:12px; color:var(--red); cursor:pointer; font-weight:600; background:none; border:none; font-family:inherit; }
+
+    /* ── TABLE ── */
+    table { width:100%; border-collapse:collapse; }
+    th { font-size:10px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:.1em; padding:0 0 10px; text-align:left; border-bottom:1px solid var(--border); }
+    td { padding:11px 0; font-size:13px; color:var(--text-dim); border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; }
+    td.td-name { color:var(--text); font-weight:600; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; }
+    .b-live    { background:rgba(48,209,88,.12);  color:var(--green); }
+    .b-draft   { background:rgba(255,159,10,.12); color:var(--warning); }
+    .b-pend    { background:rgba(255,159,10,.12); color:var(--warning); }
+    .b-flagged { background:rgba(255,69,58,.12);  color:var(--danger); }
+    .b-admin   { background:rgba(230,30,36,.12);  color:var(--red); }
+    .b-super   { background:rgba(123,79,194,.12); color:var(--violet); }
+    .b-user    { background:rgba(255,255,255,.06); color:var(--text-dim); }
+    .b-creator { background:rgba(198,132,66,.12); color:var(--gold); }
+    .td-act { color:var(--red); cursor:pointer; font-size:12px; font-weight:600; background:none; border:none; font-family:inherit; padding:0; }
+
+    /* ── FORM ── */
+    .form-row { margin-bottom:14px; }
+    .form-label { display:block; font-size:11px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px; }
+    .form-input, .form-select, .form-textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--text); font-family:inherit; outline:none; transition:border-color .15s; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--red); }
+    .form-textarea { resize:vertical; min-height:80px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+
+    /* ── BUTTONS ── */
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; border:none; transition:opacity .15s; }
+    .btn:hover { opacity:.85; }
+    .btn-primary   { background:var(--red); color:#fff; }
+    .btn-secondary { background:var(--surface2); color:var(--text-dim); border:1px solid var(--border); }
+    .btn-danger    { background:rgba(255,69,58,.15); color:var(--danger); border:1px solid rgba(255,69,58,.25); }
+    .btn-sm { padding:6px 12px; font-size:11px; }
+
+    /* ── UPLOAD DROP ZONE ── */
+    .drop-zone { border:2px dashed var(--border); border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:border-color .15s; margin-bottom:14px; }
+    .drop-zone:hover, .drop-zone.dragover { border-color:var(--red); }
+    .drop-icon { font-size:28px; margin-bottom:8px; }
+    .drop-text { font-size:13px; font-weight:600; margin-bottom:4px; }
+    .drop-hint { font-size:11px; color:var(--text-faint); }
+    .drop-zone input[type=file] { display:none; }
+
+    /* ── MOD QUEUE ── */
+    .mod-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+    .mod-icon { font-size:20px; width:32px; flex-shrink:0; }
+    .mod-text { font-size:13px; color:var(--text-dim); line-height:1.5; margin-bottom:6px; }
+    .mod-meta { font-size:11px; color:var(--text-faint); margin-bottom:8px; }
+    .mod-btns { display:flex; gap:8px; }
+
+    /* ── CHART ── */
+    .chart-wrap { height:100px; display:flex; align-items:flex-end; gap:4px; margin:12px 0 6px; }
+    .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .bar { width:100%; border-radius:3px 3px 0 0; background:linear-gradient(180deg,var(--red),var(--red-dark)); opacity:.7; transition:opacity .15s; }
+    .bar:hover { opacity:1; }
+    .bar-label { font-size:9px; color:var(--text-faint); }
+
+    /* ── SKELETON ── */
+    .skeleton { background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; height:14px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── TOAST ── */
+    #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 18px; font-size:13px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:9999; white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.5); }
+
+    /* ── CONNECTION BANNER ── */
+    .conn-banner { padding:10px 28px; font-size:12px; line-height:1.6; }
+    .conn-banner.error { background:rgba(255,69,58,.08); border-bottom:1px solid rgba(255,69,58,.15); color:var(--danger); }
+    .conn-banner.warn  { background:rgba(255,159,10,.08); border-bottom:1px solid rgba(255,159,10,.15); color:var(--warning); }
+    .conn-banner code  { background:rgba(255,255,255,.08); padding:1px 5px; border-radius:4px; font-family:monospace; font-size:11px; }
+
+    /* ── MODAL ── */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:500; align-items:flex-end; justify-content:center; }
+    .overlay.open { display:flex; }
+    .modal { background:var(--surface); border-radius:18px 18px 0 0; padding:24px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; }
+    .modal-title { font-size:18px; font-weight:700; margin-bottom:4px; }
+    .modal-sub { font-size:12px; color:var(--text-dim); margin-bottom:20px; }
+    .modal-close { float:right; background:none; border:none; color:var(--text-faint); font-size:18px; cursor:pointer; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:768px) {
+      .sidebar { width:60px; }
+      .sb-logo-text, .sb-role, .sb-section, .nav-item span, .sb-user, .btn-logout { display:none; }
+      .nav-item { justify-content:center; padding:12px; }
+      .nav-badge { display:none; }
+      .page { padding:16px; }
+      .form-grid, .form-grid-3 { grid-template-columns:1fr; }
+      .kpi-grid { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-text">SPHYNX <span>MOTION</span></div>
+      <div class="sb-role" id="sbRole">Role: <strong>—</strong></div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-section">Overview</div>
+      <div class="nav-item active" data-page="overview"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+
+      <div class="sb-section">Content</div>
+      <div class="nav-item" data-page="series"><span class="nav-icon">🎬</span><span>Series</span></div>
+      <div class="nav-item" data-page="episodes"><span class="nav-icon">▶</span><span>Episodes</span></div>
+      <div class="nav-item" data-page="upload"><span class="nav-icon">⬆️</span><span>Upload</span></div>
+      <div class="nav-item" data-page="moderation"><span class="nav-icon">🛡️</span><span>Moderation</span><div class="nav-badge" id="modBadge" style="display:none">0</div></div>
+
+      <div class="sb-section">Users</div>
+      <div class="nav-item" data-page="users"><span class="nav-icon">👥</span><span>Users</span></div>
+      <div class="nav-item" data-page="subscriptions"><span class="nav-icon">⭐</span><span>Subscriptions</span></div>
+
+      <div class="sb-section superadmin-only" style="display:none">Economy</div>
+      <div class="nav-item superadmin-only" data-page="revenue" style="display:none"><span class="nav-icon">💰</span><span>Revenue</span></div>
+      <div class="nav-item" data-page="tokens"><span class="nav-icon">🪙</span><span>Soul Tokens</span></div>
+
+      <div class="sb-section">Analytics</div>
+      <div class="nav-item" data-page="analytics"><span class="nav-icon">📈</span><span>Analytics</span></div>
+
+      <div class="sb-section superadmin-only" style="display:none">System</div>
+      <div class="nav-item superadmin-only" data-page="audit" style="display:none"><span class="nav-icon">📋</span><span>Audit Log</span></div>
+      <div class="nav-item superadmin-only" data-page="settings" style="display:none"><span class="nav-icon">⚙️</span><span>Settings</span></div>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-user">Signed in as<br><strong id="sbUser">—</strong></div>
+      <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+    <div id="connBanner" class="conn-banner" style="display:none"></div>
+
+    <!-- ════ OVERVIEW ════ -->
+    <div class="page active" id="page-overview">
+      <div class="page-hdr">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub" id="dashDate">—</div>
+      </div>
+      <div class="kpi-grid" id="overviewKpis">
+        <div class="kpi gold"><div class="kpi-label">Total Users</div><div class="kpi-value">—</div></div>
+        <div class="kpi green"><div class="kpi-label">Active Subscriptions</div><div class="kpi-value">—</div></div>
+        <div class="kpi violet"><div class="kpi-label">Total Views</div><div class="kpi-value">—</div></div>
+        <div class="kpi red"><div class="kpi-label">Pending Moderation</div><div class="kpi-value">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Viewership · Last 7 Days</div><button class="card-action" onclick="exportCSV('viewership')">Export CSV</button></div>
+        <div class="chart-wrap" id="viewChart">
+          <div style="font-size:12px;color:var(--text-faint);margin:auto">No data yet</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Top Performing Content</div></div>
+        <div id="topContent"><div style="font-size:13px;color:var(--text-faint);text-align:center;padding:20px">No content yet</div></div>
+      </div>
+    </div>
+
+    <!-- ════ SERIES ════ -->
+    <div class="page" id="page-series">
+      <div class="page-hdr">
+        <div class="page-title">Series</div>
+        <div class="page-sub">All series on the platform</div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <div style="display:flex;gap:8px">
+            <input class="form-input" id="seriesSearch" placeholder="Search series…" style="width:180px;padding:8px 12px" oninput="loadSeries()">
+            <select class="form-select" id="seriesStatus" style="width:120px;padding:8px 12px" onchange="loadSeries()">
+              <option value="">All status</option><option value="live">Live</option><option value="draft">Draft</option><option value="archived">Archived</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addSeries')">+ Add Series</button>
+        </div>
+        <table>
+          <thead><tr><th>Title</th><th>Genre</th><th>Status</th><th>Featured</th><th>Created</th><th>Action</th></tr></thead>
+          <tbody id="seriesTable"><tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No series found</td></tr></tbody>
+        </table>
+        <div id="seriesPagination" style="margin-top:14px;text-align:center;font-size:12px;color:var(--text-faint)"></div>
+      </div>
+    </div>
+
+    <!-- ════ EPISODES ════ -->
+    <div class="page" id="page-episodes">
+      <div class="page-hdr">
+        <div class="page-title">Episodes</div>
+        <div class="page-sub">Manage all episodes</div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <select class="form-select" id="episodesSeriesFilter" style="width:220px;padding:8px 12px" onchange="loadEpisodes()">
+            <option value="">All series</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addEpisode')">+ Add Episode</button>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Title</th><th>Series</th><th>Free</th><th>Duration</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="episodesTable"><tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">No episodes yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ UPLOAD ════ -->
+    <div class="page" id="page-upload">
+      <div class="page-hdr"><div class="page-title">Upload Content</div><div class="page-sub">Add posters, trailers, and full episode videos</div></div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Upload Poster</div></div>
+        <div class="drop-zone" id="posterZone" onclick="document.getElementById('posterFile').click()"
+          ondragover="e=>{ e.preventDefault(); this.classList.add('dragover'); }"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDrop(event,'poster')">
+          <input type="file" id="posterFile" accept="image/jpeg,image/png,image/webp" onchange="uploadFile('poster',this.files[0])">
+          <div class="drop-icon">🖼️</div>
+          <div class="drop-text">Drop poster image or tap to browse</div>
+          <div class="drop-hint">JPEG · PNG · WebP · max 20 MB</div>
+        </div>
+        <div id="posterResult" style="font-size:12px;color:var(--text-faint);margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Upload Trailer</div></div>
+        <div class="drop-zone" id="trailerZone" onclick="document.getElementById('trailerFile').click()">
+          <input type="file" id="trailerFile" accept="video/mp4,video/quicktime" onchange="uploadFile('trailer',this.files[0])">
+          <div class="drop-icon">🎞️</div>
+          <div class="drop-text">Drop trailer video or tap to browse</div>
+          <div class="drop-hint">MP4 · MOV · max 20 MB</div>
+        </div>
+        <div id="trailerResult" style="font-size:12px;color:var(--text-faint);margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Upload Full Episode Video</div></div>
+        <div class="drop-zone" id="videoZone" onclick="document.getElementById('videoFile').click()">
+          <input type="file" id="videoFile" accept="video/mp4,video/quicktime" onchange="uploadFile('video',this.files[0])">
+          <div class="drop-icon">🎬</div>
+          <div class="drop-text">Drop episode video or tap to browse</div>
+          <div class="drop-hint">MP4 · MOV · vertical 9:16 preferred · max 2 GB</div>
+        </div>
+        <div id="videoProgress" style="display:none;margin-top:8px">
+          <div style="background:var(--surface2);border-radius:4px;overflow:hidden">
+            <div id="videoProgressBar" style="height:6px;background:var(--red);width:0%;transition:width .3s"></div>
+          </div>
+          <div id="videoProgressText" style="font-size:11px;color:var(--text-faint);margin-top:4px">Uploading…</div>
+        </div>
+        <div id="videoResult" style="font-size:12px;color:var(--text-faint);margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- ════ MODERATION ════ -->
+    <div class="page" id="page-moderation">
+      <div class="page-hdr"><div class="page-title">Moderation Queue</div><div class="page-sub">Review creator submissions and flagged content</div></div>
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">Pending Items</div>
+          <select class="form-select" style="width:120px;padding:7px 12px;font-size:12px" onchange="loadModeration(this.value)">
+            <option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div id="modList"><div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div></div>
+      </div>
+    </div>
+
+    <!-- ════ USERS ════ -->
+    <div class="page" id="page-users">
+      <div class="page-hdr"><div class="page-title">User Management</div></div>
+      <div class="card">
+        <div class="card-hdr">
+          <div style="display:flex;gap:8px">
+            <input class="form-input" id="userSearch" placeholder="Search name or email…" style="width:200px;padding:8px 12px" oninput="loadUsers()">
+            <select class="form-select" id="userRoleFilter" style="width:130px;padding:8px 12px" onchange="loadUsers()">
+              <option value="">All roles</option><option value="user">User</option><option value="creator">Creator</option>
+              <option value="admin">Admin</option><option value="superadmin">Superadmin</option>
+            </select>
+          </div>
+          <button class="card-action" onclick="exportCSV('users')">Export CSV</button>
+        </div>
+        <table>
+          <thead><tr><th>User</th><th>Role</th><th>Soul</th><th>Sub</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="usersTable"><tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No users found</td></tr></tbody>
+        </table>
+        <div id="usersPagination" style="margin-top:14px;text-align:center;font-size:12px;color:var(--text-faint)"></div>
+      </div>
+    </div>
+
+    <!-- ════ SUBSCRIPTIONS ════ -->
+    <div class="page" id="page-subscriptions">
+      <div class="page-hdr"><div class="page-title">Subscriptions</div><div class="page-sub">Soul Pass membership management</div></div>
+      <div class="kpi-grid" id="subKpis">
+        <div class="kpi green"><div class="kpi-label">Active</div><div class="kpi-value" id="subActive">0</div></div>
+        <div class="kpi red"><div class="kpi-label">Cancelled</div><div class="kpi-value" id="subCancelled">0</div></div>
+        <div class="kpi gold"><div class="kpi-label">Conversion Rate</div><div class="kpi-value" id="subConversion">0%</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Recent Subscriptions</div></div>
+        <table>
+          <thead><tr><th>User</th><th>Plan</th><th>Provider</th><th>Status</th><th>Expires</th></tr></thead>
+          <tbody id="subsTable"><tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:20px">No subscriptions yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ REVENUE (superadmin only) ════ -->
+    <div class="page" id="page-revenue">
+      <div class="page-hdr"><div class="page-title">Revenue</div><div class="page-sub">Platform earnings — superadmin only</div></div>
+      <div class="kpi-grid" id="revenueKpis">
+        <div class="kpi green"><div class="kpi-label">Total Revenue</div><div class="kpi-value" id="revTotal">R0</div></div>
+        <div class="kpi gold"><div class="kpi-label">Subscription Revenue</div><div class="kpi-value" id="revSub">R0</div></div>
+        <div class="kpi violet"><div class="kpi-label">Token Sales</div><div class="kpi-value" id="revTokens">R0</div></div>
+        <div class="kpi red"><div class="kpi-label">Pending Payouts</div><div class="kpi-value" id="revPayouts">R0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Creator Payout Queue</div><button class="card-action" onclick="processPayouts()">Process All →</button></div>
+        <table>
+          <thead><tr><th>Creator</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="payoutsTable"><tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No pending payouts</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ SOUL TOKENS ════ -->
+    <div class="page" id="page-tokens">
+      <div class="page-hdr"><div class="page-title">Soul Tokens</div><div class="page-sub">Token economy management</div></div>
+      <div class="kpi-grid">
+        <div class="kpi gold"><div class="kpi-label">Total Issued</div><div class="kpi-value" id="tokIssued">0</div></div>
+        <div class="kpi violet"><div class="kpi-label">Total Purchased</div><div class="kpi-value" id="tokPurchased">0</div></div>
+        <div class="kpi red"><div class="kpi-label">Fraud Flags</div><div class="kpi-value" id="tokFraud">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Manual Token Grant</div></div>
+        <div class="form-grid">
+          <div class="form-row"><label class="form-label">User ID or Email</label><input class="form-input" id="grantUserId" placeholder="user-uuid or email"></div>
+          <div class="form-row"><label class="form-label">Amount</label><input class="form-input" type="number" id="grantAmount" placeholder="100" min="1"></div>
+        </div>
+        <div class="form-row"><label class="form-label">Reason</label><input class="form-input" id="grantReason" placeholder="e.g. Service interruption compensation"></div>
+        <button class="btn btn-primary" onclick="grantTokens()">Grant Tokens →</button>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Token Packages</div></div>
+        <table>
+          <thead><tr><th>Amount</th><th>Price (ZAR)</th><th>Active</th></tr></thead>
+          <tbody id="pkgTable"><tr><td colspan="3" style="text-align:center;color:var(--text-faint);padding:20px">No packages configured</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ ANALYTICS ════ -->
+    <div class="page" id="page-analytics">
+      <div class="page-hdr"><div class="page-title">Analytics</div><div class="page-sub">Platform performance metrics</div></div>
+      <div class="kpi-grid">
+        <div class="kpi gold"><div class="kpi-label">Free Users</div><div class="kpi-value" id="anaFree">0</div></div>
+        <div class="kpi green"><div class="kpi-label">Paid Users</div><div class="kpi-value" id="anaPaid">0</div></div>
+        <div class="kpi violet"><div class="kpi-label">Conversion Rate</div><div class="kpi-value" id="anaConv">0%</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Top Performing Episodes</div></div>
+        <table>
+          <thead><tr><th>Title</th><th>Series</th><th>Views</th><th>Completion</th></tr></thead>
+          <tbody id="topEpTable"><tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No data yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ AUDIT LOG (superadmin) ════ -->
+    <div class="page" id="page-audit">
+      <div class="page-hdr"><div class="page-title">Audit Log</div><div class="page-sub">All admin actions — superadmin only</div></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Time</th></tr></thead>
+          <tbody id="auditTable"><tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No audit entries yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ SETTINGS (superadmin) ════ -->
+    <div class="page" id="page-settings">
+      <div class="page-hdr"><div class="page-title">Platform Settings</div><div class="page-sub">Superadmin only</div></div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Token Earn Rates</div></div>
+        <div class="form-grid">
+          <div class="form-row"><label class="form-label">Daily Login Bonus</label><input class="form-input" type="number" id="s_daily_login_bonus" placeholder="10"></div>
+          <div class="form-row"><label class="form-label">Watch Episode Bonus</label><input class="form-input" type="number" id="s_watch_episode_bonus" placeholder="5"></div>
+          <div class="form-row"><label class="form-label">Share Bonus</label><input class="form-input" type="number" id="s_share_bonus" placeholder="25"></div>
+          <div class="form-row"><label class="form-label">Soul Pass Multiplier</label><input class="form-input" type="number" id="s_soul_pass_multiplier" placeholder="2"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Settings →</button>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Feature Flags</div></div>
+        <div id="featureFlags" style="display:flex;flex-direction:column;gap:14px"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MODALS ── -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let currentUser = null;
+let _toastTimer;
+let seriesPage   = 1;
+let usersPage    = 1;
+
+// ── HEALTH CHECK ───────────────────────────────────────────────────────────────
+async function checkHealth() {
+  const banner = document.getElementById('connBanner');
+  try {
+    const res  = await fetch('/api/admin/health');
+    const data = await res.json();
+    if (data.ok && data.supabase && data.migrations) {
+      banner.style.display = 'none';
+    } else if (data.ok && data.supabase && !data.migrations) {
+      banner.className = 'conn-banner warn';
+      banner.style.display = '';
+      banner.innerHTML = '⚠️ Supabase connected but migrations not run. In your Supabase Dashboard → SQL Editor, run <code>001_schema.sql</code> → <code>002_rls.sql</code> → <code>003_i18n.sql</code>';
+    } else {
+      banner.className = 'conn-banner error';
+      banner.style.display = '';
+      const missing = (data.missing || []).join(', ');
+      banner.innerHTML = `⚠️ Supabase not configured${missing ? ` — missing: <code>${missing}</code>` : ''}. Edit <code>server/.env</code> with your project keys, then restart the server. <a href="/START.md" target="_blank" style="color:inherit;font-weight:700;text-decoration:underline">See START.md →</a>`;
+    }
+  } catch {
+    banner.className = 'conn-banner error';
+    banner.style.display = '';
+    banner.innerHTML = '⚠️ Cannot reach server. Make sure the server is running: <code>cd server &amp;&amp; npm start</code>';
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+(async function init() {
+  await checkHealth();
+
+  try {
+    const res = await api('GET', '/api/admin/auth/me');
+    currentUser = res.user;
+  } catch (e) {
+    if (e.message === 'Unauthorized') return; // api() already redirected to /admin/login
+    // Supabase not configured or server error — render page with fallback user
+    currentUser = { display_name: 'Admin', email: '', role: 'admin' };
+  }
+
+  // Populate sidebar
+  document.getElementById('sbUser').textContent = currentUser.display_name || currentUser.email || 'Admin';
+  document.getElementById('sbRole').innerHTML   = `Role: <strong>${currentUser.role || '—'}</strong>`;
+  document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-ZA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // Show superadmin-only nav items
+  if (currentUser.role === 'superadmin') {
+    document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = '');
+  }
+
+  // Wire sidebar nav
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    item.addEventListener('click', () => showPage(item.dataset.page, item));
+  });
+
+  // Load initial data
+  loadOverview();
+  loadModBadge();
+})();
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────────
+function showPage(name, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+
+  // Lazy-load page data on first visit
+  const loaders = {
+    overview:      loadOverview,
+    series:        loadSeries,
+    episodes:      loadEpisodes,
+    moderation:    () => loadModeration('pending'),
+    users:         loadUsers,
+    subscriptions: loadSubscriptions,
+    revenue:       loadRevenue,
+    tokens:        loadTokens,
+    analytics:     loadAnalytics,
+    audit:         loadAuditLog,
+    settings:      loadSettings,
+  };
+  loaders[name]?.();
+}
+
+// ── API HELPER ─────────────────────────────────────────────────────────────────
+async function api(method, url, body) {
+  const opts = { method, credentials:'include', headers:{} };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const res  = await fetch(url, opts);
+  if (res.status === 401) { window.location.href = '/admin/login'; throw new Error('Unauthorized'); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+async function apiUpload(url, formData, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress?.(e.loaded / e.total); };
+    xhr.onload = () => { try { resolve(JSON.parse(xhr.responseText)); } catch { reject(new Error('Upload failed')); } };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.open('POST', url);
+    xhr.send(formData);
+  });
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────────
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent  = msg;
+  el.style.opacity = '1';
+  el.style.borderColor = type === 'error' ? 'rgba(255,69,58,.3)' : type === 'ok' ? 'rgba(48,209,88,.3)' : 'var(--border)';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.style.opacity = '0'; }, 3200);
+}
+
+// ── LOGOUT ─────────────────────────────────────────────────────────────────────
+async function logout() {
+  try { await api('POST', '/api/admin/auth/logout'); } catch {}
+  window.location.href = '/admin/login';
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────────
+function openModal(type, data) {
+  const overlay = document.getElementById('overlay');
+  const content = document.getElementById('modalContent');
+  content.innerHTML = (MODALS[type]?.(data)) || '<p>Unknown modal</p>';
+  overlay.classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+
+// ── FORMAT HELPERS ─────────────────────────────────────────────────────────────
+const fmtDate   = d => d ? new Date(d).toLocaleDateString('en-ZA') : '—';
+const fmtNum    = n => n == null ? '—' : Number(n).toLocaleString();
+const fmtZar    = n => n == null ? '—' : `R${Number(n).toLocaleString('en-ZA',{minimumFractionDigits:2})}`;
+const roleBadge = r => ({ user:'b-user', creator:'b-creator', admin:'b-admin', superadmin:'b-super' }[r] || 'b-user');
+const statusBadge = s => ({ live:'b-live', draft:'b-draft', pending:'b-pend', active:'b-live', cancelled:'b-flagged', approved:'b-live', rejected:'b-flagged' }[s] || 'b-draft');
+
+// ── OVERVIEW ───────────────────────────────────────────────────────────────────
+async function loadOverview() {
+  try {
+    const [stats, top, chart] = await Promise.all([
+      api('GET', '/api/admin/analytics/overview'),
+      api('GET', '/api/admin/analytics/top-content?limit=5'),
+      api('GET', '/api/admin/analytics/viewership?days=7'),
+    ]);
+
+    document.getElementById('overviewKpis').innerHTML = `
+      <div class="kpi gold"><div class="kpi-label">Total Users</div><div class="kpi-value">${fmtNum(stats.totalUsers)}</div></div>
+      <div class="kpi green"><div class="kpi-label">Active Subscriptions</div><div class="kpi-value">${fmtNum(stats.activeSubscriptions)}</div></div>
+      <div class="kpi violet"><div class="kpi-label">Total Views</div><div class="kpi-value">${fmtNum(stats.totalViews)}</div></div>
+      <div class="kpi red"><div class="kpi-label">Pending Moderation</div><div class="kpi-value">${fmtNum(stats.pendingModeration)}</div></div>
+    `;
+
+    // Viewership chart
+    const byDay = chart.byDay || {};
+    const days  = Object.keys(byDay).sort().slice(-7);
+    const max   = Math.max(...days.map(d => byDay[d] || 0), 1);
+    document.getElementById('viewChart').innerHTML = days.map(day => `
+      <div class="chart-col">
+        <div class="bar" style="height:${Math.round((byDay[day]||0)/max*100)}%"></div>
+        <div class="bar-label">${day.slice(5)}</div>
+      </div>
+    `).join('') || '<div style="font-size:12px;color:var(--text-faint);margin:auto">No data yet</div>';
+
+    // Top content
+    document.getElementById('topContent').innerHTML = (top.topContent || []).map(ep => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        ${ep.series?.poster_url ? `<img src="${ep.series.poster_url}" style="width:40px;height:50px;border-radius:6px;object-fit:cover;flex-shrink:0">` : '<div style="width:40px;height:50px;background:var(--surface2);border-radius:6px;flex-shrink:0"></div>'}
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${ep.title}</div>
+          <div style="font-size:11px;color:var(--text-faint)">${ep.series?.title || ''} · E${ep.episode_number}</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--red)">${fmtNum(ep.views)} views</div>
+      </div>
+    `).join('') || '<div style="font-size:13px;color:var(--text-faint);text-align:center;padding:20px">No content yet</div>';
+
+  } catch {
+    document.getElementById('overviewKpis').innerHTML = `
+      <div class="kpi gold"><div class="kpi-label">Total Users</div><div class="kpi-value">0</div></div>
+      <div class="kpi green"><div class="kpi-label">Active Subscriptions</div><div class="kpi-value">0</div></div>
+      <div class="kpi violet"><div class="kpi-label">Total Views</div><div class="kpi-value">0</div></div>
+      <div class="kpi red"><div class="kpi-label">Pending Moderation</div><div class="kpi-value">0</div></div>
+    `;
+    document.getElementById('viewChart').innerHTML = '<div style="font-size:12px;color:var(--text-faint);margin:auto">No data yet</div>';
+    document.getElementById('topContent').innerHTML = '<div style="font-size:13px;color:var(--text-faint);text-align:center;padding:20px">No content yet</div>';
+  }
+}
+
+async function loadModBadge() {
+  try {
+    const data = await api('GET', '/api/admin/moderation?status=pending&limit=1');
+    const badge = document.getElementById('modBadge');
+    if (data.total > 0) { badge.style.display = ''; badge.textContent = data.total; }
+  } catch {}
+}
+
+// ── SERIES ─────────────────────────────────────────────────────────────────────
+async function loadSeries() {
+  const search = document.getElementById('seriesSearch')?.value || '';
+  const status = document.getElementById('seriesStatus')?.value || '';
+  try {
+    const data = await api('GET', `/api/admin/content/series?page=${seriesPage}&search=${search}&status=${status}`);
+    const rows = (data.series || []).map(s => `
+      <tr>
+        <td class="td-name">${s.title}</td>
+        <td>${s.genre || '—'}</td>
+        <td><span class="badge ${statusBadge(s.status)}">${s.status}</span></td>
+        <td>${s.is_featured ? '⭐' : '—'}</td>
+        <td>${fmtDate(s.created_at)}</td>
+        <td><button class="td-act" onclick="openModal('editSeries',${JSON.stringify(s).replace(/"/g,'&quot;')})">Edit</button></td>
+      </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No series found</td></tr>`;
+    document.getElementById('seriesTable').innerHTML = rows;
+    document.getElementById('seriesPagination').textContent = `${data.total || 0} total · Page ${seriesPage}`;
+  } catch {
+    document.getElementById('seriesTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No series found</td></tr>`;
+    document.getElementById('seriesPagination').textContent = '0 total';
+  }
+}
+
+async function saveSeries(form, id) {
+  const body = Object.fromEntries(new FormData(form));
+  body.is_featured  = form.querySelector('[name=is_featured]')?.checked;
+  body.is_trending  = form.querySelector('[name=is_trending]')?.checked;
+  try {
+    if (id) {
+      await api('PUT', `/api/admin/content/series/${id}`, body);
+      toast('Series updated ✓', 'ok');
+    } else {
+      await api('POST', '/api/admin/content/series', body);
+      toast('Series created ✓', 'ok');
+    }
+    closeModal();
+    loadSeries();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── EPISODES ───────────────────────────────────────────────────────────────────
+async function loadEpisodes() {
+  const seriesId = document.getElementById('episodesSeriesFilter')?.value || '';
+  try {
+    if (!document.getElementById('episodesSeriesFilter').options.length || document.getElementById('episodesSeriesFilter').options.length <= 1) {
+      const sData = await api('GET', '/api/admin/content/series?limit=200');
+      const sel = document.getElementById('episodesSeriesFilter');
+      sel.innerHTML = '<option value="">All series</option>' + (sData.series || []).map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+    }
+    const data = await api('GET', `/api/admin/content/episodes?series_id=${seriesId}`);
+    const rows = (data.episodes || []).map(ep => `
+      <tr>
+        <td>${ep.episode_number}</td>
+        <td class="td-name">${ep.title}</td>
+        <td>${ep.series?.title || '—'}</td>
+        <td>${ep.is_free ? '✓ Free' : `${ep.soul_cost} Soul`}</td>
+        <td>${ep.duration ? Math.floor(ep.duration/60)+'m '+ep.duration%60+'s' : '—'}</td>
+        <td><span class="badge ${statusBadge(ep.status)}">${ep.status}</span></td>
+        <td><button class="td-act" onclick="openModal('editEpisode',${JSON.stringify(ep).replace(/"/g,'&quot;')})">Edit</button></td>
+      </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">No episodes yet</td></tr>`;
+    document.getElementById('episodesTable').innerHTML = rows;
+  } catch {
+    document.getElementById('episodesTable').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">No episodes yet</td></tr>`;
+  }
+}
+
+// ── MODERATION ─────────────────────────────────────────────────────────────────
+async function loadModeration(status) {
+  try {
+    const data = await api('GET', `/api/admin/moderation?status=${status}`);
+    const icons = { episode:'🎬', series:'📺', comment_flag:'⚠️', user_report:'💳' };
+    document.getElementById('modList').innerHTML = (data.items || []).map(item => `
+      <div class="mod-item" id="mod-${item.id}">
+        <div class="mod-icon">${icons[item.submission_type] || '⚠️'}</div>
+        <div>
+          <div class="mod-text">${item.submission_type === 'episode' ? `Creator submission: "${item.content_id}" awaiting review.` : 'Flagged item requiring review.'}</div>
+          <div class="mod-meta">${fmtDate(item.created_at)} · by ${item.profiles?.display_name || 'unknown'}</div>
+          <div class="mod-btns">
+            <button class="btn btn-primary btn-sm" onclick="moderationAction('${item.id}','approve')">Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="moderationAction('${item.id}','reject')">Reject</button>
+            <button class="btn btn-secondary btn-sm" onclick="moderationAction('${item.id}','dismiss')">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    `).join('') || '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div>';
+    loadModBadge();
+  } catch {
+    document.getElementById('modList').innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div>';
+  }
+}
+
+async function moderationAction(id, action) {
+  try {
+    await api('POST', `/api/admin/moderation/${id}/action`, { action });
+    document.getElementById('mod-'+id)?.remove();
+    toast(`${action.charAt(0).toUpperCase()+action.slice(1)} ✓`, 'ok');
+    loadModBadge();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── USERS ──────────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  const search = document.getElementById('userSearch')?.value || '';
+  const role   = document.getElementById('userRoleFilter')?.value || '';
+  try {
+    const data = await api('GET', `/api/admin/users?page=${usersPage}&search=${search}&role=${role}`);
+    const rows = (data.users || []).map(u => `
+      <tr>
+        <td>
+          <div style="font-weight:600;color:var(--text)">${u.display_name || '—'}</div>
+          <div style="font-size:11px;color:var(--text-faint)">${u.email || ''}</div>
+        </td>
+        <td><span class="badge ${roleBadge(u.role)}">${u.role}</span></td>
+        <td>${fmtNum(u.soul_balance)}</td>
+        <td><span class="badge ${u.subscription_status==='active'?'b-live':'b-user'}">${u.subscription_status}</span></td>
+        <td>${u.is_suspended ? '<span class="badge b-flagged">Suspended</span>' : '<span class="badge b-live">Active</span>'}</td>
+        <td style="display:flex;gap:6px">
+          ${currentUser.role==='superadmin' ? `<button class="td-act" onclick="openModal('changeRole','${u.id}|${u.role}')">Role</button>` : ''}
+          ${!u.is_suspended ? `<button class="td-act" onclick="suspendUser('${u.id}')">Suspend</button>` : `<button class="td-act" onclick="unsuspendUser('${u.id}')">Restore</button>`}
+        </td>
+      </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No users found</td></tr>`;
+    document.getElementById('usersTable').innerHTML = rows;
+    document.getElementById('usersPagination').textContent = `${data.total||0} total · Page ${usersPage}`;
+  } catch {
+    document.getElementById('usersTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No users found</td></tr>`;
+    document.getElementById('usersPagination').textContent = '0 total';
+  }
+}
+
+async function suspendUser(id) {
+  if (!confirm('Suspend this user?')) return;
+  try { await api('POST', `/api/admin/users/${id}/suspend`, { reason:'Suspended by admin' }); toast('User suspended', 'ok'); loadUsers(); } catch (e) { toast(e.message, 'error'); }
+}
+async function unsuspendUser(id) {
+  try { await api('POST', `/api/admin/users/${id}/unsuspend`); toast('User restored', 'ok'); loadUsers(); } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── SUBSCRIPTIONS ──────────────────────────────────────────────────────────────
+async function loadSubscriptions() {
+  try {
+    const [conv, subs] = await Promise.all([
+      api('GET', '/api/admin/analytics/conversions'),
+      api('GET', '/api/admin/revenue/subscriptions').catch(() => ({ subscriptions: [] })),
+    ]);
+    document.getElementById('subActive').textContent    = fmtNum(conv.paidUsers);
+    document.getElementById('subCancelled').textContent = '—';
+    document.getElementById('subConversion').textContent = conv.conversionRate + '%';
+    const rows = (subs.subscriptions || []).map(s => `
+      <tr>
+        <td class="td-name">${s.profiles?.display_name || '—'}<br><span style="font-size:11px;color:var(--text-faint)">${s.profiles?.email||''}</span></td>
+        <td>${s.plan}</td><td>${s.provider||'—'}</td>
+        <td><span class="badge ${statusBadge(s.status)}">${s.status}</span></td>
+        <td>${fmtDate(s.expires_at)}</td>
+      </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:20px">No subscriptions loaded</td></tr>';
+    document.getElementById('subsTable').innerHTML = rows;
+  } catch {
+    document.getElementById('subActive').textContent     = '0';
+    document.getElementById('subCancelled').textContent  = '0';
+    document.getElementById('subConversion').textContent = '0%';
+    document.getElementById('subsTable').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:20px">No subscriptions yet</td></tr>';
+  }
+}
+
+// ── REVENUE ────────────────────────────────────────────────────────────────────
+async function loadRevenue() {
+  if (currentUser.role !== 'superadmin') { document.getElementById('page-revenue').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-faint)">🔒 Superadmin only</div>'; return; }
+  try {
+    const [rev, payouts] = await Promise.all([
+      api('GET', '/api/admin/revenue/summary'),
+      api('GET', '/api/admin/revenue/payouts'),
+    ]);
+    document.getElementById('revTotal').textContent   = fmtZar(rev.totalRevenue);
+    document.getElementById('revSub').textContent     = fmtZar(rev.subscriptionRevenue);
+    document.getElementById('revTokens').textContent  = fmtZar(rev.tokenRevenue);
+    document.getElementById('revPayouts').textContent = fmtZar(rev.pendingPayouts);
+    const rows = (payouts.payouts || []).filter(p => p.status==='pending').map(p => `
+      <tr>
+        <td class="td-name">${p.profiles?.display_name||'—'}</td>
+        <td>${fmtZar(p.amount)}</td>
+        <td><span class="badge ${statusBadge(p.status)}">${p.status}</span></td>
+        <td><button class="td-act" onclick="processPayout('${p.id}')">Pay Now</button></td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No pending payouts</td></tr>';
+    document.getElementById('payoutsTable').innerHTML = rows;
+  } catch {
+    document.getElementById('revTotal').textContent   = 'R0';
+    document.getElementById('revSub').textContent     = 'R0';
+    document.getElementById('revTokens').textContent  = 'R0';
+    document.getElementById('revPayouts').textContent = 'R0';
+    document.getElementById('payoutsTable').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No pending payouts</td></tr>';
+  }
+}
+
+async function processPayout(id) {
+  const ref = prompt('Payment reference (bank ref / PayFast ID):');
+  if (!ref) return;
+  try { await api('POST', `/api/admin/revenue/payouts/${id}/process`, { reference: ref }); toast('Payout processed ✓', 'ok'); loadRevenue(); } catch (e) { toast(e.message, 'error'); }
+}
+
+async function processPayouts() {
+  if (!confirm('Process all pending payouts?')) return;
+  try {
+    const data    = await api('GET', '/api/admin/revenue/payouts');
+    const pending = (data.payouts || []).filter(p => p.status === 'pending');
+    if (!pending.length) { toast('No pending payouts', 'ok'); return; }
+    for (const p of pending) {
+      await api('POST', `/api/admin/revenue/payouts/${p.id}/process`, { reference: 'batch' });
+    }
+    toast(`Processed ${pending.length} payout${pending.length > 1 ? 's' : ''} ✓`, 'ok');
+    loadRevenue();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── TOKENS ─────────────────────────────────────────────────────────────────────
+async function loadTokens() {
+  try {
+    const [summary, pkgs] = await Promise.all([
+      api('GET', '/api/admin/tokens/summary'),
+      api('GET', '/api/admin/tokens/packages'),
+    ]);
+    document.getElementById('tokIssued').textContent    = fmtNum(summary.totalIssued);
+    document.getElementById('tokPurchased').textContent = fmtNum(summary.totalPurchased);
+    document.getElementById('tokFraud').textContent     = fmtNum(summary.openFraudFlags);
+    document.getElementById('pkgTable').innerHTML = (pkgs.packages || []).map(p => `
+      <tr>
+        <td>${fmtNum(p.amount)} Soul</td>
+        <td>${fmtZar(p.price_zar)}</td>
+        <td>${p.is_active ? '✓ Active' : '✗ Inactive'}</td>
+      </tr>`).join('');
+  } catch {
+    document.getElementById('tokIssued').textContent    = '0';
+    document.getElementById('tokPurchased').textContent = '0';
+    document.getElementById('tokFraud').textContent     = '0';
+    document.getElementById('pkgTable').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-faint);padding:20px">No packages configured</td></tr>';
+  }
+}
+
+async function grantTokens() {
+  const userId = document.getElementById('grantUserId').value.trim();
+  const amount = parseInt(document.getElementById('grantAmount').value);
+  const reason = document.getElementById('grantReason').value.trim();
+  if (!userId || !amount) { toast('User ID and amount are required', 'error'); return; }
+  try {
+    await api('POST', '/api/admin/tokens/grant', { user_id: userId, amount, reason });
+    toast(`Granted ${amount} Soul Tokens ✓`, 'ok');
+    document.getElementById('grantUserId').value = '';
+    document.getElementById('grantAmount').value = '';
+    document.getElementById('grantReason').value = '';
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── ANALYTICS ──────────────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  try {
+    const [conv, top] = await Promise.all([
+      api('GET', '/api/admin/analytics/conversions'),
+      api('GET', '/api/admin/analytics/top-content?limit=10'),
+    ]);
+    document.getElementById('anaFree').textContent = fmtNum(conv.freeUsers);
+    document.getElementById('anaPaid').textContent = fmtNum(conv.paidUsers);
+    document.getElementById('anaConv').textContent = conv.conversionRate + '%';
+    document.getElementById('topEpTable').innerHTML = (top.topContent||[]).map(ep => `
+      <tr>
+        <td class="td-name">${ep.title}</td>
+        <td>${ep.series?.title||'—'}</td>
+        <td>${fmtNum(ep.views)}</td>
+        <td>${ep.completion_rate||0}%</td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No data yet</td></tr>';
+  } catch {
+    document.getElementById('anaFree').textContent = '0';
+    document.getElementById('anaPaid').textContent = '0';
+    document.getElementById('anaConv').textContent = '0%';
+    document.getElementById('topEpTable').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No data yet</td></tr>';
+  }
+}
+
+// ── AUDIT LOG ──────────────────────────────────────────────────────────────────
+async function loadAuditLog() {
+  toast('Audit log requires superadmin + Supabase RLS access', 'ok');
+  document.getElementById('auditTable').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">Connect Supabase to view audit log</td></tr>';
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const data = await api('GET', '/api/admin/settings');
+    const s = data.settings || {};
+    ['daily_login_bonus','watch_episode_bonus','share_bonus','soul_pass_multiplier'].forEach(k => {
+      const el = document.getElementById('s_'+k);
+      if (el) el.value = s[k] ?? '';
+    });
+    const flags = [
+      { key:'maintenance_mode',    label:'Maintenance Mode',    desc:'Show maintenance screen to all users' },
+      { key:'echo_voting_enabled', label:'Echo Voting',         desc:'Enable Echo Vote events platform-wide' },
+    ];
+    document.getElementById('featureFlags').innerHTML = flags.map(f => `
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:13px;font-weight:600">${f.label}</div><div style="font-size:11px;color:var(--text-faint)">${f.desc}</div></div>
+        <button class="btn btn-${s[f.key]==='true'?'primary':'secondary'} btn-sm" onclick="toggleFlag('${f.key}',this)">${s[f.key]==='true'?'ON':'OFF'}</button>
+      </div>`).join('');
+  } catch (e) { toast('Failed to load settings: ' + e.message, 'error'); }
+}
+
+async function saveSettings() {
+  const keys = ['daily_login_bonus','watch_episode_bonus','share_bonus','soul_pass_multiplier'];
+  const body = Object.fromEntries(keys.map(k => [k, document.getElementById('s_'+k)?.value]));
+  try { await api('PATCH', '/api/admin/settings', body); toast('Settings saved ✓', 'ok'); } catch (e) { toast(e.message, 'error'); }
+}
+
+async function toggleFlag(key, btn) {
+  const current = btn.textContent.trim() === 'ON';
+  try {
+    await api('PATCH', '/api/admin/settings', { [key]: String(!current) });
+    btn.textContent = current ? 'OFF' : 'ON';
+    btn.className = `btn btn-${current?'secondary':'primary'} btn-sm`;
+    toast(`${key} ${current?'disabled':'enabled'} ✓`, 'ok');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── UPLOADS ────────────────────────────────────────────────────────────────────
+async function uploadFile(type, file) {
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  const resultEl  = document.getElementById(type+'Result');
+  const progressEl = document.getElementById('videoProgress');
+  const barEl      = document.getElementById('videoProgressBar');
+  const barText    = document.getElementById('videoProgressText');
+
+  resultEl.textContent = 'Uploading…';
+  if (type === 'video' && progressEl) progressEl.style.display = 'block';
+
+  try {
+    const data = await apiUpload(`/api/admin/uploads/${type}`, fd, progress => {
+      if (barEl) barEl.style.width = Math.round(progress*100) + '%';
+      if (barText) barText.textContent = `Uploading… ${Math.round(progress*100)}%`;
+    });
+    resultEl.innerHTML = `✓ Uploaded: <a href="${data.url}" target="_blank" style="color:var(--red)">${data.url}</a>`;
+    toast('Upload complete ✓', 'ok');
+  } catch (e) {
+    resultEl.textContent = '✗ Upload failed: ' + e.message;
+    toast('Upload failed: ' + e.message, 'error');
+  } finally {
+    if (progressEl) progressEl.style.display = 'none';
+  }
+}
+
+function handleDrop(e, type) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) uploadFile(type, file);
+}
+
+// ── CSV EXPORT (stub) ──────────────────────────────────────────────────────────
+function exportCSV(type) {
+  toast(`CSV export for ${type} — connect to backend export endpoint`, 'ok');
+}
+
+// ── MODAL TEMPLATES ───────────────────────────────────────────────────────────
+const MODALS = {
+  addSeries: () => `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Add Series</div>
+    <div class="modal-sub">Create a new series on the platform</div>
+    <form id="seriesForm">
+      <div class="form-row"><label class="form-label">Title *</label><input class="form-input" name="title" required placeholder="e.g. Gold Veins"></div>
+      <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Series synopsis…"></textarea></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Genre</label><select class="form-select" name="genre"><option>Neo-Noir</option><option>Romance</option><option>Thriller</option><option>Drama</option><option>Sci-Fi</option><option>Comedy</option><option>Crime</option><option>Diaspora</option></select></div>
+        <div class="form-row"><label class="form-label">Age Rating</label><select class="form-select" name="age_rating"><option>PG</option><option>13</option><option>16</option><option>18</option></select></div>
+      </div>
+      <div class="form-row"><label class="form-label">Poster URL (or upload above first)</label><input class="form-input" name="poster_url" placeholder="https://…"></div>
+      <div style="display:flex;gap:16px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_featured"> Featured</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_trending"> Trending</label>
+      </div>
+      <button class="btn btn-primary" type="button" onclick="saveSeries(document.getElementById('seriesForm'))">Create Series →</button>
+    </form>`,
+
+  editSeries: (s) => {
+    if (typeof s === 'string') try { s = JSON.parse(s); } catch {}
+    return `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Edit: ${s.title}</div>
+    <form id="seriesForm">
+      <div class="form-row"><label class="form-label">Title</label><input class="form-input" name="title" value="${s.title||''}"></div>
+      <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description">${s.description||''}</textarea></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Status</label><select class="form-select" name="status"><option ${s.status==='draft'?'selected':''}>draft</option><option ${s.status==='live'?'selected':''}>live</option><option ${s.status==='archived'?'selected':''}>archived</option></select></div>
+        <div class="form-row"><label class="form-label">Age Rating</label><select class="form-select" name="age_rating"><option ${s.age_rating==='PG'?'selected':''}>PG</option><option ${s.age_rating==='13'?'selected':''}>13</option><option ${s.age_rating==='16'?'selected':''}>16</option><option ${s.age_rating==='18'?'selected':''}>18</option></select></div>
+      </div>
+      <div class="form-row"><label class="form-label">Poster URL</label><input class="form-input" name="poster_url" value="${s.poster_url||''}"></div>
+      <div style="display:flex;gap:16px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_featured" ${s.is_featured?'checked':''}> Featured</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_trending" ${s.is_trending?'checked':''}> Trending</label>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" type="button" onclick="saveSeries(document.getElementById('seriesForm'),'${s.id}')">Save Changes →</button>
+        ${currentUser.role==='superadmin'?`<button class="btn btn-danger" type="button" onclick="deleteSeries('${s.id}')">Delete Series</button>`:''}
+      </div>
+    </form>`;
+  },
+
+  addEpisode: () => `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Add Episode</div>
+    <form id="episodeForm">
+      <div class="form-row"><label class="form-label">Series</label><select class="form-select" id="epSeriesSelect" name="series_id"><option value="">Loading…</option></select></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Episode #</label><input class="form-input" type="number" name="episode_number" min="1" placeholder="1"></div>
+        <div class="form-row"><label class="form-label">Title</label><input class="form-input" name="title" placeholder="Episode title"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Synopsis…"></textarea></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Video URL</label><input class="form-input" name="video_url" placeholder="https://…"></div>
+        <div class="form-row"><label class="form-label">Poster URL</label><input class="form-input" name="poster_url" placeholder="https://…"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Duration (seconds)</label><input class="form-input" type="number" name="duration" placeholder="92"></div>
+        <div class="form-row"><label class="form-label">Soul Cost</label><input class="form-input" type="number" name="soul_cost" placeholder="0"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Release Date</label><input class="form-input" type="datetime-local" name="release_date"></div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-bottom:14px"><input type="checkbox" name="is_free" checked> Free Episode</label>
+      <button class="btn btn-primary" type="button" onclick="saveEpisode(document.getElementById('episodeForm'))">Add Episode →</button>
+    </form>`,
+
+  changeRole: (data) => {
+    const [userId, currentRole] = (data||'').split('|');
+    return `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Change User Role</div>
+    <div class="modal-sub">Current role: <strong>${currentRole}</strong></div>
+    <div class="form-row"><label class="form-label">New Role</label>
+      <select class="form-select" id="newRoleSelect">
+        <option value="user" ${currentRole==='user'?'selected':''}>user</option>
+        <option value="creator" ${currentRole==='creator'?'selected':''}>creator</option>
+        <option value="admin" ${currentRole==='admin'?'selected':''}>admin</option>
+        <option value="superadmin" ${currentRole==='superadmin'?'selected':''}>superadmin</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="changeUserRole('${userId}')">Apply Role →</button>`;
+  },
+};
+
+// Load series into episode form select
+document.addEventListener('click', async e => {
+  if (document.getElementById('epSeriesSelect')) {
+    try {
+      const data = await api('GET', '/api/admin/content/series?limit=200');
+      document.getElementById('epSeriesSelect').innerHTML = (data.series||[]).map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+    } catch {}
+  }
+});
+
+async function saveEpisode(form) {
+  const body = Object.fromEntries(new FormData(form));
+  body.is_free = form.querySelector('[name=is_free]')?.checked;
+  body.episode_number = parseInt(body.episode_number);
+  body.duration = parseInt(body.duration||0);
+  body.soul_cost = parseInt(body.soul_cost||0);
+  try {
+    await api('POST', '/api/admin/content/episodes', body);
+    toast('Episode added ✓', 'ok');
+    closeModal();
+    loadEpisodes();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteSeries(id) {
+  if (!confirm('Delete this series and all its episodes? This cannot be undone.')) return;
+  try { await api('DELETE', `/api/admin/content/series/${id}`); toast('Series deleted', 'ok'); closeModal(); loadSeries(); } catch (e) { toast(e.message, 'error'); }
+}
+
+async function changeUserRole(userId) {
+  const role = document.getElementById('newRoleSelect')?.value;
+  try { await api('PATCH', `/api/admin/users/${userId}/role`, { role }); toast(`Role changed to ${role} ✓`, 'ok'); closeModal(); loadUsers(); } catch (e) { toast(e.message, 'error'); }
+}
+</script>
+</body>
+</html>

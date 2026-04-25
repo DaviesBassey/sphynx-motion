@@ -1,0 +1,3609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SPHYNX MOTION">
+<meta name="theme-color" content="#08080A">
+<meta name="description" content="SPHYNX MOTION — African vertical drama streaming. Stories That Watch Back. Watch Gold Veins, Frequency, The Last Lobola, Nairobi Signal and more.">
+<meta property="og:title" content="SPHYNX MOTION">
+<meta property="og:description" content="Stories That Watch Back. African vertical drama streaming on SPHYNX MOTION.">
+<meta property="og:image" content="assets/posters/image-11.jpg">
+<meta property="og:type" content="website">
+<title>SPHYNX MOTION</title>
+<link rel="icon" type="image/png" href="SPHYNY_MOTION_FAV.png">
+<link rel="apple-touch-icon" href="App_Cvr_Art.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────────────────── */
+:root {
+  --obsidian:   #08080A;
+  --surface:    #130E0E;
+  --surface2:   #1A1010;
+  --surface3:   #221414;
+  --red:        #E61E24;
+  --red-bright: #FF3040;
+  --red-dark:   #B5121A;
+  --text:       #F0EDE8;
+  --text-dim:   #9A9096;
+  --text-faint: #504040;
+  --danger:     #E61E24;
+  --success:    #50C878;
+
+  --r-phone: 44px;
+  --r-card:  16px;
+  --r-pill:  100px;
+}
+
+/* ─── RESET ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #05050A; font-family: 'Inter', sans-serif; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+button { -webkit-tap-highlight-color: transparent; }
+
+/* ─── MOBILE: fill the real screen, drop the desktop frame ──────────────── */
+@media (max-width: 430px) {
+  html, body { background: #08080A; }
+  .page { min-height: 100dvh; background: #08080A; padding: 0; }
+  .phone {
+    width: 100vw !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .status-bar { padding-top: env(safe-area-inset-top, 14px); }
+  .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 8px); height: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  .screen-wrap { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ─── GRAIN ──────────────────────────────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  animation: grain 0.5s steps(2) infinite;
+}
+@keyframes grain {
+  0%,100%{transform:translate(0,0)}
+  25%{transform:translate(-1px,1px)}
+  50%{transform:translate(1px,-1px)}
+  75%{transform:translate(-1px,-1px)}
+}
+
+/* ─── PAGE LAYOUT ────────────────────────────────────────────────────────── */
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 30% 20%, #1A0404 0%, #05050A 60%);
+}
+
+/* ─── PHONE SHELL ────────────────────────────────────────────────────────── */
+.phone {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  background: var(--obsidian);
+  border-radius: var(--r-phone);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px #2a2a3a,
+    0 0 0 3px #16161E,
+    0 40px 120px rgba(0,0,0,.9),
+    0 0 80px rgba(230,30,36,.12);
+}
+
+/* ─── STATUS BAR ─────────────────────────────────────────────────────────── */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: .04em;
+  position: relative;
+  z-index: 100;
+}
+.status-bar .notch {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 34px;
+  background: var(--obsidian);
+  border-radius: 0 0 20px 20px;
+}
+.status-icons { display: flex; gap: 6px; align-items: center; }
+
+/* ─── SCREENS ────────────────────────────────────────────────────────────── */
+.screen-wrap {
+  position: absolute;
+  top: 44px; left: 0; right: 0;
+  bottom: 80px;
+  overflow: hidden;
+}
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* ─── BOTTOM NAV ─────────────────────────────────────────────────────────── */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to top, var(--obsidian) 60%, transparent);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding-top: 8px;
+  z-index: 200;
+}
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 12px;
+  transition: all .2s ease;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+}
+.nav-btn.active { color: var(--red); }
+.nav-btn svg { width: 22px; height: 22px; }
+.nav-btn span { font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.nav-btn.active .nav-icon-bg {
+  background: rgba(230,30,36,.12);
+  border-radius: 12px;
+}
+
+/* ─── TYPOGRAPHY ─────────────────────────────────────────────────────────── */
+.screen-header {
+  padding: 20px 20px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.screen-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.02em;
+}
+.screen-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* ─── PILL / BADGE ───────────────────────────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.pill-gold   { background: rgba(230,30,36,.12); color: var(--red-bright); border: 1px solid rgba(230,30,36,.25); }
+.pill-violet { background: rgba(230,30,36,.08); color: var(--red); border: 1px solid rgba(230,30,36,.2); }
+.pill-red    { background: rgba(224,80,80,.15); color: #F07070; border: 1px solid rgba(224,80,80,.25); }
+.pill-green  { background: rgba(80,200,120,.15); color: var(--success); border: 1px solid rgba(80,200,120,.25); }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  SCREEN 1 — THE FEED                                                      */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#feed { background: var(--obsidian); }
+
+.oracle-bar {
+  margin: 0 20px 16px;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border-radius: 14px;
+  border: 1px solid rgba(230,30,36,.12);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.oracle-avatar {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--red-dark), var(--red));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.oracle-text { flex: 1; }
+.oracle-label { font-size: 9px; color: var(--red); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+.oracle-msg { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+/* Hero Episode Card */
+.hero-card {
+  margin: 0 20px 14px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  height: 420px;
+}
+.hero-thumb {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+.thumb-gv {
+  background: linear-gradient(160deg, #1A0A02 0%, #3D1F06 30%, #8B4513 60%, #C68642 100%);
+}
+.thumb-freq {
+  background: linear-gradient(160deg, #010D1A 0%, #062030 35%, #0A4060 65%, #0088CC 100%);
+}
+.thumb-lobola {
+  background: linear-gradient(160deg, #1A0F08 0%, #3D2010 40%, #8B5E3C 70%, #D4936A 100%);
+}
+
+.hero-scene {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.scene-shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: .5;
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(8,8,14,1) 0%, rgba(8,8,14,.6) 40%, transparent 70%);
+}
+.hero-play {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(230,30,36,.2);
+  border: 2px solid rgba(230,30,36,.6);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.hero-card:hover .hero-play { opacity: 1; }
+
+.hero-meta {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 18px;
+}
+.hero-universe {
+  font-size: 9px; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.hero-universe::before {
+  content: '';
+  width: 18px; height: 2px;
+  background: var(--red);
+  display: block;
+}
+.hero-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px; font-weight: 700;
+  color: var(--text); letter-spacing: -.02em;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.hero-ep { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+.hero-actions { display: flex; gap: 8px; align-items: center; }
+.btn-watch {
+  padding: 9px 20px;
+  background: var(--red);
+  color: var(--obsidian);
+  border: none;
+  border-radius: var(--r-pill);
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-watch:hover { background: var(--red-bright); }
+.btn-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all .2s;
+}
+.btn-icon:hover { color: var(--text); background: rgba(255,255,255,.14); }
+
+/* Progress Bar */
+.progress-bar {
+  height: 3px;
+  background: rgba(255,255,255,.08);
+  border-radius: 2px;
+  margin: 0 20px 14px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--red-dark), var(--red));
+  border-radius: 2px;
+  width: 34%;
+}
+
+/* Episode Row */
+.section-label {
+  padding: 0 20px 10px;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-faint);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.ep-row {
+  display: flex;
+  gap: 12px;
+  padding: 0 20px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ep-row::-webkit-scrollbar { display: none; }
+.ep-card {
+  flex-shrink: 0;
+  width: 120px;
+  cursor: pointer;
+}
+.ep-thumb {
+  width: 120px; height: 160px;
+  border-radius: 12px;
+  margin-bottom: 7px;
+  position: relative;
+  overflow: hidden;
+}
+.ep-thumb-inner {
+  width: 100%; height: 100%;
+}
+.ep-number {
+  position: absolute;
+  top: 7px; left: 7px;
+  font-size: 9px; font-weight: 800;
+  color: var(--text-dim);
+  background: rgba(8,8,14,.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: .06em;
+}
+.ep-lock {
+  position: absolute;
+  inset: 0;
+  background: rgba(8,8,14,.6);
+  display: flex; align-items: center; justify-content: center;
+}
+.ep-title { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.ep-dur { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  SCREEN 2 — THE VAULT                                                     */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#vault { background: var(--obsidian); padding-bottom: 20px; }
+
+.vault-hero {
+  margin: 0 20px 20px;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1A0404 0%, #0D0808 100%);
+  border: 1px solid rgba(230,30,36,.2);
+  position: relative;
+  overflow: hidden;
+}
+.vault-hero::before {
+  content: '𓂀';
+  position: absolute;
+  right: -10px; top: -20px;
+  font-size: 120px;
+  opacity: .06;
+  line-height: 1;
+}
+.vault-hero-label { font-size: 9px; font-weight: 800; letter-spacing: .14em; color: var(--red-bright); text-transform: uppercase; margin-bottom: 8px; }
+.vault-hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 8px; }
+.vault-stats { display: flex; gap: 16px; }
+.vault-stat { text-align: center; }
+.vault-stat-n { font-size: 18px; font-weight: 800; color: var(--red); display: block; }
+.vault-stat-l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; }
+
+.universe-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 20px;
+}
+.uni-card {
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  height: 140px;
+  transition: transform .2s;
+}
+.uni-card:hover { transform: scale(.98); }
+.uni-card:first-child {
+  grid-column: span 2;
+  height: 160px;
+}
+.uni-bg {
+  width: 100%; height: 100%;
+  position: relative;
+}
+.uni-bg-noir     { background: linear-gradient(135deg, #1A0800 0%, #4A2200 50%, #8B5E0A 100%); }
+.uni-bg-tech     { background: linear-gradient(135deg, #001220 0%, #003050 50%, #006B8C 100%); }
+.uni-bg-diaspora { background: linear-gradient(135deg, #0D1A0A 0%, #1A3A10 50%, #3A6B20 100%); }
+.uni-bg-royal    { background: linear-gradient(135deg, #1A0808 0%, #3A1010 50%, #7B2020 100%); }
+.uni-bg-spirit   { background: linear-gradient(135deg, #1A1200 0%, #3A2A00 50%, #7B5500 100%); }
+.uni-bg-future   { background: linear-gradient(135deg, #00101A 0%, #001830 60%, #003366 100%); }
+.uni-bg-township { background: linear-gradient(135deg, #120A00 0%, #2A1500 50%, #5A3000 100%); }
+.uni-bg-nairobi  { background: linear-gradient(135deg, #001A10 0%, #003020 50%, #006640 100%); }
+
+.uni-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(8,8,14,.95) 0%, rgba(8,8,14,.3) 60%, transparent 100%);
+}
+.uni-meta {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 12px 14px;
+}
+.uni-world { font-size: 8px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--red); margin-bottom: 4px; }
+.uni-name { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.uni-series { font-size: 10px; color: var(--text-faint); margin-top: 3px; }
+.uni-live {
+  position: absolute;
+  top: 10px; right: 10px;
+}
+.uni-glyph {
+  position: absolute;
+  top: 10px; left: 12px;
+  font-size: 28px;
+  opacity: .18;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  SCREEN 3 — CREATOR FORGE                                                 */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#forge { background: var(--obsidian); padding-bottom: 20px; }
+
+.forge-hero {
+  margin: 0 20px 20px;
+  padding: 22px 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #180808 0%, #0A0808 100%);
+  border: 1px solid rgba(230,30,36,.25);
+  position: relative;
+  overflow: hidden;
+}
+.forge-hero::after {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(230,30,36,.3) 0%, transparent 70%);
+}
+.forge-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.forge-sub { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 14px; }
+.btn-forge-start {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, var(--red-dark), var(--red));
+  color: white;
+  border: none;
+  border-radius: var(--r-pill);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-forge-start:hover { filter: brightness(1.1); }
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 20px;
+}
+.tool-card {
+  background: var(--surface2);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+.tool-card:hover { border-color: rgba(230,30,36,.2); background: var(--surface3); }
+.tool-card.featured { grid-column: span 2; }
+.tool-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+.icon-script   { background: rgba(230,30,36,.12); }
+.icon-scene    { background: rgba(181,18,26,.15); }
+.icon-voice    { background: rgba(230,30,36,.08); }
+.icon-grade    { background: rgba(80,200,120,.15); }
+.icon-edit     { background: rgba(230,30,36,.1); }
+.icon-publish  { background: rgba(230,30,36,.15); }
+
+.tool-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.tool-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+.tool-badge { margin-top: 8px; }
+
+/* Script Oracle Interactive */
+.oracle-input-area {
+  margin: 16px 20px 0;
+  background: var(--surface2);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(230,30,36,.1);
+}
+.oracle-input-label { font-size: 10px; font-weight: 700; color: var(--red); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+.genre-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.genre-pill {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--surface3);
+  font-size: 11px; font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all .2s;
+  background: transparent;
+}
+.genre-pill.selected {
+  border-color: var(--red);
+  color: var(--red-bright);
+  background: rgba(230,30,36,.1);
+}
+.fake-input {
+  background: var(--surface3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,.05);
+}
+.btn-generate {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+  color: var(--obsidian);
+  border: none;
+  border-radius: 12px;
+  font-size: 13px; font-weight: 800;
+  cursor: pointer;
+  letter-spacing: .02em;
+  transition: all .2s;
+}
+.btn-generate:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  SCREEN 4 — SOUL PROFILE                                                  */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#soul { background: var(--obsidian); padding-bottom: 20px; }
+
+.soul-top {
+  padding: 10px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.soul-avatar-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+.soul-ring {
+  width: 90px; height: 90px;
+}
+.soul-ring-track { fill: none; stroke: var(--surface2); stroke-width: 5; }
+.soul-ring-fill {
+  fill: none;
+  stroke: url(#soulGrad);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 245;
+  stroke-dashoffset: 70;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  animation: soulSpin 1.5s ease-out;
+}
+@keyframes soulSpin {
+  from { stroke-dashoffset: 245; }
+  to   { stroke-dashoffset: 70; }
+}
+.soul-avatar-inner {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red-dark) 0%, #3A0808 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+}
+.soul-name { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.soul-handle { font-size: 12px; color: var(--text-faint); margin-bottom: 12px; }
+.soul-score-display {
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 12px 24px;
+  border: 1px solid rgba(230,30,36,.15);
+  margin-bottom: 14px;
+}
+.soul-score-n { font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 800; color: var(--red-bright); line-height: 1; }
+.soul-score-l { font-size: 9px; font-weight: 700; color: var(--text-faint); letter-spacing: .14em; text-transform: uppercase; margin-top: 4px; }
+
+.soul-rank-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: rgba(230,30,36,.12);
+  border: 1px solid rgba(230,30,36,.2);
+  border-radius: var(--r-pill);
+  font-size: 11px; font-weight: 700;
+  color: var(--red);
+}
+
+/* Stats Row */
+.soul-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 20px 16px;
+}
+.soul-stat-card {
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,.04);
+}
+.soul-stat-n { font-size: 20px; font-weight: 800; color: var(--text); display: block; margin-bottom: 4px; }
+.soul-stat-l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; }
+
+/* Fingerprint */
+.fingerprint-section { padding: 0 20px 16px; }
+.section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.section-head-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.fingerprint-bars { display: flex; flex-direction: column; gap: 8px; }
+.fp-bar-row { display: flex; align-items: center; gap: 10px; }
+.fp-bar-label { font-size: 10px; color: var(--text-dim); width: 80px; flex-shrink: 0; }
+.fp-bar-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.fp-bar-fill { height: 100%; border-radius: 3px; animation: fpFill .8s ease-out; }
+@keyframes fpFill { from { width: 0; } }
+.fp-val { font-size: 10px; font-weight: 700; color: var(--text-faint); width: 30px; text-align: right; }
+
+/* Badges */
+.badges-section { padding: 0 20px 16px; }
+.badges-grid { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+.badge-card {
+  flex-shrink: 0;
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,.04);
+  width: 90px;
+}
+.badge-icon { font-size: 24px; margin-bottom: 5px; display: block; }
+.badge-name { font-size: 9px; color: var(--text-dim); font-weight: 600; line-height: 1.3; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  SCREEN 5 — ECHO HUB                                                      */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#echo { background: var(--obsidian); padding-bottom: 20px; }
+
+.echo-live-banner {
+  margin: 0 20px 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1A0808, #300A0A);
+  border: 1px solid rgba(224,80,80,.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.echo-live-banner::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(224,80,80,.5), transparent);
+}
+.live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  flex-shrink: 0;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%,100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(224,80,80,.5); }
+  50%      { opacity: .8; transform: scale(1.1); box-shadow: 0 0 0 6px rgba(224,80,80,0); }
+}
+.live-text { flex: 1; }
+.live-label { font-size: 9px; font-weight: 800; color: var(--danger); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 2px; }
+.live-sub { font-size: 11px; color: var(--text-dim); }
+.countdown {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px; font-weight: 800;
+  color: var(--danger);
+  text-align: right;
+}
+.countdown-l { font-size: 8px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; }
+
+/* ECHO Event Card */
+.echo-event-card {
+  margin: 0 20px 16px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+.echo-thumb {
+  height: 180px;
+  background: linear-gradient(160deg, #1A0800 0%, #5C2A00 50%, #C68642 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+.echo-thumb-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 120px;
+  opacity: .05;
+}
+.echo-thumb-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(8,8,14,.95) 0%, transparent 60%);
+}
+.echo-thumb-meta {
+  position: relative;
+  padding: 14px;
+  z-index: 1;
+}
+.echo-series { font-size: 9px; font-weight: 800; color: var(--red); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
+.echo-question {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px; font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* Vote Choices */
+.vote-section {
+  background: var(--surface2);
+  padding: 16px;
+  border-radius: 0 0 20px 20px;
+  border: 1px solid rgba(255,255,255,.04);
+  border-top: none;
+}
+.vote-label { font-size: 10px; font-weight: 700; color: var(--text-faint); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; }
+.vote-choices { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.vote-choice {
+  position: relative;
+  padding: 11px 14px;
+  background: var(--surface3);
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all .2s;
+  overflow: hidden;
+}
+.vote-choice.voted { border-color: var(--red); }
+.vote-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: rgba(230,30,36,.08);
+  border-radius: 12px;
+  transition: width .6s ease;
+}
+.vote-choice-text {
+  position: relative;
+  font-size: 12px; font-weight: 600;
+  color: var(--text);
+  z-index: 1;
+}
+.vote-pct {
+  position: absolute;
+  right: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px; font-weight: 800;
+  color: var(--red);
+  z-index: 1;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.vote-choice.voted ~ * .vote-pct,
+.voted-reveal .vote-pct { opacity: 1; }
+.vote-soul-cost {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0 0;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.soul-cost-info { font-size: 11px; color: var(--text-dim); }
+.soul-cost-n { color: var(--red); font-weight: 700; }
+.btn-vote {
+  padding: 9px 20px;
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
+  color: var(--obsidian);
+  border: none;
+  border-radius: var(--r-pill);
+  font-size: 11px; font-weight: 800;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .04em;
+}
+.btn-vote:hover { filter: brightness(1.1); }
+
+/* ─── LOADING SKELETONS ──────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+.skeleton-card { border-radius: var(--r-card); overflow: hidden; }
+.skeleton-thumb { aspect-ratio: 2/3; width: 100%; }
+.skeleton-line { height: 11px; margin-top: 8px; border-radius: 6px; }
+.skeleton-line--short { width: 55%; }
+
+/* ─── EMPTY STATES ───────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 40px 20px; text-align: center;
+}
+.empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.empty-state-sub { font-size: 12px; color: var(--text-faint); line-height: 1.6; }
+
+/* Report button on cards */
+.report-btn {
+  position: absolute; bottom: 6px; right: 6px;
+  background: rgba(0,0,0,.55); border: none; border-radius: 50%;
+  width: 24px; height: 24px; font-size: 14px; line-height: 1;
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.g-thumb:hover .report-btn,
+.g-thumb:active .report-btn { opacity: 1; }
+@media (hover: none) { .report-btn { opacity: 1; } }
+
+/* Community reactions */
+.community-strip {
+  margin: 0 20px 14px;
+  padding: 14px;
+  background: var(--surface2);
+  border-radius: 16px;
+}
+.community-label { font-size: 10px; font-weight: 700; color: var(--text-faint); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+.avatars-row { display: flex; align-items: center; gap: -4px; margin-bottom: 8px; }
+.mini-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--surface2);
+  margin-left: -6px;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mini-avatar:first-child { margin-left: 0; }
+.avatar-c1 { background: linear-gradient(135deg, #C68642, #8B4513); }
+.avatar-c2 { background: linear-gradient(135deg, #0088CC, #003050); }
+.avatar-c3 { background: linear-gradient(135deg, #7B2020, #3A0808); }
+.avatar-c4 { background: linear-gradient(135deg, #50C878, #1A3A10); }
+.avatar-c5 { background: linear-gradient(135deg, #E05050, #8B2020); }
+.votes-total { font-size: 11px; color: var(--text-dim); margin-left: 8px; }
+.reaction-row { display: flex; gap: 6px; }
+.reaction-chip {
+  padding: 4px 10px;
+  background: var(--surface3);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  border: 1px solid transparent;
+}
+.reaction-chip:hover { border-color: rgba(255,255,255,.1); }
+
+/* Upcoming Events */
+.upcoming-section { padding: 0 20px; }
+.upcoming-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  cursor: pointer;
+}
+.upcoming-thumb {
+  width: 60px; height: 70px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.upcoming-info { flex: 1; }
+.upcoming-series { font-size: 9px; font-weight: 700; color: var(--red-bright); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; }
+.upcoming-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 5px; }
+.upcoming-time { font-size: 10px; color: var(--text-faint); }
+.upcoming-soul { font-size: 10px; color: var(--red); font-weight: 700; }
+
+/* ─── MODAL OVERLAY ──────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal-sheet {
+  position: relative;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  padding: 20px;
+  width: 100%;
+  transform: translateY(100%);
+  transition: transform .35s cubic-bezier(.2,.9,.3,1);
+  border-top: 1px solid rgba(255,255,255,.06);
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.modal-sheet::-webkit-scrollbar { display: none; }
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.modal-sub { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+/* ─── SPLASH SCREEN ──────────────────────────────────────────────────────── */
+.splash {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  transition: opacity .8s ease;
+  overflow: hidden;
+}
+
+/* ── NETFLIX-STYLE COVER ART SPLASH ─────────────────────────────────────── */
+
+/* Background cover art */
+.splash-bg {
+  position: absolute; inset: 0;
+  background-image: url('App_Cvr_Art.png');
+  background-size: cover;
+  background-position: center top;
+  transform: scale(1.04);
+  animation: splashBgDrift 6s ease-in-out infinite alternate;
+}
+@keyframes splashBgDrift {
+  from { transform: scale(1.04) translateY(0); }
+  to   { transform: scale(1.06) translateY(-8px); }
+}
+
+/* Gradient overlay — matches cvr-1.png exactly:
+   deep black top → transparent mid → deep black bottom */
+.splash-grad {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom,
+      rgba(0,0,0,.88)  0%,
+      rgba(0,0,0,.55) 22%,
+      rgba(0,0,0,.18) 42%,
+      rgba(0,0,0,.18) 58%,
+      rgba(0,0,0,.60) 78%,
+      rgba(0,0,0,.92) 100%
+    );
+}
+
+/* Side vignette for depth */
+.splash-sides {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right,
+      rgba(0,0,0,.45) 0%,
+      transparent 28%,
+      transparent 72%,
+      rgba(0,0,0,.45) 100%
+    );
+}
+
+/* Logo block — centered */
+.splash-logo {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  animation: splashIn 1s cubic-bezier(.22,.68,0,1.2) .3s both;
+}
+@keyframes splashIn {
+  from { opacity: 0; transform: translateY(14px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Exact SPHYNX MOTION white logo image */
+.splash-logo-img {
+  width: 220px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 24px rgba(0,0,0,.8));
+}
+
+/* Tagline — matches cvr-1.png typography exactly */
+.splash-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(255,255,255,.72);
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Loading bar — bottom, ultra-slim */
+.splash-loader {
+  position: absolute;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 48px; height: 2px;
+  background: rgba(255,255,255,.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.splash-loader-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  animation: splashLoad 2.4s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes splashLoad {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ─── MISC UTILS ─────────────────────────────────────────────────────────── */
+.divider { height: 1px; background: rgba(255,255,255,.04); margin: 0 20px; }
+.spacer { height: 16px; }
+svg defs { position: absolute; width: 0; height: 0; }
+
+/* ─── VOTE SYSTEM FIXES ──────────────────────────────────────────────────── */
+.vote-fill { opacity: 0; transition: opacity .5s ease, width .6s ease; }
+.votes-revealed .vote-fill { opacity: 1; }
+.votes-revealed .vote-pct { opacity: 1 !important; }
+.vote-choice { cursor: pointer; transition: all .2s; }
+.vote-choice.choice-selected { border-color: rgba(230,30,36,.5); background: rgba(230,30,36,.06); }
+.vote-choice.voted { border-color: var(--red); }
+.vote-pct { transition: opacity .4s ease !important; }
+
+/* ─── TOAST SYSTEM ───────────────────────────────────────────────────────── */
+#toastContainer {
+  position: absolute;
+  top: 60px; left: 0; right: 0;
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 9990;
+  pointer-events: none;
+}
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text);
+  background: rgba(30,30,40,.95);
+  border: 1px solid rgba(255,255,255,.1);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  transform: translateY(-10px);
+  opacity: 0;
+  transition: opacity .25s ease, transform .25s ease;
+  pointer-events: none;
+  max-width: 280px;
+  text-align: center;
+}
+.toast.visible { opacity: 1; transform: translateY(0); }
+.toast-success { border-color: rgba(80,200,120,.3); color: #80E0A0; }
+.toast-soul { border-color: rgba(230,30,36,.3); color: var(--red-bright); }
+.toast-warn { border-color: rgba(232,151,30,.3); color: #F0B840; }
+
+/* ─── VOICE PREVIEW ──────────────────────────────────────────────────────── */
+.voice-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.04); cursor: pointer; border-radius: 8px; transition: background .2s; }
+.voice-row.playing { background: rgba(230,30,36,.06); }
+.voice-play-btn { font-size: 14px; color: var(--text-faint); width: 20px; text-align: center; transition: color .2s; }
+.voice-row.playing .voice-play-btn { color: var(--red); }
+
+/* ─── GRADE OPTION ───────────────────────────────────────────────────────── */
+.grade-option { cursor: pointer; transition: all .2s; opacity: .75; border-radius: 12px; padding: 4px; }
+.grade-option:hover { opacity: 1; }
+.grade-option.selected { outline: 2px solid var(--red); opacity: 1; }
+
+/* ─── BTN GENERATE STATE ─────────────────────────────────────────────────── */
+.btn-generate { cursor: pointer; transition: all .2s; }
+.btn-generate:disabled { cursor: not-allowed; }
+
+/* ─── POSTER IMAGE HERO ──────────────────────────────────────────────────── */
+.hero-poster {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* ─── VIDEO PLAYER MODAL ─────────────────────────────────────────────────── */
+.video-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s;
+}
+.video-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.video-player-wrap {
+  position: relative;
+  flex: 1;
+  background: #000;
+  display: flex;
+  align-items: center;
+}
+.video-player-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.video-controls {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px;
+  background: linear-gradient(to top, rgba(0,0,0,.9), transparent);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.video-player-wrap:hover .video-controls,
+.video-player-wrap.show-controls .video-controls { opacity: 1; }
+.video-progress {
+  width: 100%; height: 3px;
+  background: rgba(255,255,255,.2);
+  border-radius: 3px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  position: relative;
+}
+.video-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--red), var(--red-dark));
+  border-radius: 3px;
+  width: 0%;
+  transition: width .5s linear;
+  pointer-events: none;
+}
+.video-btns {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.video-btn-play {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--red);
+  border: none;
+  color: var(--obsidian);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+.video-time {
+  font-size: 11px;
+  color: rgba(255,255,255,.7);
+  font-family: 'Space Grotesk', sans-serif;
+  flex: 1;
+}
+.video-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: none;
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+.video-header {
+  padding: 14px 16px 10px;
+  background: linear-gradient(to bottom, rgba(0,0,0,.9), transparent);
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.video-header-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+}
+.video-header-ep {
+  font-size: 10px;
+  color: rgba(255,255,255,.5);
+  margin-top: 2px;
+}
+
+/* Admin dashboard moved to /admin/ — not in user app */
+
+.notification-dot {
+  position: absolute;
+  top: 4px; right: 8px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid var(--obsidian);
+}
+
+/* ─── HOME — TOP BAR ─────────────────────────────────────────────────────── */
+.home-topbar {
+  padding: 14px 16px 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.search-field {
+  flex: 1;
+  background: var(--surface2);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.search-field svg { flex-shrink: 0; }
+.search-placeholder { font-size: 12px; color: var(--text-faint); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.topbar-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  position: relative;
+}
+.topbar-badge {
+  position: absolute; top: -3px; right: -3px;
+  background: var(--red); color: #fff;
+  font-size: 8px; font-weight: 800;
+  border-radius: 999px; padding: 1px 4px;
+  border: 1.5px solid var(--obsidian);
+}
+
+/* ─── TAB STRIP ──────────────────────────────────────────────────────────── */
+.tab-strip {
+  display: flex; gap: 0;
+  padding: 12px 16px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.tab-strip::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex-shrink: 0;
+  padding: 6px 14px 10px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-faint);
+  cursor: pointer;
+  background: none; border: none;
+  position: relative;
+  transition: color .2s;
+  white-space: nowrap;
+}
+.tab-btn.active { color: var(--text); }
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 14px; right: 14px;
+  height: 2px;
+  background: var(--red);
+  border-radius: 2px 2px 0 0;
+}
+
+/* ─── CARD GRID ──────────────────────────────────────────────────────────── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 12px 12px 0;
+}
+.g-card { cursor: pointer; }
+.g-thumb {
+  width: 100%; aspect-ratio: 2/3;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  background: var(--surface2);
+  margin-bottom: 6px;
+}
+.g-thumb img, .g-thumb video { width: 100%; height: 100%; object-fit: cover; }
+.g-badge {
+  position: absolute; top: 5px; right: 5px;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 6px; border-radius: 4px;
+  letter-spacing: .04em;
+}
+.g-badge--hot { background: var(--red); color: #fff; }
+.g-badge--new { background: #2ECC71; color: #fff; }
+.g-badge--following { background: #7B2FB0; color: #fff; }
+.g-views {
+  position: absolute; bottom: 5px; left: 5px;
+  font-size: 9px; color: rgba(255,255,255,.8);
+  font-weight: 700;
+  display: flex; align-items: center; gap: 3px;
+}
+.g-title { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+.g-genre { font-size: 10px; color: var(--text-faint); }
+
+/* ─── RESUME BAR ─────────────────────────────────────────────────────────── */
+.resume-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.resume-thumb {
+  width: 40px; height: 52px;
+  border-radius: 6px; flex-shrink: 0;
+  overflow: hidden; background: var(--surface2);
+}
+.resume-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.resume-info { flex: 1; min-width: 0; }
+.resume-title { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resume-ep { font-size: 10px; color: var(--text-faint); margin-top: 1px; }
+.resume-cta {
+  background: var(--red); color: #fff;
+  font-size: 11px; font-weight: 800;
+  padding: 7px 14px; border-radius: 999px;
+  border: none; cursor: pointer; flex-shrink: 0;
+  letter-spacing: .02em;
+}
+.resume-bar-close {
+  width: 20px; height: 20px;
+  border-radius: 50%; background: var(--surface3);
+  border: none; color: var(--text-faint);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; cursor: pointer; flex-shrink: 0;
+}
+
+/* ─── FOR YOU FEED ───────────────────────────────────────────────────────── */
+#foryou { background: #000; overflow: hidden !important; padding: 0 !important; }
+#home { position: relative; }
+.fy-stack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+.fy-stack::-webkit-scrollbar { display: none; }
+.fy-slide {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%; height: 100%;
+  scroll-snap-align: start;
+  overflow: hidden;
+}
+.fy-bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.fy-grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.95) 0%, rgba(0,0,0,.3) 50%, rgba(0,0,0,.2) 100%);
+}
+.fy-right {
+  position: absolute;
+  right: 12px; bottom: 100px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20px;
+}
+.fy-action {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+  cursor: pointer;
+}
+.fy-action-icon {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.fy-action-icon:hover { background: rgba(230,30,36,.3); }
+.fy-action-count { font-size: 10px; color: rgba(255,255,255,.8); font-weight: 700; }
+.fy-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 60px;
+  padding: 0 14px 20px;
+}
+.fy-series-label {
+  font-size: 10px; font-weight: 800;
+  color: var(--red); letter-spacing: .12em;
+  text-transform: uppercase; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.fy-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px; font-weight: 700;
+  color: #fff; line-height: 1.2;
+  margin-bottom: 6px;
+}
+.fy-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.fy-tag {
+  font-size: 10px; font-weight: 600;
+  padding: 3px 10px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.3);
+  color: rgba(255,255,255,.8);
+  cursor: pointer;
+}
+.fy-desc {
+  font-size: 12px; color: rgba(255,255,255,.65);
+  line-height: 1.5; margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fy-watch-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px; font-weight: 800;
+  cursor: pointer;
+  letter-spacing: .02em;
+  transition: background .2s;
+}
+.fy-watch-btn:hover { background: var(--red); border-color: var(--red); }
+.fy-swipe-hint {
+  position: absolute;
+  top: 50%; right: 12px;
+  transform: translateY(-50%);
+  font-size: 9px; color: rgba(255,255,255,.4);
+  letter-spacing: .06em; text-transform: uppercase;
+  writing-mode: vertical-rl;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ─── MEMBER SCREEN ──────────────────────────────────────────────────────── */
+.member-banner {
+  margin: 14px 16px 0;
+  background: linear-gradient(135deg, var(--red-dark) 0%, var(--red) 100%);
+  border-radius: 16px;
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.member-banner::after {
+  content: '𓂀';
+  position: absolute; right: -10px; top: -15px;
+  font-size: 100px; opacity: .06; line-height: 1;
+}
+.member-banner-label { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.7); margin-bottom: 4px; }
+.member-banner-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.member-banner-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-bottom: 14px; }
+.member-banner-row { display: flex; align-items: center; gap: 10px; }
+.member-join-btn {
+  background: #fff; color: var(--red);
+  font-size: 13px; font-weight: 800;
+  padding: 9px 20px; border-radius: 999px;
+  border: none; cursor: pointer;
+}
+.member-discount { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.8); }
+.benefit-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; padding: 14px 16px;
+  background: var(--surface);
+  margin: 0 16px; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.04);
+}
+.benefit-item { text-align: center; }
+.benefit-icon { font-size: 20px; margin-bottom: 4px; display: block; }
+.benefit-label { font-size: 9px; color: var(--text-dim); line-height: 1.3; }
+.plan-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 0 16px;
+}
+.plan-card {
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.05);
+  position: relative;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.plan-card.featured { border-color: var(--red); }
+.plan-card.featured::before {
+  content: 'BEST VALUE';
+  position: absolute; top: -1px; right: 12px;
+  background: var(--red); color: #fff;
+  font-size: 8px; font-weight: 800;
+  padding: 2px 6px; border-radius: 0 0 6px 6px;
+  letter-spacing: .06em;
+}
+.plan-name { font-size: 11px; font-weight: 700; color: var(--text-dim); margin-bottom: 6px; }
+.plan-price { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 2px; }
+.plan-period { font-size: 10px; color: var(--text-faint); margin-bottom: 10px; }
+.plan-features { font-size: 10px; color: var(--text-dim); line-height: 1.8; }
+.plan-btn {
+  width: 100%; margin-top: 12px;
+  padding: 9px; border-radius: 8px; border: none;
+  font-size: 11px; font-weight: 800; cursor: pointer;
+  transition: all .2s;
+}
+.plan-btn--red { background: var(--red); color: #fff; }
+.plan-btn--outline { background: transparent; border: 1px solid rgba(255,255,255,.1); color: var(--text-dim); }
+.soul-topup {
+  margin: 0 16px;
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.05);
+}
+.soul-topup-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.soul-topup-sub { font-size: 11px; color: var(--text-faint); margin-bottom: 12px; }
+.soul-pkg-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.soul-pkg-row::-webkit-scrollbar { display: none; }
+.soul-pkg {
+  flex-shrink: 0;
+  background: var(--surface3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .2s;
+  min-width: 70px;
+}
+.soul-pkg:hover, .soul-pkg.active { border-color: var(--red); background: rgba(230,30,36,.08); }
+.soul-pkg-n { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); display: block; }
+.soul-pkg-label { font-size: 9px; color: var(--text-faint); display: block; margin-bottom: 4px; }
+.soul-pkg-price { font-size: 10px; font-weight: 700; color: var(--red); }
+
+/* ─── MY LIST SCREEN ─────────────────────────────────────────────────────── */
+.list-topbar {
+  padding: 14px 16px 0;
+  display: flex; gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.list-tab {
+  flex: 1; text-align: center;
+  padding: 8px 6px 12px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-faint);
+  cursor: pointer;
+  background: none; border: none;
+  position: relative;
+  transition: color .2s;
+}
+.list-tab.active { color: var(--text); }
+.list-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px; background: var(--red);
+  border-radius: 2px 2px 0 0;
+}
+.follow-card {
+  display: flex; gap: 12px; align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  cursor: pointer;
+}
+.follow-card:hover { background: rgba(255,255,255,.02); }
+.follow-thumb {
+  width: 60px; height: 78px;
+  border-radius: 8px; flex-shrink: 0;
+  overflow: hidden; position: relative;
+  background: var(--surface2);
+}
+.follow-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.follow-info { flex: 1; min-width: 0; }
+.follow-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.follow-genres { font-size: 10px; color: var(--text-faint); margin-bottom: 6px; }
+.follow-ep { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+.trending-section { padding: 16px 16px 0; }
+.trending-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.trending-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.t-card { cursor: pointer; position: relative; }
+.t-thumb {
+  width: 100%; aspect-ratio: 2/3;
+  border-radius: 8px; overflow: hidden;
+  position: relative; background: var(--surface2);
+  margin-bottom: 6px;
+}
+.t-thumb img, .t-thumb video { width: 100%; height: 100%; object-fit: cover; }
+.t-rank {
+  position: absolute; top: 0; left: 0;
+  width: 22px; height: 22px;
+  border-radius: 0 0 8px 0;
+  background: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #fff;
+}
+.t-fire {
+  position: absolute; bottom: 5px; right: 5px;
+  font-size: 9px; font-weight: 800;
+  color: #fff; display: flex; align-items: center; gap: 2px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.8);
+}
+.t-title { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+.t-genre { font-size: 10px; color: var(--text-faint); }
+
+/* ─── PROFILE SCREEN ─────────────────────────────────────────────────────── */
+.prof-topbar {
+  padding: 14px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.prof-settings {
+  width: 32px; height: 32px;
+  border-radius: 8px; background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.prof-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 16px 16px;
+}
+.prof-avatar-wrap {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,.08);
+}
+.prof-login-btn {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px; font-weight: 700;
+  color: var(--text);
+  display: flex; align-items: center; gap: 4px;
+  cursor: pointer;
+  background: none; border: none;
+}
+.prof-id { font-size: 11px; color: var(--text-faint); margin-top: 3px; }
+.prof-following { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.prof-member-banner {
+  margin: 0 16px 14px;
+  background: linear-gradient(135deg, var(--red-dark), var(--red));
+  border-radius: 14px;
+  padding: 16px;
+  position: relative; overflow: hidden;
+}
+.prof-member-banner::after {
+  content: '𓂀';
+  position: absolute; right: -8px; top: -12px;
+  font-size: 80px; opacity: .07; line-height: 1;
+}
+.pmb-label { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; font-family: 'Space Grotesk', sans-serif; }
+.pmb-sub { font-size: 11px; color: rgba(255,255,255,.7); margin-bottom: 12px; }
+.pmb-perks { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+.pmb-perk { text-align: center; }
+.pmb-perk-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+.pmb-perk-label { font-size: 8px; color: rgba(255,255,255,.7); line-height: 1.3; }
+.pmb-join-btn {
+  width: 100%; padding: 11px;
+  background: #fff; color: var(--red);
+  font-size: 13px; font-weight: 800;
+  border-radius: 8px; border: none; cursor: pointer;
+}
+.pmb-discount {
+  position: absolute; top: -1px; right: 12px;
+  background: #fff; color: var(--red);
+  font-size: 9px; font-weight: 800;
+  padding: 2px 8px; border-radius: 0 0 8px 8px;
+}
+.prof-menu-group {
+  margin: 0 16px 12px;
+  background: var(--surface2);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.04);
+}
+.prof-menu-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  cursor: pointer;
+  transition: background .15s;
+}
+.prof-menu-item:last-child { border-bottom: none; }
+.prof-menu-item:hover { background: rgba(255,255,255,.03); }
+.pmi-icon { font-size: 16px; flex-shrink: 0; }
+.pmi-label { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.pmi-right { display: flex; align-items: center; gap: 6px; }
+.pmi-value { font-size: 12px; color: var(--text-dim); }
+.pmi-badge {
+  background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 6px; border-radius: 999px;
+}
+.pmi-chevron { font-size: 12px; color: var(--text-faint); }
+.prof-soul-row {
+  margin: 0 16px 12px;
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,.04);
+  display: flex; align-items: center; gap: 14px;
+}
+.psr-ring { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+.psr-ring svg { width: 52px; height: 52px; }
+.psr-inner {
+  position: absolute; inset: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red-dark), var(--red));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.psr-info { flex: 1; }
+.psr-score { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.psr-label { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .1em; }
+.psr-rank { font-size: 11px; color: var(--red); font-weight: 700; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+<div class="phone" id="phone">
+
+  <!-- SVG Defs -->
+  <svg style="position:absolute;width:0;height:0">
+    <defs>
+      <linearGradient id="soulGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#B5121A"/>
+        <stop offset="100%" style="stop-color:#E61E24"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- SPLASH — Netflix-style cover art loading screen -->
+  <div class="splash" id="splash">
+    <div class="splash-bg"></div>
+    <div class="splash-grad"></div>
+    <div class="splash-sides"></div>
+
+    <div class="splash-logo">
+      <img class="splash-logo-img" src="SPHYNX_LOGO_WHITE.png" alt="SPHYNX MOTION">
+      <div class="splash-tagline">Stories That Watch Back</div>
+    </div>
+
+    <div class="splash-loader"><div class="splash-loader-fill"></div></div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="notch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+        <rect x="1" y="5" width="2" height="8" rx="1" opacity=".4"/>
+        <rect x="5" y="3" width="2" height="10" rx="1" opacity=".7"/>
+        <rect x="9" y="1" width="2" height="12" rx="1"/>
+        <rect x="13" y="0" width="2" height="13" rx="1"/>
+      </svg>
+      <svg viewBox="0 0 20 14" width="16" height="12" fill="none">
+        <rect x="1" y="1" width="17" height="12" rx="3" stroke="currentColor" stroke-width="1.5" opacity=".5"/>
+        <rect x="3" y="3" width="11" height="8" rx="1.5" fill="currentColor"/>
+        <path d="M19 5v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- SCREEN WRAP -->
+  <div class="screen-wrap">
+
+    <!-- ── HOME ─────────────────────────────────────────────────────── -->
+    <div class="screen active" id="home">
+
+      <!-- Top bar -->
+      <div class="home-topbar">
+        <div class="search-field" onclick="openModal('search')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span class="search-placeholder">Search series, genres, creators...</span>
+        </div>
+        <div class="topbar-icon" onclick="openModal('gold-veins')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="topbar-badge">3</span>
+        </div>
+      </div>
+
+      <!-- Tab strip -->
+      <div class="tab-strip" id="homeTabStrip">
+        <button class="tab-btn active" onclick="switchHomeTab(this,'popular')">Popular</button>
+        <button class="tab-btn" onclick="switchHomeTab(this,'new')">New</button>
+        <button class="tab-btn" onclick="switchHomeTab(this,'rankings')">Rankings</button>
+        <button class="tab-btn" onclick="switchHomeTab(this,'categories')">Categories</button>
+        <button class="tab-btn" onclick="switchHomeTab(this,'all')">All</button>
+      </div>
+
+      <!-- Card grid -->
+      <div class="card-grid" id="homeGrid">
+
+        <div class="g-card" onclick="openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-11.jpg" alt="Gold Veins">
+            <div class="g-badge g-badge--hot">Hot</div>
+            <div class="g-views">▶ 8.4K</div>
+            <button class="report-btn" onclick="event.stopPropagation();openModal('report')" title="Report">⋯</button>
+          </div>
+          <div class="g-title">Gold Veins</div>
+          <div class="g-genre">Neo-Noir</div>
+        </div>
+
+        <div class="g-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--hot">Hot</div>
+            <div class="g-views">▶ 5.1K</div>
+          </div>
+          <div class="g-title">Frequency</div>
+          <div class="g-genre">Tech Thriller</div>
+        </div>
+
+        <div class="g-card" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-16.jpg" alt="The Last Lobola" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--new">New</div>
+            <div class="g-views">▶ 3.8K</div>
+          </div>
+          <div class="g-title">The Last Lobola</div>
+          <div class="g-genre">Diaspora</div>
+        </div>
+
+        <div class="g-card" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-17.jpg" alt="Nairobi Signal" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--new">New</div>
+            <div class="g-views">▶ 2.1K</div>
+          </div>
+          <div class="g-title">Nairobi Signal</div>
+          <div class="g-genre">Underground</div>
+        </div>
+
+        <div class="g-card" onclick="openVideoPlayer('assets/videos/gold-veins-e4.mp4','Gold Veins','E4 — The Gold Room')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-13.jpg" alt="Gold Veins E4" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--hot">Hot</div>
+            <div class="g-views">▶ 6.2K</div>
+          </div>
+          <div class="g-title">Gold Veins E4</div>
+          <div class="g-genre">Neo-Noir</div>
+        </div>
+
+        <div class="g-card" onclick="openVideoPlayer('assets/videos/gold-veins-e5.mp4','Gold Veins','E5 — Two Mothers')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-14.jpg" alt="Gold Veins E5" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--following">Following</div>
+            <div class="g-views">▶ 4.7K</div>
+          </div>
+          <div class="g-title">Gold Veins E5</div>
+          <div class="g-genre">Neo-Noir</div>
+        </div>
+
+        <div class="g-card" onclick="openModal('coming')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-18.jpg" alt="Royal Bloodlines" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--new">Soon</div>
+          </div>
+          <div class="g-title">Royal Bloodlines</div>
+          <div class="g-genre">Historical Drama</div>
+        </div>
+
+        <div class="g-card" onclick="openModal('coming')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-19.jpg" alt="Afrofuturism 2099" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--new">Soon</div>
+          </div>
+          <div class="g-title">Afrofuturism 2099</div>
+          <div class="g-genre">Sci-Fi</div>
+        </div>
+
+        <div class="g-card" onclick="openModal('coming')">
+          <div class="g-thumb">
+            <img src="assets/posters/image-20.jpg" alt="Township Grunge" style="width:100%;height:100%;object-fit:cover">
+            <div class="g-badge g-badge--new">Soon</div>
+          </div>
+          <div class="g-title">Township Grunge</div>
+          <div class="g-genre">Urban Drama</div>
+        </div>
+
+      </div>
+
+      <!-- Resume watching bar -->
+      <div class="resume-bar" id="resumeBar">
+        <div class="resume-thumb">
+          <img src="assets/posters/image-11.jpg" alt="">
+        </div>
+        <div class="resume-info">
+          <div class="resume-title">Gold Veins — The Third Name</div>
+          <div class="resume-ep">E3 / E24 · 34% watched</div>
+        </div>
+        <button class="resume-cta" onclick="event.stopPropagation();openVideoPlayer()">Continue</button>
+        <button class="resume-bar-close" onclick="event.stopPropagation();this.closest('.resume-bar').style.display='none'">✕</button>
+      </div>
+
+      <div style="height:80px"></div>
+    </div><!-- /home -->
+
+    <!-- ── FOR YOU ────────────────────────────────────────────────────── -->
+    <div class="screen" id="foryou">
+      <div class="fy-stack" id="fyStack">
+
+        <!-- Slide 1 — Gold Veins -->
+        <div class="fy-slide">
+          <img class="fy-bg" src="assets/posters/image-11.jpg" alt="Gold Veins">
+          <div class="fy-grad"></div>
+          <div class="fy-right">
+            <div class="fy-action" onclick="fyBookmark(this)">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="fy-action-count">8.4K</div>
+            </div>
+            <div class="fy-action" onclick="fyShare()">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <div class="fy-action-count">Share</div>
+            </div>
+            <div class="fy-action" onclick="openVideoPlayer()">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+              </div>
+              <div class="fy-action-count">Play</div>
+            </div>
+          </div>
+          <div class="fy-bottom">
+            <div class="fy-series-label">● Live · Joburg Neo-Noir</div>
+            <div class="fy-title">Gold Veins</div>
+            <div class="fy-tags">
+              <span class="fy-tag">Hot</span>
+              <span class="fy-tag">Crime Drama</span>
+              <span class="fy-tag">Family Secrets</span>
+            </div>
+            <div class="fy-desc">Trailer | A fractured family controls Johannesburg's underground gold trade. When the matriarch vanishes, three siblings unravel a secret that could destroy everything. ... more</div>
+            <button class="fy-watch-btn" onclick="openVideoPlayer()">Start Watching</button>
+          </div>
+        </div>
+
+        <!-- Slide 2 — Frequency -->
+        <div class="fy-slide">
+          <img class="fy-bg" src="assets/posters/image-15.jpg" alt="Frequency">
+          <div class="fy-grad"></div>
+          <div class="fy-right">
+            <div class="fy-action" onclick="fyBookmark(this)">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="fy-action-count">5.1K</div>
+            </div>
+            <div class="fy-action" onclick="fyShare()">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <div class="fy-action-count">Share</div>
+            </div>
+            <div class="fy-action" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+              </div>
+              <div class="fy-action-count">Play</div>
+            </div>
+          </div>
+          <div class="fy-bottom">
+            <div class="fy-series-label">New · Lagos Tech Underground</div>
+            <div class="fy-title">Frequency</div>
+            <div class="fy-tags">
+              <span class="fy-tag">Hot</span>
+              <span class="fy-tag">Tech Thriller</span>
+              <span class="fy-tag">Conspiracy</span>
+            </div>
+            <div class="fy-desc">Trailer | A rogue signal broadcasts impossible transmissions from Lagos. A young engineer traces it to a network that could rewire everything. ... more</div>
+            <button class="fy-watch-btn" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">Start Watching</button>
+          </div>
+        </div>
+
+        <!-- Slide 3 — The Last Lobola -->
+        <div class="fy-slide">
+          <img class="fy-bg" src="assets/posters/image-16.jpg" alt="The Last Lobola">
+          <div class="fy-grad"></div>
+          <div class="fy-right">
+            <div class="fy-action" onclick="fyBookmark(this)">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="fy-action-count">3.8K</div>
+            </div>
+            <div class="fy-action" onclick="fyShare()">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <div class="fy-action-count">Share</div>
+            </div>
+            <div class="fy-action" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+              </div>
+              <div class="fy-action-count">Play</div>
+            </div>
+          </div>
+          <div class="fy-bottom">
+            <div class="fy-series-label">New · Diaspora Tension</div>
+            <div class="fy-title">The Last Lobola</div>
+            <div class="fy-tags">
+              <span class="fy-tag">New</span>
+              <span class="fy-tag">Romance</span>
+              <span class="fy-tag">Culture Clash</span>
+            </div>
+            <div class="fy-desc">Trailer | A woman caught between two worlds must decide if love is worth the price of tradition. ... more</div>
+            <button class="fy-watch-btn" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">Start Watching</button>
+          </div>
+        </div>
+
+        <!-- Slide 4 — Nairobi Signal -->
+        <div class="fy-slide">
+          <img class="fy-bg" src="assets/posters/image-17.jpg" alt="Nairobi Signal">
+          <div class="fy-grad"></div>
+          <div class="fy-right">
+            <div class="fy-action" onclick="fyBookmark(this)">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="fy-action-count">2.1K</div>
+            </div>
+            <div class="fy-action" onclick="fyShare()">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <div class="fy-action-count">Share</div>
+            </div>
+            <div class="fy-action" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">
+              <div class="fy-action-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+              </div>
+              <div class="fy-action-count">Play</div>
+            </div>
+          </div>
+          <div class="fy-bottom">
+            <div class="fy-series-label">New · Nairobi Underground</div>
+            <div class="fy-title">Nairobi Signal</div>
+            <div class="fy-tags">
+              <span class="fy-tag">New</span>
+              <span class="fy-tag">Action</span>
+              <span class="fy-tag">Underground</span>
+            </div>
+            <div class="fy-desc">Trailer | The city's power grid goes dark. One woman's search for the truth leads her deeper into Nairobi's most dangerous network. ... more</div>
+            <button class="fy-watch-btn" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">Start Watching</button>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /foryou -->
+
+    <!-- ── MEMBER ────────────────────────────────────────────────────── -->
+    <div class="screen" id="member">
+
+      <div class="screen-header" style="padding-bottom:4px">
+        <div class="screen-title">Soul Pass</div>
+        <div class="pill pill-red" style="font-size:9px">20% OFF</div>
+      </div>
+
+      <!-- Banner -->
+      <div class="member-banner">
+        <div class="member-banner-label">Soul Pass</div>
+        <div class="member-banner-title">Join Soul Pass</div>
+        <div class="member-banner-sub">Enjoy all exclusive benefits</div>
+        <div class="member-banner-row">
+          <button class="member-join-btn" onclick="openModal('join')">Join Now</button>
+          <span class="member-discount">Save 20% this week</span>
+        </div>
+      </div>
+
+      <!-- Benefits -->
+      <div class="benefit-grid" style="margin-top:10px">
+        <div class="benefit-item"><span class="benefit-icon">📺</span><span class="benefit-label">All original series</span></div>
+        <div class="benefit-item"><span class="benefit-icon">⚡</span><span class="benefit-label">Daily Soul Points</span></div>
+        <div class="benefit-item"><span class="benefit-icon">🎬</span><span class="benefit-label">HD Quality</span></div>
+        <div class="benefit-item"><span class="benefit-icon">🗳️</span><span class="benefit-label">Echo Voting</span></div>
+      </div>
+
+      <div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Choose Plan</div>
+
+      <!-- Plan Cards -->
+      <div class="plan-row">
+        <div class="plan-card">
+          <div class="plan-name">Monthly</div>
+          <div class="plan-price">R89</div>
+          <div class="plan-period">per month</div>
+          <div class="plan-features">✓ All series<br>✓ HD streaming<br>✓ 100 Soul / month<br>✓ Echo voting</div>
+          <button class="plan-btn plan-btn--outline" onclick="openModal('join')">Get Monthly</button>
+        </div>
+        <div class="plan-card featured">
+          <div class="plan-name">Annual</div>
+          <div class="plan-price">R59</div>
+          <div class="plan-period">per month · R708/yr</div>
+          <div class="plan-features">✓ All series<br>✓ HD streaming<br>✓ 200 Soul / month<br>✓ Early access releases</div>
+          <button class="plan-btn plan-btn--red" onclick="openModal('join')">Get Annual</button>
+        </div>
+      </div>
+
+      <div style="padding:16px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Buy Soul Tokens</div>
+
+      <!-- Soul Token packages -->
+      <div class="soul-topup">
+        <div class="soul-topup-title">Soul Tokens</div>
+        <div class="soul-topup-sub">Unlock episodes, vote in Echo events & unlock exclusive content</div>
+        <div class="soul-pkg-row">
+          <div class="soul-pkg" onclick="selectPkg(this)">
+            <span class="soul-pkg-n">50</span>
+            <span class="soul-pkg-label">Soul</span>
+            <span class="soul-pkg-price">R15</span>
+          </div>
+          <div class="soul-pkg active" onclick="selectPkg(this)">
+            <span class="soul-pkg-n">150</span>
+            <span class="soul-pkg-label">Soul</span>
+            <span class="soul-pkg-price">R39</span>
+          </div>
+          <div class="soul-pkg" onclick="selectPkg(this)">
+            <span class="soul-pkg-n">400</span>
+            <span class="soul-pkg-label">Soul</span>
+            <span class="soul-pkg-price">R89</span>
+          </div>
+          <div class="soul-pkg" onclick="selectPkg(this)">
+            <span class="soul-pkg-n">1000</span>
+            <span class="soul-pkg-label">Soul</span>
+            <span class="soul-pkg-price">R199</span>
+          </div>
+        </div>
+        <button class="btn-generate" style="margin-top:12px;font-size:12px;padding:11px" onclick="openModal('join')">Get Soul Tokens →</button>
+        <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text-faint)">
+          Soul Tokens have no cash value. <span style="color:var(--red);cursor:pointer" onclick="openModal('soul-terms')">Token Terms</span>
+        </div>
+      </div>
+
+      <!-- Website & App Store links -->
+      <div style="margin:16px 16px 0;padding:16px;background:var(--surface2);border-radius:16px;text-align:center">
+        <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Also Available On</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button onclick="window.open('https://www.sphynxmotion.com','_blank')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">🌐</span> sphynxmotion.com
+          </button>
+          <button onclick="openModal('coming')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px"></span> App Store
+          </button>
+          <button onclick="openModal('coming')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">▶</span> Google Play
+          </button>
+        </div>
+      </div>
+
+      <div style="height:20px"></div>
+    </div><!-- /member -->
+
+    <!-- ── MY LIST ───────────────────────────────────────────────────── -->
+    <div class="screen" id="mylist">
+
+      <!-- Tab strip -->
+      <div class="list-topbar">
+        <button class="list-tab active" onclick="switchListTab(this,'following')">Following</button>
+        <button class="list-tab" onclick="switchListTab(this,'history')">History</button>
+        <button class="list-tab" onclick="switchListTab(this,'reminder')">Reminders</button>
+        <div style="margin-left:auto;display:flex;align-items:center;padding-bottom:12px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+        </div>
+      </div>
+
+      <!-- Following tab content -->
+      <div id="tab-following">
+        <div class="follow-card" onclick="openVideoPlayer()">
+          <div class="follow-thumb">
+            <img src="assets/posters/image-11.jpg" alt="">
+            <div class="g-badge g-badge--hot" style="position:absolute;top:4px;right:4px;font-size:8px">Hot</div>
+          </div>
+          <div class="follow-info">
+            <div class="follow-title">Gold Veins</div>
+            <div class="follow-genres">Neo-Noir · Crime Drama · Family Secrets</div>
+            <div class="follow-ep">E3 / E24</div>
+          </div>
+        </div>
+        <div class="follow-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
+          <div class="follow-thumb"><img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover"></div>
+          <div class="follow-info">
+            <div class="follow-title">Frequency</div>
+            <div class="follow-genres">Tech Thriller · Conspiracy · Lagos</div>
+            <div class="follow-ep">E1 / E18</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History tab (hidden) -->
+      <div id="tab-history" style="display:none">
+        <div class="follow-card" onclick="openVideoPlayer()">
+          <div class="follow-thumb"><img src="assets/posters/image-11.jpg" alt=""></div>
+          <div class="follow-info">
+            <div class="follow-title">Gold Veins — E3</div>
+            <div class="follow-genres">Watched 2 hours ago · 34% complete</div>
+            <div class="follow-ep">Continue →</div>
+          </div>
+        </div>
+        <div class="follow-card">
+          <div class="follow-thumb"><img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover"></div>
+          <div class="follow-info">
+            <div class="follow-title">Frequency — E1</div>
+            <div class="follow-genres">Watched yesterday · Completed</div>
+            <div class="follow-ep">Watch E2 →</div>
+          </div>
+        </div>
+        <div class="follow-card">
+          <div class="follow-thumb"><img src="assets/posters/image-16.jpg" alt="The Last Lobola" style="width:100%;height:100%;object-fit:cover"></div>
+          <div class="follow-info">
+            <div class="follow-title">The Last Lobola — E2</div>
+            <div class="follow-genres">Watched 3 days ago · Completed</div>
+            <div class="follow-ep">Watch E3 →</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reminder set (hidden) -->
+      <div id="tab-reminder" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon">🔔</div>
+          <div class="empty-state-title">No reminders yet</div>
+          <div class="empty-state-sub">Set reminders for upcoming Echo events and new episode drops. They'll appear here.</div>
+        </div>
+      </div>
+
+      <!-- Most Trending -->
+      <div class="trending-section">
+        <div class="trending-title">Most Trending</div>
+        <div class="trending-grid" id="trendingGrid">
+
+          <div class="t-card" onclick="openVideoPlayer()">
+            <div class="t-thumb">
+              <img src="assets/posters/image-11.jpg" alt="">
+              <div class="t-rank">1</div>
+              <div class="t-fire">🔥 8.4K</div>
+            </div>
+            <div class="t-title">Gold Veins</div>
+            <div class="t-genre">Neo-Noir</div>
+          </div>
+
+          <div class="t-card" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
+            <div class="t-thumb">
+              <img src="assets/posters/image-16.jpg" alt="The Last Lobola" style="width:100%;height:100%;object-fit:cover">
+              <div class="t-rank">2</div>
+              <div class="t-fire">🔥 3.8K</div>
+            </div>
+            <div class="t-title">The Last Lobola</div>
+            <div class="t-genre">Diaspora</div>
+          </div>
+
+          <div class="t-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
+            <div class="t-thumb">
+              <img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover">
+              <div class="t-rank">3</div>
+              <div class="t-fire">🔥 5.1K</div>
+            </div>
+            <div class="t-title">Frequency</div>
+            <div class="t-genre">Tech Thriller</div>
+          </div>
+
+          <div class="t-card" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">
+            <div class="t-thumb">
+              <img src="assets/posters/image-17.jpg" alt="Nairobi Signal" style="width:100%;height:100%;object-fit:cover">
+              <div class="t-rank">4</div>
+              <div class="t-fire">🔥 2.1K</div>
+            </div>
+            <div class="t-title">Nairobi Signal</div>
+            <div class="t-genre">Underground</div>
+          </div>
+
+          <div class="t-card" onclick="openVideoPlayer('assets/videos/gold-veins-e4.mp4','Gold Veins','E4 — The Gold Room')">
+            <div class="t-thumb">
+              <img src="assets/posters/image-13.jpg" alt="Gold Veins E4" style="width:100%;height:100%;object-fit:cover">
+              <div class="t-rank">5</div>
+              <div class="t-fire">🔥 6.2K</div>
+            </div>
+            <div class="t-title">Gold Veins E4</div>
+            <div class="t-genre">Neo-Noir</div>
+          </div>
+
+          <div class="t-card" onclick="openVideoPlayer('assets/videos/gold-veins-e5.mp4','Gold Veins','E5 — Two Mothers')">
+            <div class="t-thumb">
+              <img src="assets/posters/image-14.jpg" alt="Gold Veins E5" style="width:100%;height:100%;object-fit:cover">
+              <div class="t-rank">6</div>
+              <div class="t-fire">🔥 4.7K</div>
+            </div>
+            <div class="t-title">Gold Veins E5</div>
+            <div class="t-genre">Neo-Noir</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="height:20px"></div>
+    </div><!-- /mylist -->
+
+    <!-- ── PROFILE ───────────────────────────────────────────────────── -->
+    <div class="screen" id="profile">
+
+      <div class="prof-topbar">
+        <span style="font-size:15px;font-weight:700;color:var(--text)">Profile</span>
+        <div class="prof-settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+      </div>
+
+      <!-- Avatar + Login -->
+      <div class="prof-header">
+        <div class="prof-avatar-wrap">👤</div>
+        <div>
+          <button id="profLoginBtn" class="prof-login-btn" onclick="openModal('login')">Log in <span style="color:var(--red)">›</span></button>
+          <button id="profLogoutBtn" class="prof-login-btn" style="display:none" onclick="logoutUser()">Log out <span style="color:var(--text-faint)">›</span></button>
+          <div class="prof-id">ID: 455938882 &nbsp;·&nbsp; <span style="color:var(--text-dim)">Following 0</span></div>
+        </div>
+      </div>
+
+      <!-- Guest CTA (hidden when logged in) -->
+      <div id="profGuestCta" style="background:var(--surface2);border-radius:14px;padding:16px;margin:0 16px 14px;text-align:center;border:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:22px;margin-bottom:8px">𓂀</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Track your Soul Score</div>
+        <div style="font-size:12px;color:var(--text-faint);margin-bottom:12px">Log in to see your stats, history, and earned Soul Tokens across devices.</div>
+        <button class="btn-generate" style="margin-bottom:8px" onclick="openModal('login')">Log In →</button>
+        <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);border:1px solid rgba(255,255,255,.1)" onclick="openModal('join')">Create Account</button>
+      </div>
+
+      <!-- Soul score summary (hidden for guest) -->
+      <div id="profSoulRow" class="prof-soul-row" style="display:none">
+        <div class="psr-ring">
+          <svg viewBox="0 0 52 52">
+            <circle fill="none" stroke="var(--surface3)" stroke-width="5" cx="26" cy="26" r="21"/>
+            <circle fill="none" stroke="url(#soulGrad)" stroke-width="5" stroke-linecap="round"
+              stroke-dasharray="132" stroke-dashoffset="37"
+              transform="rotate(-90 26 26)" cx="26" cy="26" r="21"/>
+          </svg>
+          <div class="psr-inner">𓂀</div>
+        </div>
+        <div class="psr-info">
+          <div class="psr-score">847</div>
+          <div class="psr-label">Soul Score</div>
+          <div class="psr-rank">✦ Deep Watcher · Top 12%</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--text-faint)">Episodes</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text)">142</div>
+          <div style="font-size:10px;color:var(--text-faint);margin-top:4px">Echo Votes</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text)">4</div>
+        </div>
+      </div>
+
+      <!-- Membership Banner -->
+      <div class="prof-member-banner">
+        <div class="pmb-discount">20% off</div>
+        <div class="pmb-label">Join Soul Pass</div>
+        <div class="pmb-sub">Enjoy exclusive benefits &amp; all series</div>
+        <div class="pmb-perks">
+          <div class="pmb-perk"><span class="pmb-perk-icon">📺</span><span class="pmb-perk-label">All original series</span></div>
+          <div class="pmb-perk"><span class="pmb-perk-icon">⚡</span><span class="pmb-perk-label">Daily points</span></div>
+          <div class="pmb-perk"><span class="pmb-perk-icon">🗳️</span><span class="pmb-perk-label">Echo voting</span></div>
+          <div class="pmb-perk"><span class="pmb-perk-icon">🎬</span><span class="pmb-perk-label">HD quality</span></div>
+        </div>
+        <button class="pmb-join-btn" onclick="switchScreen('member',document.querySelectorAll('.nav-btn')[2])">Join Now</button>
+      </div>
+
+      <!-- Menu groups -->
+      <div class="prof-menu-group">
+        <div class="prof-menu-item" onclick="switchScreen('member',document.querySelectorAll('.nav-btn')[2])">
+          <span class="pmi-icon">💳</span>
+          <span class="pmi-label">Soul Pass</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="openModal('wallet')">
+          <span class="pmi-icon">👛</span>
+          <span class="pmi-label">My Wallet</span>
+          <div class="pmi-right"><span class="pmi-value">847 Soul</span><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="openModal('rewards')">
+          <span class="pmi-icon">🎁</span>
+          <span class="pmi-label">Earn Soul</span>
+          <div class="pmi-right"><span class="pmi-badge">+70</span><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="switchScreen('mylist',document.querySelectorAll('.nav-btn')[3])">
+          <span class="pmi-icon">🕐</span>
+          <span class="pmi-label">History</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>
+      </div>
+
+      <div class="prof-menu-group">
+        <div class="prof-menu-item" onclick="openModal('coming')">
+          <span class="pmi-icon">🌍</span>
+          <span class="pmi-label">Language</span>
+          <div class="pmi-right"><span class="pmi-value">English</span><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="openModal('support')">
+          <span class="pmi-icon">💬</span>
+          <span class="pmi-label">Help &amp; Support</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="window.open('privacy.html','_blank')">
+          <span class="pmi-icon">🔒</span>
+          <span class="pmi-label">Privacy Policy</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="openModal('terms')">
+          <span class="pmi-icon">📄</span>
+          <span class="pmi-label">Terms of Use</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="openModal('content-policy')">
+          <span class="pmi-icon">🛡️</span>
+          <span class="pmi-label">Content Policy</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>
+      </div>
+
+      <div class="prof-menu-group">
+        <div class="prof-menu-item" onclick="window.open('https://www.sphynxmotion.com','_blank')">
+          <span class="pmi-icon">🌐</span>
+          <span class="pmi-label">Visit sphynxmotion.com</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>
+        <div class="prof-menu-item" onclick="openModal('delete-account')" style="color:var(--danger)">
+          <span class="pmi-icon">🗑️</span>
+          <span class="pmi-label" style="color:var(--danger)">Delete Account</span>
+          <div class="pmi-right"><span class="pmi-chevron" style="color:var(--danger)">›</span></div>
+        </div>
+      </div>
+
+      <!-- Version / secret admin access -->
+      <div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--text-faint)" id="versionTap" onclick="handleVersionTap()">
+        SPHYNX MOTION v1.0.0
+      </div>
+
+      <div style="height:20px"></div>
+    </div><!-- /profile -->
+
+
+    <!-- ── ADMIN (protected — not in public nav) ────────────────────── -->
+    <!-- Admin dashboard moved to /admin/ (protected separate area) -->
+
+  </div><!-- /screen-wrap -->
+
+  <!-- VIDEO PLAYER OVERLAY -->
+  <div class="video-overlay" id="videoOverlay">
+    <div class="video-header">
+      <button class="video-close" onclick="closeVideoPlayer()">✕</button>
+      <div>
+        <div class="video-header-title" id="videoTitle">Gold Veins</div>
+        <div class="video-header-ep" id="videoEp">S1 · E3 — "The Third Name"</div>
+      </div>
+    </div>
+    <div class="video-player-wrap" id="videoWrap" onclick="toggleVideoControls()">
+      <video id="mainVideo" src="assets/videos/gold-veins-e3.mp4" playsinline
+             style="width:100%;height:100%;object-fit:contain"
+             ontimeupdate="updateVideoProgress()"
+             onloadedmetadata="updateVideoProgress()"
+             onplay="updatePlayBtn()"
+             onpause="updatePlayBtn()"
+             onended="videoEnded()"></video>
+      <div class="video-controls" id="videoControls">
+        <div class="video-progress" onclick="seekVideo(event)">
+          <div class="video-progress-fill" id="videoProgressFill"></div>
+        </div>
+        <div class="video-btns">
+          <button class="video-btn-play" id="playPauseBtn" onclick="event.stopPropagation();togglePlay()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          </button>
+          <div class="video-time" id="videoTime">0:00 / 0:00</div>
+          <button class="video-close" onclick="event.stopPropagation();document.getElementById('mainVideo').muted=!document.getElementById('mainVideo').muted">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="switchScreen('home', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn" onclick="switchScreen('foryou', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><polygon points="8 21 16 21 12 17"/>
+        <circle cx="12" cy="10" r="3" fill="currentColor" opacity=".5"/>
+      </svg>
+      <span>Discover</span>
+    </button>
+    <button class="nav-btn" onclick="switchScreen('member', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      <span>Soul Pass</span>
+    </button>
+    <button class="nav-btn" onclick="switchScreen('mylist', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>Watchlist</span>
+    </button>
+    <button class="nav-btn" onclick="switchScreen('profile', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profile</span>
+      <div style="position:absolute;top:6px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--obsidian)"></div>
+    </button>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal-sheet" id="modalSheet">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toastContainer"></div>
+
+</div><!-- /phone -->
+</div><!-- /page -->
+
+<script>
+/* ─── INIT ───────────────────────────────────────────────────────────────── */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSplash();
+  initFyScroll();
+  initImages();
+  initVoting();
+  initBtnGenerate();
+  updateProfileUI();
+});
+
+/* ─── SPLASH ─────────────────────────────────────────────────────────────── */
+function initSplash() {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    if (!splash) return;
+    splash.style.opacity = '0';
+    setTimeout(() => splash.style.display = 'none', 600);
+  }, 2400);
+}
+
+/* ─── TOAST ──────────────────────────────────────────────────────────────── */
+function toast(msg, type = 'default') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const t = document.createElement('div');
+  t.className = 'toast' + (type !== 'default' ? ' toast-' + type : '');
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('visible')));
+  setTimeout(() => {
+    t.classList.remove('visible');
+    setTimeout(() => t.remove(), 400);
+  }, 2600);
+}
+
+/* ─── NAVIGATION ─────────────────────────────────────────────────────────── */
+function switchScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const screen = document.getElementById(id);
+  if (screen) { screen.classList.add('active'); screen.scrollTop = 0; }
+  if (btn) btn.classList.add('active');
+  if (id !== 'foryou') document.querySelectorAll('#fyStack video').forEach(v => v.pause());
+  if (id === 'foryou') fyPlayCurrent();
+}
+
+/* ─── HOME TABS ──────────────────────────────────────────────────────────── */
+function switchHomeTab(btn, tab) {
+  document.querySelectorAll('#homeTabStrip .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Could filter grid — for now just visual switch
+}
+
+/* ─── MY LIST TABS ───────────────────────────────────────────────────────── */
+function switchListTab(btn, tab) {
+  document.querySelectorAll('.list-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-following').style.display = tab === 'following' ? '' : 'none';
+  document.getElementById('tab-history').style.display   = tab === 'history'   ? '' : 'none';
+  document.getElementById('tab-reminder').style.display  = tab === 'reminder'  ? '' : 'none';
+}
+
+/* ─── SOUL TOKEN PACKAGES ────────────────────────────────────────────────── */
+function selectPkg(el) {
+  document.querySelectorAll('.soul-pkg').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ─── FOR YOU FEED ───────────────────────────────────────────────────────── */
+function initFyScroll() {
+  const stack = document.getElementById('fyStack');
+  if (!stack) return;
+  stack.addEventListener('scroll', () => {
+    clearTimeout(window._fyTimer);
+    window._fyTimer = setTimeout(fyPlayCurrent, 120);
+  }, { passive: true });
+}
+
+function fyPlayCurrent() {
+  const stack = document.getElementById('fyStack');
+  if (!stack) return;
+  const slides = stack.querySelectorAll('.fy-slide');
+  const idx = Math.round(stack.scrollTop / stack.clientHeight);
+  slides.forEach((s, i) => {
+    const v = s.querySelector('video');
+    if (!v) return;
+    if (i === idx) v.play().catch(() => {});
+    else { v.pause(); v.currentTime = 0; }
+  });
+}
+
+/* ─── FOR YOU ACTIONS ────────────────────────────────────────────────────── */
+function fyBookmark(el) {
+  const icon = el.querySelector('.fy-action-icon');
+  const path = icon.querySelector('svg path');
+  const bookmarked = el.dataset.bookmarked === '1';
+  if (!bookmarked) {
+    if (path) path.setAttribute('fill', 'var(--red)');
+    icon.style.background = 'rgba(230,30,36,.3)';
+    el.dataset.bookmarked = '1';
+    toast('✓ Added to Watchlist', 'success');
+  } else {
+    if (path) path.setAttribute('fill', 'none');
+    icon.style.background = '';
+    el.dataset.bookmarked = '0';
+    toast('Removed from Watchlist');
+  }
+}
+function fyShare() {
+  const url = window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: 'SPHYNX MOTION', url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(url).then(() => toast('📋 Link copied!', 'success')).catch(() => toast('📋 Copied!', 'success'));
+  }
+}
+
+/* ─── GENRE PILLS ────────────────────────────────────────────────────────── */
+function toggleGenre(el) {
+  el.classList.toggle('selected');
+}
+
+/* ─── VOTING SYSTEM (fixed) ──────────────────────────────────────────────── */
+const voteState = { selected: -1, cast: false };
+
+function initVoting() {
+  document.querySelectorAll('.vote-choice').forEach((el, idx) => {
+    el.addEventListener('click', () => selectVoteChoice(el, idx));
+  });
+  const btn = document.querySelector('.btn-vote');
+  if (btn) btn.addEventListener('click', confirmVote);
+}
+
+function selectVoteChoice(el, idx) {
+  if (voteState.cast) return;
+  document.querySelectorAll('.vote-choice').forEach(c => c.classList.remove('choice-selected'));
+  el.classList.add('choice-selected');
+  voteState.selected = idx;
+}
+
+function confirmVote() {
+  if (voteState.cast) return;
+  if (voteState.selected < 0) { toast('⚠️ Select a choice first', 'warn'); return; }
+  voteState.cast = true;
+
+  const section = document.querySelector('.vote-section') || document.querySelector('.vote-choices')?.parentElement;
+  if (section) section.classList.add('votes-revealed');
+
+  document.querySelectorAll('.vote-choice').forEach((c, i) => {
+    c.style.cursor = 'default';
+    if (i === voteState.selected) c.classList.add('voted');
+  });
+
+  const countEl = document.getElementById('voteCount');
+  if (countEl) {
+    const cur = parseInt((countEl.textContent || '0').replace(/[^0-9]/g, ''));
+    countEl.textContent = (cur + 1).toLocaleString() + ' votes';
+  }
+
+  const btn = document.querySelector('.btn-vote');
+  if (btn) {
+    btn.textContent = '✓ Vote Cast';
+    btn.style.background = 'linear-gradient(135deg,#50C878,#1A6640)';
+    btn.style.color = '#fff';
+    btn.disabled = true;
+  }
+  toast('⚡ +15 Soul spent · Vote cast!', 'soul');
+}
+
+/* ─── REACTIONS ──────────────────────────────────────────────────────────── */
+const reactionCounts = {};
+function reactEcho(el) {
+  const key = el.dataset.key || (el.dataset.key = Math.random().toString(36).slice(2));
+  const parts = el.textContent.trim().split(' ');
+  const emoji = parts[0];
+  if (!reactionCounts[key]) {
+    const raw = parts[1] || '0';
+    reactionCounts[key] = raw.endsWith('k') ? parseFloat(raw) * 1000 : parseInt(raw) || 0;
+  }
+  reactionCounts[key]++;
+  const n = reactionCounts[key];
+  el.textContent = emoji + ' ' + (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n);
+  el.style.borderColor = 'rgba(230,30,36,.5)';
+  el.style.color = 'var(--red)';
+  setTimeout(() => { el.style.borderColor = ''; el.style.color = ''; }, 600);
+}
+
+/* ─── COUNTDOWN ──────────────────────────────────────────────────────────── */
+let countdownSecs = 14 * 60 + 22;
+setInterval(() => {
+  countdownSecs = Math.max(0, countdownSecs - 1);
+  const el = document.getElementById('countdown');
+  if (!el) return;
+  if (countdownSecs === 0) { el.textContent = 'CLOSED'; return; }
+  const m = Math.floor(countdownSecs / 60).toString().padStart(2, '0');
+  const s = (countdownSecs % 60).toString().padStart(2, '0');
+  el.textContent = m + ':' + s;
+}, 1000);
+
+/* ─── MODALS ─────────────────────────────────────────────────────────────── */
+const modalContent = {
+  'coming': `
+    <div style="text-align:center;padding:10px 0">
+      <div style="font-size:36px;margin-bottom:10px">🎬</div>
+      <div class="modal-title">Coming Soon</div>
+      <div class="modal-sub">This feature is in production. Stay tuned for the next SPHYNX MOTION update.</div>
+    </div>
+  `,
+  'search': `
+    <div class="modal-title">Search</div>
+    <div style="background:var(--surface2);border-radius:10px;display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:14px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span style="font-size:13px;color:var(--text-faint)">Search series, genres...</span>
+    </div>
+    <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Popular Searches</div>
+    ${['Gold Veins','Frequency','The Last Lobola','Nairobi Signal','Neo-Noir','Romance'].map(t => `
+      <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:8px" onclick="closeModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${t}
+      </div>`).join('')}
+  `,
+  'join': `
+    <div class="modal-title">Join Soul Pass</div>
+    <div class="modal-sub">Unlock all series, download episodes, and earn double Soul Tokens every day.</div>
+    <div style="background:linear-gradient(135deg,var(--red-dark),var(--red));border-radius:12px;padding:16px;margin-bottom:14px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:#fff;font-family:'Space Grotesk',sans-serif">R59<span style="font-size:14px;font-weight:400">/month</span></div>
+      <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Billed annually · Cancel anytime</div>
+    </div>
+    <button class="btn-generate" style="margin-bottom:8px">Subscribe via App Store →</button>
+    <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim)">Subscribe via Google Play →</button>
+  `,
+  'login': `
+    <div class="modal-title">Log in to SPHYNX MOTION</div>
+    <div class="modal-sub">Sign in to sync your Soul Score, history, and memberships across devices.</div>
+    <div id="loginError" style="display:none;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:10px;padding:10px 12px;font-size:12px;color:#FF453A;margin-bottom:12px"></div>
+    <input id="loginEmail" type="email" placeholder="Email" autocomplete="email"
+      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
+    <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password"
+      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:14px"
+      onkeydown="if(event.key==='Enter')loginUser()">
+    <button class="btn-generate" onclick="loginUser()" id="loginSubmitBtn">Sign in →</button>
+    <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-faint)">
+      Don't have an account? <a href="#" onclick="openModal('signup');return false" style="color:var(--red);font-weight:600">Create one →</a>
+    </div>
+  `,
+  'signup': `
+    <div class="modal-title">Create Account</div>
+    <div class="modal-sub">Join SPHYNX MOTION — Africa's vertical drama platform.</div>
+    <div id="signupError" style="display:none;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:10px;padding:10px 12px;font-size:12px;color:#FF453A;margin-bottom:12px"></div>
+    <input id="signupName" type="text" placeholder="Display name" autocomplete="name"
+      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
+    <input id="signupEmail" type="email" placeholder="Email" autocomplete="email"
+      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
+    <input id="signupPassword" type="password" placeholder="Password (min 8 chars)" autocomplete="new-password"
+      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:14px">
+    <button class="btn-generate" onclick="signupUser()">Create Account →</button>
+    <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-faint)">
+      Already have an account? <a href="#" onclick="openModal('login');return false" style="color:var(--red);font-weight:600">Log in →</a>
+    </div>
+  `,
+  'wallet': `
+    <div class="modal-title">My Wallet</div>
+    <div style="background:var(--surface2);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px;border:1px solid rgba(230,30,36,.15)">
+      <div style="font-size:38px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1">847</div>
+      <div style="font-size:10px;color:var(--text-faint);letter-spacing:.12em;text-transform:uppercase;margin-top:4px">Soul Tokens</div>
+    </div>
+    <div style="font-size:11px;color:var(--text-faint);margin-bottom:10px">Recent transactions</div>
+    ${[['Episode unlock · Gold Veins E4','-15 Soul'],['Daily login bonus','+10 Soul'],['Echo vote · Gold Veins E6','-15 Soul'],['Top Up · 150 Soul','+150 Soul']].map(([label,amount]) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="font-size:12px;color:var(--text-dim)">${label}</span>
+        <span style="font-size:12px;font-weight:700;color:${amount.startsWith('+') ? 'var(--success)' : 'var(--text-dim)'}">${amount}</span>
+      </div>`).join('')}
+    <button class="btn-generate" style="margin-top:14px">Buy Soul Tokens →</button>
+  `,
+  'rewards': `
+    <div class="modal-title">Earn Soul</div>
+    <div style="background:rgba(230,30,36,.1);border:1px solid rgba(230,30,36,.2);border-radius:12px;padding:12px;margin-bottom:14px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--red)">+70 Soul available to claim!</div>
+    </div>
+    ${[['Daily Login','Log in every day','+10 Soul'],['First Watch','Watch any episode today','+15 Soul'],['Share Series','Share a series with a friend','+25 Soul'],['Complete E3','Finish Gold Veins E3','+20 Soul']].map(([title,desc,reward]) => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${title}</div>
+          <div style="font-size:10px;color:var(--text-faint);margin-top:2px">${desc}</div>
+        </div>
+        <div style="font-size:11px;font-weight:800;color:var(--red);white-space:nowrap">${reward}</div>
+      </div>`).join('')}
+  `,
+  'gold-veins': `
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px">
+      <img src="assets/posters/image-11.jpg" alt="Gold Veins" style="width:70px;height:90px;border-radius:12px;object-fit:cover;flex-shrink:0">
+      <div>
+        <div style="font-size:9px;font-weight:800;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Joburg Neo-Noir · Universe 01</div>
+        <div class="modal-title">Gold Veins</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <span class="pill pill-gold">S1 · 24 eps</span>
+          <span class="pill pill-red">● Live</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-sub">A fractured family controls half of Johannesburg's underground gold trade. When the matriarch vanishes, her three children — a cop, a club owner, a preacher — unravel a secret that could destroy everything.</div>
+    <button class="btn-watch" style="width:100%;padding:13px;font-size:14px">▶ Continue Episode 3</button>
+    <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--text-faint)">34% through arc · 15 Soul for Episode 6+</div>
+  `,
+  'script': `
+    <div class="modal-title">Script Oracle</div>
+    <div class="modal-sub">AI-generated vertical drama scripts with African narrative DNA, Ubuntu arc structure, and engineered cliffhangers every 45–90 seconds.</div>
+    <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid rgba(230,30,36,.1)">
+      <div style="font-size:9px;font-weight:800;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Sample Output Preview</div>
+      <div style="font-size:11px;color:var(--text-dim);line-height:1.7;font-family:monospace">
+        <span style="color:var(--red)">INT. GOLD MINE ELEVATOR — NIGHT</span><br>
+        Kemi grips the brass key. Darkness below.<br><br>
+        <span style="color:var(--red-bright)">KEMI (V.O.)</span><br>
+        My mother hid three things before she died.<br>
+        Two, I've already lost.<br><br>
+        The elevator jolts. Descends.<br><br>
+        <span style="color:var(--danger)">CLIFFHANGER: What's at the bottom?</span>
+      </div>
+    </div>
+    <button class="btn-generate">Generate Full Script →</button>
+  `,
+  'scene': `
+    <div class="modal-title">Scene Architect</div>
+    <div class="modal-sub">Vertical shot composition, lighting direction, and camera movement descriptions — production-ready shot lists optimized for phone cinema.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">📐</div>
+        <div style="font-size:10px;color:var(--text-dim)">Vertical Framing</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">💡</div>
+        <div style="font-size:10px;color:var(--text-dim)">Lighting Direction</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">🎥</div>
+        <div style="font-size:10px;color:var(--text-dim)">Camera Motion</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">🗂️</div>
+        <div style="font-size:10px;color:var(--text-dim)">Shot List Export</div>
+      </div>
+    </div>
+    <button class="btn-generate">Open Scene Architect →</button>
+  `,
+  'voice': `
+    <div class="modal-title">Voice Forge</div>
+    <div class="modal-sub">40+ African voice models across Zulu, Yoruba-inflected English, Amharic, Swahili, Cape Malay, and Nigerian Pidgin — with emotion layer controls.</div>
+    <div style="margin-bottom:12px">
+      ${['Zulu · Male · Deep', 'Yoruba-EN · Female · Mid', 'Cape Malay · Male · Smooth', 'Amharic · Female · Resonant', 'Nairobi-EN · Male · Sharp'].map((v) => `
+        <div class="voice-row" onclick="previewVoice(this,'${v}')">
+          <div style="width:32px;height:32px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🎙️</div>
+          <div style="flex:1;font-size:12px;color:var(--text)">${v}</div>
+          <div class="voice-play-btn">▶</div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn-generate">Select Voice & Generate →</button>
+  `,
+  'grade': `
+    <div class="modal-title">Motion Grade</div>
+    <div class="modal-sub">12 SPHYNX signature color looks built from ARRI cinema science, optimized for vertical mobile display.</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      ${[
+        ['Joburg Gold','linear-gradient(135deg,#3D1F06,#C68642)'],
+        ['Lagos Haze','linear-gradient(135deg,#062030,#0088CC)'],
+        ['Nairobi Blue','linear-gradient(135deg,#001A10,#006640)'],
+        ['Durban Dusk','linear-gradient(135deg,#1A0A1A,#8B3A8B)'],
+        ['Kinshasa Copper','linear-gradient(135deg,#1A0800,#8B4513)'],
+        ['Accra Clean','linear-gradient(135deg,#0A0A0A,#3A3A4A)'],
+      ].map(([name, bg]) => `
+        <div class="grade-option" data-grade="${name}" onclick="selectGrade(this)">
+          <div style="height:60px;border-radius:8px;background:${bg};margin-bottom:5px"></div>
+          <div style="font-size:9px;color:var(--text-dim);text-align:center">${name}</div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn-generate">Apply Grade →</button>
+  `,
+  'edit': `
+    <div class="modal-title">Auto-Edit Engine</div>
+    <div class="modal-sub">Upload raw vertical footage and receive an episode-ready cut with pacing, music beds, sound design, and emotion-aligned assembly.</div>
+    <div style="background:var(--surface2);border-radius:14px;padding:20px;text-align:center;border:2px dashed rgba(255,255,255,.08);margin-bottom:14px;cursor:pointer">
+      <div style="font-size:32px;margin-bottom:8px">📁</div>
+      <div style="font-size:13px;color:var(--text-dim)">Drop footage here or tap to upload</div>
+      <div style="font-size:10px;color:var(--text-faint);margin-top:4px">MP4 · MOV · vertical preferred · up to 2GB</div>
+    </div>
+    <button class="btn-generate">Start Auto-Edit →</button>
+  `,
+  'publish': `
+    <div class="modal-title">Publish Pipeline</div>
+    <div class="modal-sub">SPHYNX quality gate checks resolution, pacing, audio, and story structure. Pass it and you're live in 48 hours with instant monetization.</div>
+    <div style="margin-bottom:14px">
+      ${[
+        ['✓ Resolution Check','HD vertical 9:16 required','var(--success)'],
+        ['✓ Audio Quality','Spatial audio validation','var(--success)'],
+        ['⋯ Story Structure','AI narrative scoring','var(--red)'],
+        ['○ Pacing Analysis','Episode rhythm check','var(--text-faint)'],
+        ['○ Rights Clearance','Music + asset check','var(--text-faint)'],
+      ].map(([step, desc, color]) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <div style="font-size:14px;color:${color};width:16px">${step.split(' ')[0]}</div>
+          <div>
+            <div style="font-size:12px;color:var(--text)">${step.substring(2)}</div>
+            <div style="font-size:10px;color:var(--text-faint)">${desc}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn-generate">Submit for Review →</button>
+  `,
+  'terms': `
+    <div class="modal-title">Terms of Use</div>
+    <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SPHYNX MOTION (Pty) Ltd</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;max-height:320px;overflow-y:auto;padding-right:4px">
+      <strong style="color:var(--text)">1. Acceptance</strong><br>By accessing SPHYNX MOTION you agree to these Terms. If you do not agree, do not use the platform.<br><br>
+      <strong style="color:var(--text)">2. Eligibility</strong><br>You must be 16 years or older to use this service. Users under 18 require parental consent.<br><br>
+      <strong style="color:var(--text)">3. Account Responsibility</strong><br>You are responsible for all activity under your account. Do not share credentials. Notify us immediately of any unauthorised access.<br><br>
+      <strong style="color:var(--text)">4. Soul Tokens</strong><br>Soul Tokens are a virtual in-app currency with no cash value. They are non-transferable, non-refundable, and expire if your account is closed.<br><br>
+      <strong style="color:var(--text)">5. Content</strong><br>All content on SPHYNX MOTION is protected by copyright. You may not reproduce, redistribute, or resell any content.<br><br>
+      <strong style="color:var(--text)">6. User Conduct</strong><br>You agree not to upload harmful, illegal, or infringing content. We reserve the right to remove content and suspend accounts.<br><br>
+      <strong style="color:var(--text)">7. Termination</strong><br>We may terminate or suspend your account at any time for violation of these Terms.<br><br>
+      <strong style="color:var(--text)">8. Governing Law</strong><br>These Terms are governed by the laws of the Republic of South Africa.
+    </div>
+    <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">I Understand →</button>
+  `,
+  'support': `
+    <div class="modal-title">Help &amp; Support</div>
+    <div class="modal-sub">We're here to help. Reach us through any of the channels below.</div>
+    <div style="margin-bottom:14px">
+      ${[
+        ['📧','Email Support','support@sphynxmotion.com','mailto:support@sphynxmotion.com'],
+        ['🌐','Website','www.sphynxmotion.com','https://www.sphynxmotion.com'],
+        ['📱','Instagram','@sphynxmotion','https://www.sphynxmotion.com'],
+        ['❓','FAQ','Browse common questions','https://www.sphynxmotion.com'],
+      ].map(([icon,label,value,href]) => `
+        <div onclick="window.open('${href}')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">
+          <div style="font-size:20px;width:32px;text-align:center">${icon}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${label}</div>
+            <div style="font-size:11px;color:var(--text-faint)">${value}</div>
+          </div>
+          <div style="color:var(--text-faint)">›</div>
+        </div>`).join('')}
+    </div>
+    <div style="font-size:10px;color:var(--text-faint);text-align:center">Response time: within 48 hours on business days</div>
+  `,
+  'content-policy': `
+    <div class="modal-title">Content Policy</div>
+    <div class="modal-sub">SPHYNX MOTION is committed to a safe, inclusive viewing experience.</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;max-height:300px;overflow-y:auto">
+      <strong style="color:var(--text)">Prohibited Content</strong><br>
+      We do not permit content that includes hate speech, graphic violence, sexual exploitation, harassment, misinformation, or content that endangers minors.<br><br>
+      <strong style="color:var(--text)">Age Ratings</strong><br>
+      All series carry an age rating. Content rated 16+ or 18+ is clearly labelled. Parental controls are available in Settings.<br><br>
+      <strong style="color:var(--text)">Creator Standards</strong><br>
+      All creator submissions are reviewed by our moderation team before going live. Creators must hold rights to all submitted content.<br><br>
+      <strong style="color:var(--text)">Reporting</strong><br>
+      Use the Report button on any content card to flag violations. Our team responds within 24 hours.<br><br>
+      <strong style="color:var(--text)">Appeals</strong><br>
+      Creators may appeal content removal decisions by emailing support@sphynxmotion.com.
+    </div>
+    <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">Got It →</button>
+  `,
+  'delete-account': `
+    <div style="text-align:center;padding:10px 0 6px">
+      <div style="font-size:36px;margin-bottom:10px">⚠️</div>
+      <div class="modal-title" style="color:var(--danger)">Delete Account</div>
+      <div class="modal-sub" style="margin-bottom:16px">This action is permanent and cannot be undone. Your Soul Tokens, watch history, and profile data will be permanently deleted.</div>
+    </div>
+    <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.2);border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--text-dim);line-height:1.6">
+      Before deleting, you may request a copy of your data by emailing <span style="color:var(--text)">support@sphynxmotion.com</span>
+    </div>
+    <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);margin-bottom:8px" onclick="closeModal()">Cancel — Keep My Account</button>
+    <button class="btn-generate" style="background:var(--danger)" onclick="toast('📧 Deletion request sent to support@sphynxmotion.com');closeModal()">Send Deletion Request →</button>
+  `,
+  'report': `
+    <div class="modal-title">Report Content</div>
+    <div class="modal-sub">Select the reason that best describes the issue.</div>
+    <div id="reportOptions" style="margin-bottom:14px">
+      ${['Hateful or abusive content','Sexual or explicit content','Violence or graphic content','Misinformation or false claims','Spam or misleading','Copyright violation','Child safety concern','Other'].map(r => `
+        <div class="prof-menu-item" onclick="submitReport('${r}')" style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="font-size:13px;color:var(--text)">${r}</span>
+          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+        </div>`).join('')}
+    </div>
+  `,
+  'admin-login': `
+    <div style="text-align:center;padding:10px 0 16px">
+      <div style="font-size:32px;margin-bottom:8px">🔐</div>
+      <div class="modal-title">Admin Portal</div>
+      <div class="modal-sub">The admin dashboard is a protected separate area.</div>
+    </div>
+    <button class="btn-generate" onclick="closeModal();window.open('admin/index.html','_blank')">Open Admin Portal →</button>
+    <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Cancel</button>
+  `,
+  'soul-terms': `
+    <div class="modal-title">Soul Token Terms</div>
+    <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SPHYNX MOTION (Pty) Ltd</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;max-height:320px;overflow-y:auto;padding-right:4px">
+      <strong style="color:var(--text)">1. What are Soul Tokens?</strong><br>
+      Soul Tokens are a virtual in-app currency used exclusively within the SPHYNX MOTION platform. They hold no monetary value and cannot be exchanged for cash or transferred between accounts.<br><br>
+      <strong style="color:var(--text)">2. Earning Soul Tokens</strong><br>
+      Tokens are earned through daily logins, watching episodes, sharing series, and completing platform challenges. Bonus tokens are awarded to Soul Pass members.<br><br>
+      <strong style="color:var(--text)">3. Spending Soul Tokens</strong><br>
+      Tokens may be used to unlock premium episodes, Echo Votes, and exclusive digital content within the app.<br><br>
+      <strong style="color:var(--text)">4. Purchasing Soul Tokens</strong><br>
+      Additional tokens may be purchased via in-app purchase through the App Store or Google Play. All purchases are final and non-refundable unless required by applicable law.<br><br>
+      <strong style="color:var(--text)">5. Expiry &amp; Termination</strong><br>
+      Soul Tokens expire if your account is inactive for 12 consecutive months. All tokens are forfeited upon account deletion or termination for Terms violations.<br><br>
+      <strong style="color:var(--text)">6. Changes</strong><br>
+      We reserve the right to modify the Soul Token system at any time with reasonable notice to users.
+    </div>
+    <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">I Understand →</button>
+  `,
+};
+
+function submitReport(reason) {
+  document.getElementById('modalContent').innerHTML = `
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:36px;margin-bottom:12px">✅</div>
+      <div class="modal-title">Report Submitted</div>
+      <div class="modal-sub">Thank you. We've received your report for: <strong style="color:var(--text)">${reason}</strong>. Our moderation team will review it within 24 hours.</div>
+      <button class="btn-generate" style="margin-top:16px" onclick="closeModal()">Done</button>
+    </div>`;
+}
+
+function openModal(key) {
+  const overlay = document.getElementById('modal');
+  const content = document.getElementById('modalContent');
+  content.innerHTML = modalContent[key] || '<div class="modal-title">Coming Soon</div>';
+  overlay.classList.add('open');
+  initVoting();
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+/* ─── VIDEO PLAYER — defined below with HLS support ─────────────────────── */
+
+function closeVideoPlayer() {
+  const video = document.getElementById('mainVideo');
+  video.pause();
+  document.getElementById('videoOverlay').classList.remove('open');
+}
+
+function togglePlay() {
+  const video = document.getElementById('mainVideo');
+  video.paused ? video.play() : video.pause();
+  updatePlayBtn();
+}
+
+function updatePlayBtn() {
+  const video = document.getElementById('mainVideo');
+  const btn   = document.getElementById('playPauseBtn');
+  btn.innerHTML = video.paused
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+}
+
+function updateVideoProgress() {
+  const video = document.getElementById('mainVideo');
+  if (!video.duration) return;
+  const pct = (video.currentTime / video.duration) * 100;
+  document.getElementById('videoProgressFill').style.width = pct + '%';
+  const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+  document.getElementById('videoTime').textContent = `${fmt(video.currentTime)} / ${fmt(video.duration)}`;
+  updatePlayBtn();
+}
+
+function videoEnded() {
+  updatePlayBtn();
+}
+
+function seekVideo(e) {
+  const video = document.getElementById('mainVideo');
+  const bar   = e.currentTarget;
+  const ratio = e.offsetX / bar.offsetWidth;
+  video.currentTime = ratio * video.duration;
+}
+
+let controlsTimeout;
+function toggleVideoControls() {
+  const wrap = document.getElementById('videoWrap');
+  wrap.classList.toggle('show-controls');
+  clearTimeout(controlsTimeout);
+  if (wrap.classList.contains('show-controls')) {
+    controlsTimeout = setTimeout(() => wrap.classList.remove('show-controls'), 3000);
+  }
+}
+
+/* ─── GENERATE BUTTONS (fixed — all .btn-generate wired up) ─────────────── */
+function initBtnGenerate() {
+  document.querySelectorAll('.btn-generate').forEach(btn => {
+    if (!btn._generateWired) {
+      btn._generateWired = true;
+      btn.addEventListener('click', () => handleGenerate(btn));
+    }
+  });
+}
+
+function handleGenerate(btn) {
+  if (btn.disabled) return;
+  const orig = btn.textContent;
+  btn.textContent = '⋯ Processing...';
+  btn.disabled = true;
+  btn.style.opacity = '.65';
+  setTimeout(() => {
+    btn.textContent = '✓ Done!';
+    btn.style.background = 'linear-gradient(135deg,#50C878,#1A6640)';
+    btn.style.color = '#fff';
+    btn.style.opacity = '1';
+    toast('✓ Action completed successfully', 'success');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.disabled = false;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2000);
+  }, 1600);
+}
+
+/* ─── GRADE PICKER (single-select fixed) ─────────────────────────────────── */
+function selectGrade(el) {
+  document.querySelectorAll('.grade-option').forEach(g => g.classList.remove('selected'));
+  el.classList.add('selected');
+  toast('✓ ' + (el.dataset.grade || 'Look') + ' applied', 'success');
+}
+
+/* ─── VOICE PREVIEW (playing state fixed) ────────────────────────────────── */
+let activeVoiceRow = null;
+function previewVoice(el, name) {
+  if (activeVoiceRow === el) {
+    el.classList.remove('playing');
+    el.querySelector('.voice-play-btn').textContent = '▶';
+    activeVoiceRow = null;
+    return;
+  }
+  if (activeVoiceRow) {
+    activeVoiceRow.classList.remove('playing');
+    activeVoiceRow.querySelector('.voice-play-btn').textContent = '▶';
+  }
+  el.classList.add('playing');
+  el.querySelector('.voice-play-btn').textContent = '■';
+  activeVoiceRow = el;
+  toast('▶ Previewing: ' + name);
+  setTimeout(() => {
+    if (activeVoiceRow === el) {
+      el.classList.remove('playing');
+      el.querySelector('.voice-play-btn').textContent = '▶';
+      activeVoiceRow = null;
+    }
+  }, 3200);
+}
+
+/* ─── IMAGE FALLBACKS ────────────────────────────────────────────────────── */
+function initImages() {
+  document.querySelectorAll('img').forEach(img => {
+    img.onerror = function() { this.style.display = 'none'; };
+  });
+  document.querySelectorAll('.g-thumb, .t-thumb').forEach(thumb => {
+    if (thumb.querySelector('.report-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'report-btn';
+    btn.textContent = '⋯';
+    btn.title = 'Report';
+    btn.addEventListener('click', e => { e.stopPropagation(); openModal('report'); });
+    thumb.appendChild(btn);
+  });
+}
+
+/* ─── ADMIN AUTH (7 taps on version → PIN modal) ────────────────────────── */
+let _adminTaps = 0, _adminTimer;
+function handleVersionTap() {
+  _adminTaps++;
+  clearTimeout(_adminTimer);
+  if (_adminTaps >= 7) {
+    _adminTaps = 0;
+    openModal('admin-login');
+  } else if (_adminTaps >= 4) {
+    toast(`${7 - _adminTaps} more taps to unlock…`);
+  }
+  _adminTimer = setTimeout(() => { _adminTaps = 0; }, 2000);
+}
+/* checkAdminPin removed — admin is now at /admin/index.html */
+
+/* ─── SUPABASE CLIENT + REAL AUTH ───────────────────────────────────────── */
+let _sb = null;
+let isLoggedIn = false;
+let _currentUser = null;
+
+async function initSupabase() {
+  try {
+    const cfg = await fetch('/api/config').then(r => r.json());
+    if (cfg.supabaseUrl && cfg.supabaseAnonKey) {
+      _sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      const { data: { session } } = await _sb.auth.getSession();
+      if (session) {
+        isLoggedIn = true;
+        _currentUser = session.user;
+        document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax`;
+      }
+      _sb.auth.onAuthStateChange((event, session) => {
+        isLoggedIn = !!session;
+        _currentUser = session?.user || null;
+        if (session) document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax`;
+        else document.cookie = 'sphynx_session=;path=/;max-age=0';
+        updateProfileUI();
+      });
+    }
+  } catch {}
+}
+
+function updateProfileUI() {
+  const soulRow   = document.getElementById('profSoulRow');
+  const guestCta  = document.getElementById('profGuestCta');
+  const loginBtn  = document.getElementById('profLoginBtn');
+  const logoutBtn = document.getElementById('profLogoutBtn');
+  if (!soulRow) return;
+  if (isLoggedIn) {
+    soulRow.style.display   = '';
+    guestCta.style.display  = 'none';
+    loginBtn.style.display  = 'none';
+    logoutBtn.style.display = '';
+  } else {
+    soulRow.style.display   = 'none';
+    guestCta.style.display  = '';
+    loginBtn.style.display  = '';
+    logoutBtn.style.display = 'none';
+  }
+}
+
+async function loginUser() {
+  const email = document.getElementById('loginEmail')?.value?.trim();
+  const pass  = document.getElementById('loginPassword')?.value;
+  const errEl = document.getElementById('loginError');
+  const btn   = document.getElementById('loginSubmitBtn');
+  if (!email || !pass) { if (errEl) { errEl.textContent = 'Enter your email and password.'; errEl.style.display = ''; } return; }
+  if (btn) btn.textContent = 'Signing in…';
+  try {
+    if (!_sb) throw new Error('App not fully configured — Supabase keys missing in server/.env');
+    const { error } = await _sb.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    closeModal();
+    toast('Welcome back!', 'success');
+  } catch (e) {
+    if (errEl) { errEl.textContent = e.message || 'Login failed.'; errEl.style.display = ''; }
+  } finally {
+    if (btn) btn.textContent = 'Sign in →';
+  }
+}
+
+async function signupUser() {
+  const name  = document.getElementById('signupName')?.value?.trim();
+  const email = document.getElementById('signupEmail')?.value?.trim();
+  const pass  = document.getElementById('signupPassword')?.value;
+  const errEl = document.getElementById('signupError');
+  if (!email || !pass || pass.length < 8) {
+    if (errEl) { errEl.textContent = 'Valid email and password (min 8 chars) required.'; errEl.style.display = ''; }
+    return;
+  }
+  try {
+    if (!_sb) throw new Error('App not fully configured — Supabase keys missing in server/.env');
+    const { error } = await _sb.auth.signUp({ email, password: pass, options: { data: { display_name: name || email.split('@')[0] } } });
+    if (error) throw error;
+    closeModal();
+    toast('Account created! Check your email to confirm.', 'success');
+  } catch (e) {
+    if (errEl) { errEl.textContent = e.message || 'Signup failed.'; errEl.style.display = ''; }
+  }
+}
+
+async function logoutUser() {
+  if (_sb) await _sb.auth.signOut();
+  isLoggedIn = false;
+  _currentUser = null;
+  document.cookie = 'sphynx_session=;path=/;max-age=0';
+  toast('Logged out');
+  updateProfileUI();
+}
+
+/* ─── VIDEO PLAYER — HLS SUPPORT ────────────────────────────────────────── */
+function openVideoPlayer(src, title, ep, type) {
+  const overlay = document.getElementById('videoOverlay');
+  const video   = document.getElementById('mainVideo');
+
+  if (src) {
+    const isHls = type === 'hls' || src.includes('.m3u8');
+    if (isHls && window.Hls && Hls.isSupported()) {
+      if (window._hls) { window._hls.destroy(); window._hls = null; }
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      window._hls = hls;
+    } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src; // Safari native HLS
+    } else if (!isHls) {
+      if (window._hls) { window._hls.destroy(); window._hls = null; }
+      if (video.src !== new URL(src, location.href).href) video.src = src;
+    }
+    document.getElementById('videoProgressFill').style.width = '0%';
+    document.getElementById('videoTime').textContent = '0:00 / --:--';
+  }
+
+  document.getElementById('videoTitle').textContent = title || 'Gold Veins';
+  document.getElementById('videoEp').textContent    = ep    || 'S1 · E3 — "The Third Name"';
+  overlay.classList.add('open');
+  video.play().catch(() => {});
+  updatePlayBtn();
+}
+
+/* ─── EPISODE / SERIES PLAYBACK FROM API ────────────────────────────────── */
+async function playSeries(seriesId) {
+  try {
+    const res  = await fetch('/api/content/series/' + seriesId);
+    const data = await res.json();
+    const ep   = (data.series?.episodes || [])[0];
+    if (!ep) { toast('No episodes available yet'); return; }
+    playEpisode(ep.id, data.series.title, 'E' + ep.episode_number + ' — ' + ep.title);
+  } catch { toast('Could not load episode'); }
+}
+
+async function playEpisode(episodeId, title, epLabel) {
+  try {
+    const res  = await fetch('/api/content/episodes/' + episodeId + '/play', {
+      credentials: 'include',
+      headers: _currentUser ? { Authorization: 'Bearer ' + (_sb ? (await _sb.auth.getSession()).data.session?.access_token : '') } : {},
+    });
+    const data = await res.json();
+    if (res.status === 401) { openModal('login'); return; }
+    if (res.status === 403) { toast(data.cost + ' Soul required — buy Soul Tokens to watch'); return; }
+    if (!res.ok) { toast(data.error || 'Playback error'); return; }
+    openVideoPlayer(data.url, title, epLabel, data.type);
+  } catch { toast('Could not load video'); }
+}
+
+/* ─── LIVE CONTENT LOADING ──────────────────────────────────────────────── */
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderCard(s) {
+  const badge = s.is_featured ? 'g-badge--hot' : 'g-badge--new';
+  const label = s.is_featured ? 'Hot' : 'New';
+  const poster = s.poster_url || 'assets/posters/image-11.jpg';
+  return `
+    <div class="g-card" onclick="playSeries('${esc(s.id)}')">
+      <div class="g-thumb">
+        <img src="${esc(poster)}" alt="${esc(s.title)}" style="width:100%;height:100%;object-fit:cover">
+        <div class="g-badge ${badge}">${label}</div>
+        <div class="g-views">▶ ${s.views ? (s.views > 999 ? (s.views/1000).toFixed(1)+'K' : s.views) : '—'}</div>
+        <button class="report-btn" onclick="event.stopPropagation();openModal('report')" title="Report">⋯</button>
+      </div>
+      <div class="g-title">${esc(s.title)}</div>
+      <div class="g-genre">${esc(s.genre || '')}</div>
+    </div>`;
+}
+
+function renderSlide(s) {
+  const poster = s.poster_url || 'assets/posters/image-11.jpg';
+  return `
+    <div class="fy-slide">
+      <img class="fy-bg" src="${esc(poster)}" alt="${esc(s.title)}">
+      <div class="fy-grad"></div>
+      <div class="fy-right">
+        <div class="fy-action" onclick="fyBookmark(this)">
+          <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="fy-action-count">—</div>
+        </div>
+        <div class="fy-action" onclick="fyShare()">
+          <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+          <div class="fy-action-count">Share</div>
+        </div>
+        <div class="fy-action" onclick="playSeries('${esc(s.id)}')">
+          <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg></div>
+          <div class="fy-action-count">Play</div>
+        </div>
+      </div>
+      <div class="fy-bottom">
+        <div class="fy-series-label">● Live · ${esc(s.genre || '')}</div>
+        <div class="fy-title">${esc(s.title)}</div>
+        <div class="fy-tags"><span class="fy-tag">${esc(s.genre || '')}</span></div>
+        <div class="fy-desc">${esc(s.description || '')}</div>
+        <button class="fy-watch-btn" onclick="playSeries('${esc(s.id)}')">Start Watching</button>
+      </div>
+    </div>`;
+}
+
+function renderTCard(s, rank) {
+  const poster = s.poster_url || 'assets/posters/image-11.jpg';
+  const views  = s.views ? (s.views > 999 ? (s.views/1000).toFixed(1)+'K' : s.views) : '';
+  return `
+    <div class="t-card" onclick="playSeries('${esc(s.id)}')">
+      <div class="t-thumb">
+        <img src="${esc(poster)}" alt="${esc(s.title)}" style="width:100%;height:100%;object-fit:cover">
+        <div class="t-rank">${rank}</div>
+        ${views ? '<div class="t-fire">🔥 ' + views + '</div>' : ''}
+      </div>
+      <div class="t-title">${esc(s.title)}</div>
+      <div class="t-genre">${esc(s.genre || '')}</div>
+    </div>`;
+}
+
+async function loadContent() {
+  try {
+    const res  = await fetch('/api/content/featured');
+    if (!res.ok) return;
+    const { featured = [], trending = [] } = await res.json();
+    if (!featured.length && !trending.length) return; // no real content yet — keep demo
+
+    const allSeries = [...featured, ...trending].filter((s, i, a) => a.findIndex(x => x.id === s.id) === i);
+
+    if (allSeries.length) {
+      document.getElementById('homeGrid').innerHTML = allSeries.map(s => renderCard(s)).join('');
+    }
+    if (featured.length) {
+      document.getElementById('fyStack').innerHTML = featured.map(s => renderSlide(s)).join('');
+      initFyScroll();
+    }
+    if (trending.length) {
+      const tg = document.getElementById('trendingGrid');
+      if (tg) tg.innerHTML = trending.map((s, i) => renderTCard(s, i + 1)).join('');
+    }
+  } catch { /* API unavailable — keep demo content */ }
+}
+
+/* ─── BOOT ───────────────────────────────────────────────────────────────── */
+(async () => {
+  await initSupabase();
+  updateProfileUI();
+  loadContent();
+})();
+
+/* Admin actions moved to /admin/dashboard.html */
+</script>
+</body>
+</html>

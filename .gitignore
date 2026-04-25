@@ -1,0 +1,29 @@
+# ── SECRETS — NEVER COMMIT THESE ──────────────────────────────────────────────
+server/.env
+.env
+.env.local
+.env.*.local
+
+# ── NODE ───────────────────────────────────────────────────────────────────────
+node_modules/
+server/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── OS ─────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── UPLOAD TEMP ────────────────────────────────────────────────────────────────
+server/uploads/
+*.tmp
+
+# ── CAPACITOR NATIVE (generated, not source) ──────────────────────────────────
+ios/
+android/
+
+# ── EDITOR ─────────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
