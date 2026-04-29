@@ -1,8 +1,10 @@
 # ── SECRETS — NEVER COMMIT THESE ──────────────────────────────────────────────
 server/.env
+server/.env.production
 .env
 .env.local
 .env.*.local
+capacitor.config.json.xmp
 
 # ── NODE ───────────────────────────────────────────────────────────────────────
 node_modules/
