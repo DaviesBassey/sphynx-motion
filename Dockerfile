@@ -14,12 +14,12 @@ COPY . .
 # Remove dev/native artifacts not needed in production
 RUN rm -rf ios android node_modules .git scripts
 
-EXPOSE 3000
+# Render injects PORT at runtime (default 10000). EXPOSE is documentation only.
+EXPOSE 10000
 
 ENV NODE_ENV=production
-ENV PORT=3000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD wget -qO- "http://localhost:${PORT:-10000}/api/health" || exit 1
 
 CMD ["node", "server/index.js"]
