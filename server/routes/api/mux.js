@@ -11,10 +11,14 @@ function muxClient() {
   return new Mux({ tokenId: process.env.MUX_TOKEN_ID, tokenSecret: process.env.MUX_TOKEN_SECRET });
 }
 
-// POST /api/admin/uploads/mux-url
-// Creates a Mux direct upload URL — episode video is uploaded from browser directly to Mux.
+// POST /api/admin/video/mux-url
+// Creates a Mux direct upload URL. Optionally saves upload_id to the episode
+// row (via episode_id body param) so the webhook can match the asset later.
 router.post('/mux-url', requireAuth, requireRole('admin'), async (req, res) => {
-  if (!process.env.MUX_TOKEN_ID) return res.status(503).json({ error: 'Mux not configured — add MUX_TOKEN_ID and MUX_TOKEN_SECRET to server/.env' });
+  if (!process.env.MUX_TOKEN_ID) {
+    return res.status(503).json({ error: 'Mux not configured — add MUX_TOKEN_ID and MUX_TOKEN_SECRET to server/.env' });
+  }
+  const { episode_id } = req.body;
   try {
     const mux    = muxClient();
     const upload = await mux.video.uploads.create({
@@ -24,7 +28,16 @@ router.post('/mux-url', requireAuth, requireRole('admin'), async (req, res) => {
         mp4_support: 'capped-1080p',
       },
     });
-    res.json({ upload_id: upload.id, url: upload.url });
+
+    // Immediately bind the upload to the episode so the webhook can find it
+    if (episode_id) {
+      await supabaseAdmin
+        .from('episodes')
+        .update({ mux_upload_id: upload.id, mux_playback_id: null, mux_asset_id: null })
+        .eq('id', episode_id);
+    }
+
+    res.json({ upload_id: upload.id, url: upload.url, episode_id: episode_id || null });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

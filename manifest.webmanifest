@@ -31,6 +31,20 @@
       "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Home screen — trending series"
+    },
+    {
+      "src": "assets/posters/image-13.jpg",
+      "sizes": "600x900",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "For You feed — vertical drama"
+    },
+    {
+      "src": "assets/posters/image-15.jpg",
+      "sizes": "600x900",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Soul Pass membership"
     }
   ],
   "shortcuts": [
@@ -44,5 +58,17 @@
       "url": "/#mylist",
       "description": "Your saved series"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/sphynx-motion/id0000000000"
+    },
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.sphynxmotion.app",
+      "id": "com.sphynxmotion.app"
+    }
+  ],
+  "prefer_related_applications": false
 }

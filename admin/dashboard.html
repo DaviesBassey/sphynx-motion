@@ -170,6 +170,7 @@
       <div class="nav-item" data-page="episodes"><span class="nav-icon">▶</span><span>Episodes</span></div>
       <div class="nav-item" data-page="upload"><span class="nav-icon">⬆️</span><span>Upload</span></div>
       <div class="nav-item" data-page="moderation"><span class="nav-icon">🛡️</span><span>Moderation</span><div class="nav-badge" id="modBadge" style="display:none">0</div></div>
+      <div class="nav-item" data-page="languages"><span class="nav-icon">🌍</span><span>Languages</span></div>
 
       <div class="sb-section">Users</div>
       <div class="nav-item" data-page="users"><span class="nav-icon">👥</span><span>Users</span></div>
@@ -188,6 +189,7 @@
     </div>
     <div class="sb-footer">
       <div class="sb-user">Signed in as<br><strong id="sbUser">—</strong></div>
+      <a href="/" style="display:block;text-align:center;font-size:11px;color:var(--text-dim);text-decoration:none;padding:6px;border-radius:6px;margin-bottom:6px;transition:color .15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-dim)'">← Public App</a>
       <button class="btn-logout" onclick="logout()">Sign Out</button>
     </div>
   </nav>
@@ -322,6 +324,50 @@
           </select>
         </div>
         <div id="modList"><div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div></div>
+      </div>
+    </div>
+
+    <!-- ════ LANGUAGES ════ -->
+    <div class="page" id="page-languages">
+      <div class="page-hdr">
+        <div class="page-title">Languages</div>
+        <div class="page-sub">Manage supported languages and UI translations</div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">Supported Languages</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addLanguage')">+ Add Language</button>
+        </div>
+        <table>
+          <thead><tr><th>Code</th><th>English Name</th><th>Native Name</th><th>RTL</th><th>Default</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="langsTable"><tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">UI Translations Editor</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="form-select" id="transLangSel" style="width:170px;padding:8px 12px" onchange="loadTranslations()">
+              <option value="">Select language…</option>
+            </select>
+            <select class="form-select" id="transNsSel" style="width:140px;padding:8px 12px" onchange="loadTranslations()">
+              <option value="">All namespaces</option>
+              <option value="nav">nav</option>
+              <option value="home">home</option>
+              <option value="player">player</option>
+              <option value="profile">profile</option>
+              <option value="member">member</option>
+            </select>
+          </div>
+        </div>
+        <div id="transEditor">
+          <div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">Select a language above to view and edit translations</div>
+        </div>
+        <div id="transSaveRow" style="display:none;margin-top:14px">
+          <button class="btn btn-primary" onclick="saveTranslations()">Save Translations →</button>
+        </div>
       </div>
     </div>
 
@@ -509,8 +555,8 @@ async function checkHealth() {
     currentUser = { display_name: 'Admin', email: '', role: 'admin' };
   }
 
-  // Populate sidebar
-  document.getElementById('sbUser').textContent = currentUser.display_name || currentUser.email || 'Admin';
+  // Populate sidebar — always show email so admin knows which account is active
+  document.getElementById('sbUser').textContent = currentUser.email || currentUser.display_name || 'Admin';
   document.getElementById('sbRole').innerHTML   = `Role: <strong>${currentUser.role || '—'}</strong>`;
   document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-ZA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
@@ -550,6 +596,7 @@ function showPage(name, navEl) {
     analytics:     loadAnalytics,
     audit:         loadAuditLog,
     settings:      loadSettings,
+    languages:     loadLanguages,
   };
   loaders[name]?.();
 }
@@ -612,8 +659,9 @@ const statusBadge = s => ({ live:'b-live', draft:'b-draft', pending:'b-pend', ac
 // ── OVERVIEW ───────────────────────────────────────────────────────────────────
 async function loadOverview() {
   try {
-    const [stats, top, chart] = await Promise.all([
+    const [stats, contentStats, top, chart] = await Promise.all([
       api('GET', '/api/admin/analytics/overview'),
+      api('GET', '/api/admin/content/stats'),
       api('GET', '/api/admin/analytics/top-content?limit=5'),
       api('GET', '/api/admin/analytics/viewership?days=7'),
     ]);
@@ -621,8 +669,10 @@ async function loadOverview() {
     document.getElementById('overviewKpis').innerHTML = `
       <div class="kpi gold"><div class="kpi-label">Total Users</div><div class="kpi-value">${fmtNum(stats.totalUsers)}</div></div>
       <div class="kpi green"><div class="kpi-label">Active Subscriptions</div><div class="kpi-value">${fmtNum(stats.activeSubscriptions)}</div></div>
-      <div class="kpi violet"><div class="kpi-label">Total Views</div><div class="kpi-value">${fmtNum(stats.totalViews)}</div></div>
-      <div class="kpi red"><div class="kpi-label">Pending Moderation</div><div class="kpi-value">${fmtNum(stats.pendingModeration)}</div></div>
+      <div class="kpi violet"><div class="kpi-label">Total Series</div><div class="kpi-value">${fmtNum(contentStats.series)}</div></div>
+      <div class="kpi red"><div class="kpi-label">Total Episodes</div><div class="kpi-value">${fmtNum(contentStats.episodes)}</div></div>
+      <div class="kpi"><div class="kpi-label">Total Views</div><div class="kpi-value">${fmtNum(stats.totalViews || contentStats.totalViews)}</div></div>
+      <div class="kpi warn"><div class="kpi-label">Pending Moderation</div><div class="kpi-value">${fmtNum(stats.pendingModeration)}</div></div>
     `;
 
     // Viewership chart
@@ -681,7 +731,11 @@ async function loadSeries() {
         <td><span class="badge ${statusBadge(s.status)}">${s.status}</span></td>
         <td>${s.is_featured ? '⭐' : '—'}</td>
         <td>${fmtDate(s.created_at)}</td>
-        <td><button class="td-act" onclick="openModal('editSeries',${JSON.stringify(s).replace(/"/g,'&quot;')})">Edit</button></td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="td-act" onclick="openModal('editSeries',${JSON.stringify(s).replace(/"/g,'&quot;')})">Edit</button>
+          <button class="td-act" style="color:${s.status==='live'?'var(--warning)':'var(--green)'}"
+            onclick="toggleSeriesStatus('${s.id}','${s.status}')">${s.status==='live'?'Unpublish':'Publish'}</button>
+        </td>
       </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No series found</td></tr>`;
     document.getElementById('seriesTable').innerHTML = rows;
     document.getElementById('seriesPagination').textContent = `${data.total || 0} total · Page ${seriesPage}`;
@@ -726,7 +780,11 @@ async function loadEpisodes() {
         <td>${ep.is_free ? '✓ Free' : `${ep.soul_cost} Soul`}</td>
         <td>${ep.duration ? Math.floor(ep.duration/60)+'m '+ep.duration%60+'s' : '—'}</td>
         <td><span class="badge ${statusBadge(ep.status)}">${ep.status}</span></td>
-        <td><button class="td-act" onclick="openModal('editEpisode',${JSON.stringify(ep).replace(/"/g,'&quot;')})">Edit</button></td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="td-act" onclick="openModal('editEpisode',${JSON.stringify(ep).replace(/"/g,'&quot;')})">Edit</button>
+          <button class="td-act" style="color:${ep.status==='live'?'var(--warning)':'var(--green)'}"
+            onclick="toggleEpisodeStatus('${ep.id}','${ep.status}')">${ep.status==='live'?'Unpublish':'Publish'}</button>
+        </td>
       </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">No episodes yet</td></tr>`;
     document.getElementById('episodesTable').innerHTML = rows;
   } catch {
@@ -1021,6 +1079,28 @@ function handleDrop(e, type) {
   if (file) uploadFile(type, file);
 }
 
+// ── INLINE POSTER UPLOAD (used inside Series modals) ──────────────────────────
+async function inlinePosterUpload(input, urlInputId, previewId, statusId) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById(statusId);
+  if (statusEl) statusEl.textContent = 'Uploading…';
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const data = await apiUpload('/api/admin/uploads/poster', fd);
+    if (data.url) {
+      const urlInput = document.getElementById(urlInputId);
+      if (urlInput) urlInput.value = data.url;
+      const prev = document.getElementById(previewId);
+      if (prev) { prev.src = data.url; prev.style.display = ''; }
+      if (statusEl) statusEl.textContent = '✓ Uploaded';
+    }
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '✗ ' + e.message;
+  }
+}
+
 // ── CSV EXPORT (stub) ──────────────────────────────────────────────────────────
 function exportCSV(type) {
   toast(`CSV export for ${type} — connect to backend export endpoint`, 'ok');
@@ -1034,12 +1114,54 @@ const MODALS = {
     <div class="modal-sub">Create a new series on the platform</div>
     <form id="seriesForm">
       <div class="form-row"><label class="form-label">Title *</label><input class="form-input" name="title" required placeholder="e.g. Gold Veins"></div>
-      <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Series synopsis…"></textarea></div>
+      <div class="form-row"><label class="form-label">Synopsis</label><textarea class="form-textarea" name="description" placeholder="Series synopsis…"></textarea></div>
       <div class="form-grid">
-        <div class="form-row"><label class="form-label">Genre</label><select class="form-select" name="genre"><option>Neo-Noir</option><option>Romance</option><option>Thriller</option><option>Drama</option><option>Sci-Fi</option><option>Comedy</option><option>Crime</option><option>Diaspora</option></select></div>
-        <div class="form-row"><label class="form-label">Age Rating</label><select class="form-select" name="age_rating"><option>PG</option><option>13</option><option>16</option><option>18</option></select></div>
+        <div class="form-row"><label class="form-label">Genre</label>
+          <select class="form-select" name="genre">
+            <option>Neo-Noir</option><option>Romance</option><option>Thriller</option>
+            <option>Drama</option><option>Sci-Fi</option><option>Comedy</option>
+            <option>Crime</option><option>Diaspora</option><option>Action</option><option>Mystery</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Age Rating</label>
+          <select class="form-select" name="age_rating">
+            <option>PG</option><option>13</option><option>16</option><option>18</option>
+          </select>
+        </div>
       </div>
-      <div class="form-row"><label class="form-label">Poster URL (or upload above first)</label><input class="form-input" name="poster_url" placeholder="https://…"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Original Language</label>
+          <select class="form-select" name="language">
+            <option value="en">English</option><option value="zu">isiZulu</option>
+            <option value="xh">isiXhosa</option><option value="af">Afrikaans</option>
+            <option value="st">Sesotho</option><option value="sw">Swahili</option>
+            <option value="yo">Yoruba</option><option value="ha">Hausa</option>
+            <option value="pcm">Nigerian Pidgin</option><option value="fr">French</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Status</label>
+          <select class="form-select" name="status">
+            <option value="draft">draft</option>
+            <option value="live">live — publish immediately</option>
+            <option value="archived">archived</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Poster</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="flex:1">
+            <input class="form-input" name="poster_url" id="addPosterUrl" placeholder="Paste URL or upload →" style="margin-bottom:6px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="file" id="addPosterFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="inlinePosterUpload(this,'addPosterUrl','addPosterPreview','addPosterStatus')">
+              <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;white-space:nowrap" onclick="document.getElementById('addPosterFile').click()">📎 Upload image</span>
+              <span id="addPosterStatus" style="font-size:11px;color:var(--text-faint)"></span>
+            </label>
+          </div>
+          <img id="addPosterPreview" src="" style="display:none;width:48px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)">
+        </div>
+      </div>
+      <div class="form-row"><label class="form-label">Trailer URL</label><input class="form-input" name="trailer_url" placeholder="https://stream.mux.com/…"></div>
       <div style="display:flex;gap:16px;margin-bottom:14px">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_featured"> Featured</label>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_trending"> Trending</label>
@@ -1049,24 +1171,47 @@ const MODALS = {
 
   editSeries: (s) => {
     if (typeof s === 'string') try { s = JSON.parse(s); } catch {}
+    const genres = ['Neo-Noir','Romance','Thriller','Drama','Sci-Fi','Comedy','Crime','Diaspora','Action','Mystery'];
+    const genreOpts = genres.map(g => `<option ${s.genre===g?'selected':''}>${g}</option>`).join('');
     return `
     <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-title">Edit: ${s.title}</div>
+    <div class="modal-title">Edit Series</div>
+    <div class="modal-sub" style="font-weight:600;color:var(--text)">${s.title}</div>
     <form id="seriesForm">
       <div class="form-row"><label class="form-label">Title</label><input class="form-input" name="title" value="${s.title||''}"></div>
       <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description">${s.description||''}</textarea></div>
       <div class="form-grid">
-        <div class="form-row"><label class="form-label">Status</label><select class="form-select" name="status"><option ${s.status==='draft'?'selected':''}>draft</option><option ${s.status==='live'?'selected':''}>live</option><option ${s.status==='archived'?'selected':''}>archived</option></select></div>
+        <div class="form-row"><label class="form-label">Genre</label><select class="form-select" name="genre">${genreOpts}</select></div>
         <div class="form-row"><label class="form-label">Age Rating</label><select class="form-select" name="age_rating"><option ${s.age_rating==='PG'?'selected':''}>PG</option><option ${s.age_rating==='13'?'selected':''}>13</option><option ${s.age_rating==='16'?'selected':''}>16</option><option ${s.age_rating==='18'?'selected':''}>18</option></select></div>
       </div>
-      <div class="form-row"><label class="form-label">Poster URL</label><input class="form-input" name="poster_url" value="${s.poster_url||''}"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Status</label><select class="form-select" name="status"><option ${s.status==='draft'?'selected':''}>draft</option><option ${s.status==='live'?'selected':''}>live</option><option ${s.status==='archived'?'selected':''}>archived</option></select></div>
+        <div class="form-row"><label class="form-label">Language</label><select class="form-select" name="language"><option value="en" ${(s.language||'en')==='en'?'selected':''}>English</option><option value="zu" ${s.language==='zu'?'selected':''}>isiZulu</option><option value="xh" ${s.language==='xh'?'selected':''}>isiXhosa</option><option value="af" ${s.language==='af'?'selected':''}>Afrikaans</option><option value="sw" ${s.language==='sw'?'selected':''}>Swahili</option><option value="yo" ${s.language==='yo'?'selected':''}>Yoruba</option></select></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Poster</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="flex:1">
+            <input class="form-input" name="poster_url" id="editPosterUrl" value="${s.poster_url||''}" placeholder="Paste URL or upload →" style="margin-bottom:6px" oninput="const p=document.getElementById('editPosterPreview');if(this.value){p.src=this.value;p.style.display='';}else{p.style.display='none';}">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="file" id="editPosterFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="inlinePosterUpload(this,'editPosterUrl','editPosterPreview','editPosterStatus')">
+              <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;white-space:nowrap" onclick="document.getElementById('editPosterFile').click()">📎 Replace image</span>
+              <span id="editPosterStatus" style="font-size:11px;color:var(--text-faint)"></span>
+            </label>
+          </div>
+          <img id="editPosterPreview" src="${s.poster_url||''}" style="${s.poster_url?'':'display:none;'}width:48px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)">
+        </div>
+      </div>
+      <div class="form-row"><label class="form-label">Trailer URL</label><input class="form-input" name="trailer_url" value="${s.trailer_url||''}" placeholder="https://stream.mux.com/…"></div>
       <div style="display:flex;gap:16px;margin-bottom:14px">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_featured" ${s.is_featured?'checked':''}> Featured</label>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_trending" ${s.is_trending?'checked':''}> Trending</label>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary" type="button" onclick="saveSeries(document.getElementById('seriesForm'),'${s.id}')">Save Changes →</button>
-        ${currentUser.role==='superadmin'?`<button class="btn btn-danger" type="button" onclick="deleteSeries('${s.id}')">Delete Series</button>`:''}
+        <button class="btn" style="background:${s.status==='live'?'var(--warning)':'var(--green)'}" type="button"
+          onclick="toggleSeriesStatus('${s.id}','${s.status}')">${s.status==='live'?'Unpublish':'Publish'}</button>
+        ${currentUser.role==='superadmin'?`<button class="btn btn-danger" type="button" onclick="deleteSeries('${s.id}')">Delete</button>`:''}
       </div>
     </form>`;
   },
@@ -1075,24 +1220,155 @@ const MODALS = {
     <button class="modal-close" onclick="closeModal()">✕</button>
     <div class="modal-title">Add Episode</div>
     <form id="episodeForm">
-      <div class="form-row"><label class="form-label">Series</label><select class="form-select" id="epSeriesSelect" name="series_id"><option value="">Loading…</option></select></div>
+      <div class="form-row"><label class="form-label">Series *</label><select class="form-select" id="epSeriesSelect" name="series_id"><option value="">Loading…</option></select></div>
       <div class="form-grid">
+        <div class="form-row"><label class="form-label">Season #</label><input class="form-input" type="number" name="season_number" min="1" value="1" placeholder="1"></div>
         <div class="form-row"><label class="form-label">Episode #</label><input class="form-input" type="number" name="episode_number" min="1" placeholder="1"></div>
-        <div class="form-row"><label class="form-label">Title</label><input class="form-input" name="title" placeholder="Episode title"></div>
       </div>
-      <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Synopsis…"></textarea></div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">Video URL</label><input class="form-input" name="video_url" placeholder="https://…"></div>
-        <div class="form-row"><label class="form-label">Poster URL</label><input class="form-input" name="poster_url" placeholder="https://…"></div>
+      <div class="form-row"><label class="form-label">Title *</label><input class="form-input" name="title" placeholder="Episode title"></div>
+      <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Episode synopsis…"></textarea></div>
+      <div class="form-row">
+        <label class="form-label">Thumbnail</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="flex:1">
+            <input class="form-input" name="poster_url" id="addEpThumbUrl" placeholder="Paste URL or upload →" style="margin-bottom:6px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="file" id="addEpThumbFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="inlinePosterUpload(this,'addEpThumbUrl','addEpThumbPreview','addEpThumbStatus')">
+              <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;white-space:nowrap" onclick="document.getElementById('addEpThumbFile').click()">📎 Upload thumbnail</span>
+              <span id="addEpThumbStatus" style="font-size:11px;color:var(--text-faint)"></span>
+            </label>
+          </div>
+          <img id="addEpThumbPreview" src="" style="display:none;width:64px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Video</label>
+        <div id="addEpVideoArea">
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <input class="form-input" name="video_url" id="addEpVideoUrl" placeholder="Paste direct URL (or upload to Mux →)" style="flex:1">
+            <button type="button" class="btn btn-secondary btn-sm" style="white-space:nowrap;flex-shrink:0" onclick="muxUploadEpisode('add')">⬆ Upload to Mux</button>
+          </div>
+          <input type="hidden" name="mux_asset_id" id="addEpMuxAsset">
+          <div id="addEpMuxStatus" style="font-size:11px;color:var(--text-faint);margin-top:2px"></div>
+          <div id="addEpMuxBar" style="display:none;margin-top:6px">
+            <div style="background:var(--surface2);border-radius:4px;overflow:hidden">
+              <div id="addEpMuxBarFill" style="height:4px;background:var(--red);width:0%;transition:width .3s"></div>
+            </div>
+            <div id="addEpMuxBarText" style="font-size:11px;color:var(--text-faint);margin-top:3px">Uploading to Mux…</div>
+          </div>
+        </div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Duration (seconds)</label><input class="form-input" type="number" name="duration" placeholder="92"></div>
         <div class="form-row"><label class="form-label">Soul Cost</label><input class="form-input" type="number" name="soul_cost" placeholder="0"></div>
       </div>
       <div class="form-row"><label class="form-label">Release Date</label><input class="form-input" type="datetime-local" name="release_date"></div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-bottom:14px"><input type="checkbox" name="is_free" checked> Free Episode</label>
+      <div style="display:flex;gap:16px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_free" checked> Free Episode</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_published"> Publish Now</label>
+      </div>
       <button class="btn btn-primary" type="button" onclick="saveEpisode(document.getElementById('episodeForm'))">Add Episode →</button>
     </form>`,
+
+  editEpisode: (ep) => {
+    if (typeof ep === 'string') try { ep = JSON.parse(ep); } catch {}
+    const fmtDt = v => v ? v.slice(0,16) : '';
+    return `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Edit Episode</div>
+    <div class="modal-sub" style="font-weight:600;color:var(--text)">E${ep.episode_number} — ${ep.title}</div>
+    <form id="episodeEditForm">
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Season #</label><input class="form-input" type="number" name="season_number" value="${ep.season_number||1}" min="1"></div>
+        <div class="form-row"><label class="form-label">Episode #</label><input class="form-input" type="number" name="episode_number" value="${ep.episode_number||''}" min="1" readonly style="opacity:.6"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Title</label><input class="form-input" name="title" value="${ep.title||''}"></div>
+      <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" name="description">${ep.description||''}</textarea></div>
+      <div class="form-row">
+        <label class="form-label">Thumbnail</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="flex:1">
+            <input class="form-input" name="poster_url" id="editEpThumbUrl" value="${ep.poster_url||''}" placeholder="Paste URL or upload →" style="margin-bottom:6px" oninput="const p=document.getElementById('editEpThumbPreview');if(this.value){p.src=this.value;p.style.display='';}else{p.style.display='none';}">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="file" id="editEpThumbFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="inlinePosterUpload(this,'editEpThumbUrl','editEpThumbPreview','editEpThumbStatus')">
+              <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;white-space:nowrap" onclick="document.getElementById('editEpThumbFile').click()">📎 Replace thumbnail</span>
+              <span id="editEpThumbStatus" style="font-size:11px;color:var(--text-faint)"></span>
+            </label>
+          </div>
+          <img id="editEpThumbPreview" src="${ep.poster_url||''}" style="${ep.poster_url?'':'display:none;'}width:64px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Video</label>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <input class="form-input" name="video_url" id="editEpVideoUrl" value="${ep.video_url||''}" placeholder="Direct URL (or upload to Mux →)" style="flex:1">
+          <button type="button" class="btn btn-secondary btn-sm" style="white-space:nowrap;flex-shrink:0" onclick="muxUploadEpisode('edit','${ep.id}')">⬆ Upload to Mux</button>
+        </div>
+        <input type="hidden" name="mux_asset_id" id="editEpMuxAsset" value="${ep.mux_asset_id||''}">
+        <input type="hidden" name="mux_playback_id" id="editEpMuxPlayback" value="${ep.mux_playback_id||''}">
+        ${ep.mux_playback_id ? `<div style="font-size:11px;color:var(--green);margin-top:2px">✓ Mux video ready — playback ID: ${ep.mux_playback_id}</div>` : (ep.mux_upload_id ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">⏳ Processing… upload ID: ${ep.mux_upload_id}</div>` : '<div style="font-size:11px;color:var(--text-faint);margin-top:2px">No Mux video attached</div>')}
+        <div id="editEpMuxStatus" style="font-size:11px;color:var(--text-faint);margin-top:2px"></div>
+        <div id="editEpMuxBar" style="display:none;margin-top:6px">
+          <div style="background:var(--surface2);border-radius:4px;overflow:hidden">
+            <div id="editEpMuxBarFill" style="height:4px;background:var(--red);width:0%;transition:width .3s"></div>
+          </div>
+          <div id="editEpMuxBarText" style="font-size:11px;color:var(--text-faint);margin-top:3px">Uploading to Mux…</div>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Duration (seconds)</label><input class="form-input" type="number" name="duration" value="${ep.duration||0}"></div>
+        <div class="form-row"><label class="form-label">Soul Cost</label><input class="form-input" type="number" name="soul_cost" value="${ep.soul_cost||0}"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Status</label><select class="form-select" name="status"><option ${ep.status==='draft'?'selected':''}>draft</option><option ${ep.status==='live'?'selected':''}>live</option><option ${ep.status==='archived'?'selected':''}>archived</option></select></div>
+        <div class="form-row"><label class="form-label">Release Date</label><input class="form-input" type="datetime-local" name="release_date" value="${fmtDt(ep.release_date)}"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-bottom:14px">
+        <input type="checkbox" name="is_free" ${ep.is_free?'checked':''}> Free Episode (no Soul required)
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" type="button" onclick="saveEpisodeEdit(document.getElementById('episodeEditForm'),'${ep.id}')">Save Changes →</button>
+        <button class="btn" style="background:${ep.status==='live'?'var(--warning)':'var(--green)'}" type="button"
+          onclick="toggleEpisodeStatus('${ep.id}','${ep.status}')">${ep.status==='live'?'Unpublish':'Publish'}</button>
+        <button class="btn btn-danger" type="button" onclick="deleteEpisode('${ep.id}','${ep.title?.replace(/'/g,"\\'")}')">Delete</button>
+      </div>
+    </form>`;
+  },
+
+  addLanguage: () => `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Add Language</div>
+    <div class="modal-sub">New language will be available in the public app immediately</div>
+    <form id="langForm">
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Code * <span style="font-size:10px;font-weight:400">(BCP-47)</span></label><input class="form-input" name="code" placeholder="e.g. zu, xh, pcm" required></div>
+        <div class="form-row"><label class="form-label">English Name *</label><input class="form-input" name="name" placeholder="e.g. Zulu" required></div>
+      </div>
+      <div class="form-row"><label class="form-label">Native Name</label><input class="form-input" name="native_name" placeholder="e.g. isiZulu"></div>
+      <div style="display:flex;gap:16px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_rtl"> Right-to-left (RTL)</label>
+        <label style="display:flex;align-items:center;gap=6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_active" checked> Active</label>
+      </div>
+      <button class="btn btn-primary" type="button" onclick="saveLanguage(document.getElementById('langForm'))">Add Language →</button>
+    </form>`,
+
+  editLanguage: (l) => {
+    if (typeof l === 'string') try { l = JSON.parse(l); } catch {}
+    return `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Edit: ${l.name}</div>
+    <div class="modal-sub">Code: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">${l.code}</code></div>
+    <form id="langForm">
+      <div class="form-row"><label class="form-label">English Name</label><input class="form-input" name="name" value="${l.name || ''}"></div>
+      <div class="form-row"><label class="form-label">Native Name</label><input class="form-input" name="native_name" value="${l.native_name || ''}"></div>
+      <div style="display:flex;gap:16px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_rtl" ${l.is_rtl ? 'checked' : ''}> RTL</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_active" ${l.is_active !== false ? 'checked' : ''}> Active</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" name="is_default" ${l.is_default ? 'checked' : ''}> Default</label>
+      </div>
+      <button class="btn btn-primary" type="button" onclick="saveLanguage(document.getElementById('langForm'),'${l.code}')">Save Changes →</button>
+    </form>`;
+  },
 
   changeRole: (data) => {
     const [userId, currentRole] = (data||'').split('|');
@@ -1124,10 +1400,17 @@ document.addEventListener('click', async e => {
 
 async function saveEpisode(form) {
   const body = Object.fromEntries(new FormData(form));
-  body.is_free = form.querySelector('[name=is_free]')?.checked;
-  body.episode_number = parseInt(body.episode_number);
-  body.duration = parseInt(body.duration||0);
-  body.soul_cost = parseInt(body.soul_cost||0);
+  body.is_free         = form.querySelector('[name=is_free]')?.checked;
+  body.episode_number  = parseInt(body.episode_number);
+  body.season_number   = parseInt(body.season_number || 1);
+  body.duration        = parseInt(body.duration || 0);
+  body.soul_cost       = parseInt(body.soul_cost || 0);
+  const publishNow     = form.querySelector('[name=is_published]')?.checked;
+  if (publishNow) body.status = 'live';
+  // Strip empty mux fields so DB doesn't get empty strings
+  if (!body.mux_asset_id)    delete body.mux_asset_id;
+  if (!body.mux_playback_id) delete body.mux_playback_id;
+  if (!body.video_url)       delete body.video_url;
   try {
     await api('POST', '/api/admin/content/episodes', body);
     toast('Episode added ✓', 'ok');
@@ -1141,9 +1424,262 @@ async function deleteSeries(id) {
   try { await api('DELETE', `/api/admin/content/series/${id}`); toast('Series deleted', 'ok'); closeModal(); loadSeries(); } catch (e) { toast(e.message, 'error'); }
 }
 
+async function toggleSeriesStatus(id, currentStatus) {
+  const newStatus = currentStatus === 'live' ? 'draft' : 'live';
+  try {
+    await api('PUT', `/api/admin/content/series/${id}`, { status: newStatus });
+    toast(`Series ${newStatus === 'live' ? 'published ✓' : 'unpublished'}`, 'ok');
+    closeModal();
+    loadSeries();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function saveEpisodeEdit(form, id) {
+  const body = Object.fromEntries(new FormData(form));
+  body.is_free       = form.querySelector('[name=is_free]')?.checked;
+  body.duration      = parseInt(body.duration || 0);
+  body.soul_cost     = parseInt(body.soul_cost || 0);
+  body.season_number = parseInt(body.season_number || 1);
+  delete body.episode_number; // readonly — not updatable here
+  // Strip empty Mux/video fields to avoid overwriting with empty strings
+  if (!body.mux_asset_id)    delete body.mux_asset_id;
+  if (!body.mux_playback_id) delete body.mux_playback_id;
+  if (!body.video_url)       delete body.video_url;
+  try {
+    await api('PUT', `/api/admin/content/episodes/${id}`, body);
+    toast('Episode updated ✓', 'ok');
+    closeModal();
+    loadEpisodes();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── MUX DIRECT UPLOAD ─────────────────────────────────────────────────────────
+// mode = 'add' | 'edit', episodeId required for 'edit' so upload_id is saved.
+async function muxUploadEpisode(mode, episodeId) {
+  const prefix    = mode === 'edit' ? 'editEp' : 'addEp';
+  const statusEl  = document.getElementById(prefix + 'MuxStatus');
+  const barWrap   = document.getElementById(prefix + 'MuxBar');
+  const barFill   = document.getElementById(prefix + 'MuxBarFill');
+  const barText   = document.getElementById(prefix + 'MuxBarText');
+
+  // Pick file
+  const fileInput = document.createElement('input');
+  fileInput.type  = 'file';
+  fileInput.accept = 'video/mp4,video/quicktime,video/*';
+  fileInput.onchange = async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    if (statusEl) statusEl.textContent = 'Getting Mux upload URL…';
+    try {
+      // 1. Get a signed Mux upload URL (and optionally bind to episode)
+      const urlRes = await api('POST', '/api/admin/video/mux-url', episodeId ? { episode_id: episodeId } : {});
+      const { url: muxUrl, upload_id } = urlRes;
+
+      if (statusEl) statusEl.textContent = `Uploading to Mux (${(file.size / 1e6).toFixed(1)} MB)…`;
+      if (barWrap)  barWrap.style.display = '';
+
+      // 2. PUT the file directly to Mux
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = e => {
+          if (!e.lengthComputable) return;
+          const pct = Math.round(e.loaded / e.total * 100);
+          if (barFill) barFill.style.width = pct + '%';
+          if (barText) barText.textContent = `Uploading… ${pct}%`;
+        };
+        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error('Upload to Mux failed: ' + xhr.status));
+        xhr.onerror = () => reject(new Error('Network error during Mux upload'));
+        xhr.open('PUT', muxUrl);
+        xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+        xhr.send(file);
+      });
+
+      if (barWrap)  barWrap.style.display = 'none';
+      if (statusEl) statusEl.innerHTML = `<span style="color:var(--green)">✓ Upload complete — Mux is processing the video. Playback ID will appear after ~1–2 minutes. Save the episode and refresh to see it.</span>`;
+      toast('Video uploaded to Mux ✓ — processing…', 'ok');
+
+      // Store the upload_id in the hidden asset field so saveEpisode can include it
+      const assetEl = document.getElementById(prefix + 'MuxAsset');
+      if (assetEl) assetEl.value = upload_id;
+
+    } catch (e) {
+      if (barWrap) barWrap.style.display = 'none';
+      if (statusEl) statusEl.innerHTML = `<span style="color:var(--danger)">✗ ${e.message}</span>`;
+      toast('Mux upload failed: ' + e.message, 'error');
+    }
+  };
+  fileInput.click();
+}
+
+async function toggleEpisodeStatus(id, currentStatus) {
+  const newStatus = currentStatus === 'live' ? 'draft' : 'live';
+  try {
+    await api('PUT', `/api/admin/content/episodes/${id}`, { status: newStatus });
+    toast(`Episode ${newStatus === 'live' ? 'published ✓' : 'unpublished'}`, 'ok');
+    closeModal();
+    loadEpisodes();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteEpisode(id, title) {
+  if (!confirm(`Delete episode "${title}"? This cannot be undone.`)) return;
+  try {
+    await api('DELETE', `/api/admin/content/episodes/${id}`);
+    toast('Episode deleted', 'ok');
+    closeModal();
+    loadEpisodes();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
 async function changeUserRole(userId) {
   const role = document.getElementById('newRoleSelect')?.value;
   try { await api('PATCH', `/api/admin/users/${userId}/role`, { role }); toast(`Role changed to ${role} ✓`, 'ok'); closeModal(); loadUsers(); } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── LANGUAGES ──────────────────────────────────────────────────────────────────
+let _allLangs = [];
+
+async function loadLanguages() {
+  try {
+    const data = await api('GET', '/api/admin/languages');
+    _allLangs = data.languages || [];
+
+    // Populate language table
+    document.getElementById('langsTable').innerHTML = _allLangs.map(l => `
+      <tr>
+        <td><code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:11px">${l.code}</code></td>
+        <td class="td-name">${l.name}</td>
+        <td style="color:var(--text-dim)">${l.native_name || '—'}</td>
+        <td style="color:var(--text-faint)">${l.is_rtl ? 'RTL' : '—'}</td>
+        <td>${l.is_default ? '<span class="badge b-live">Default</span>' : '—'}</td>
+        <td><span class="badge ${l.is_active ? 'b-live' : 'b-flagged'}">${l.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="td-act" onclick="openModal('editLanguage',${JSON.stringify(l).replace(/"/g,'&quot;')})">Edit</button>
+          ${l.is_active && l.code !== 'en' ? `<button class="td-act" style="color:var(--danger)" onclick="deactivateLanguage('${l.code}')">Deactivate</button>` : ''}
+          ${!l.is_active ? `<button class="td-act" style="color:var(--green)" onclick="reactivateLanguage('${l.code}')">Reactivate</button>` : ''}
+        </td>
+      </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">No languages found — run supabase/migrations/003_i18n.sql</td></tr>';
+
+    // Populate translation language selector
+    const sel = document.getElementById('transLangSel');
+    if (sel) {
+      sel.innerHTML = '<option value="">Select language…</option>' +
+        _allLangs.filter(l => l.is_active).map(l => `<option value="${l.code}">${l.native_name || l.name} (${l.code})</option>`).join('');
+    }
+  } catch {
+    document.getElementById('langsTable').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">Could not load languages — check Supabase connection</td></tr>';
+  }
+}
+
+async function deactivateLanguage(code) {
+  if (!confirm(`Deactivate ${code}? Users with this language preference will fall back to English.`)) return;
+  try {
+    await api('DELETE', `/api/admin/languages/${code}`);
+    toast(`${code} deactivated ✓`, 'ok');
+    loadLanguages();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function reactivateLanguage(code) {
+  try {
+    await api('PATCH', `/api/admin/languages/${code}`, { is_active: true });
+    toast(`${code} reactivated ✓`, 'ok');
+    loadLanguages();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function saveLanguage(form, code) {
+  const body = {
+    name:        form.querySelector('[name=name]')?.value?.trim(),
+    native_name: form.querySelector('[name=native_name]')?.value?.trim(),
+    is_rtl:      form.querySelector('[name=is_rtl]')?.checked,
+    is_active:   form.querySelector('[name=is_active]')?.checked,
+    is_default:  form.querySelector('[name=is_default]')?.checked,
+  };
+  try {
+    if (code) {
+      await api('PATCH', `/api/admin/languages/${code}`, body);
+      toast('Language updated ✓', 'ok');
+    } else {
+      const langCode = form.querySelector('[name=code]')?.value?.trim().toLowerCase();
+      await api('POST', '/api/admin/languages', { code: langCode, ...body });
+      toast('Language added ✓', 'ok');
+    }
+    closeModal();
+    loadLanguages();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── UI TRANSLATIONS EDITOR ─────────────────────────────────────────────────────
+let _transRows = [];
+
+async function loadTranslations() {
+  const lang = document.getElementById('transLangSel')?.value;
+  const ns   = document.getElementById('transNsSel')?.value;
+  if (!lang) {
+    document.getElementById('transEditor').innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">Select a language above to view and edit translations</div>';
+    document.getElementById('transSaveRow').style.display = 'none';
+    return;
+  }
+
+  try {
+    // Fetch both the selected language and English (to show English keys as reference)
+    const [selected, english] = await Promise.all([
+      api('GET', `/api/admin/languages/ui-translations?lang=${lang}${ns ? '&namespace='+ns : ''}`),
+      api('GET', `/api/admin/languages/ui-translations?lang=en${ns ? '&namespace='+ns : ''}`),
+    ]);
+
+    const enTrans = english.translations || {};
+    const selTrans = selected.translations || {};
+    _transRows = [];
+
+    // Build merged list of all English keys as the source of truth
+    const rows = [];
+    for (const [namespace, keys] of Object.entries(enTrans)) {
+      for (const [key, enValue] of Object.entries(keys)) {
+        const existing = selTrans[namespace]?.[key] || '';
+        const rowId = `tr_${namespace}_${key}`;
+        _transRows.push({ namespace, key });
+        rows.push(`
+          <tr>
+            <td><code style="font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:4px">${namespace}</code></td>
+            <td style="color:var(--text-faint);font-size:12px">${key}</td>
+            <td style="color:var(--text-dim);font-size:12px;font-style:italic">${enValue}</td>
+            <td><input id="${rowId}" class="form-input" style="padding:6px 10px;font-size:12px" value="${existing.replace(/"/g,'&quot;')}" placeholder="${enValue}"></td>
+          </tr>`);
+      }
+    }
+
+    if (!rows.length) {
+      document.getElementById('transEditor').innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No English source keys found — seed the English translations first</div>';
+      document.getElementById('transSaveRow').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('transEditor').innerHTML = `
+      <table>
+        <thead><tr><th>Namespace</th><th>Key</th><th>English (source)</th><th>Translation</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>`;
+    document.getElementById('transSaveRow').style.display = '';
+  } catch (e) {
+    document.getElementById('transEditor').innerHTML = `<div style="text-align:center;color:var(--danger);padding:32px;font-size:13px">${e.message}</div>`;
+  }
+}
+
+async function saveTranslations() {
+  const lang = document.getElementById('transLangSel')?.value;
+  if (!lang || !_transRows.length) return;
+  const rows = _transRows.map(({ namespace, key }) => ({
+    namespace,
+    key,
+    value: document.getElementById(`tr_${namespace}_${key}`)?.value || '',
+  })).filter(r => r.value.trim());
+  try {
+    await api('PUT', '/api/admin/languages/ui-translations', { lang, rows });
+    toast(`Saved ${rows.length} translation${rows.length !== 1 ? 's' : ''} ✓`, 'ok');
+  } catch (e) { toast(e.message, 'error'); }
 }
 </script>
 </body>

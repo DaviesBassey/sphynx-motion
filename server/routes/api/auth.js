@@ -42,7 +42,7 @@ router.post('/login', loginLimiter, async (req, res) => {
   // Set httpOnly cookie — not readable from JS
   res.cookie('sphynx_admin_session', data.session.access_token, {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
+    secure:   req.secure || req.headers['x-forwarded-proto'] === 'https',
     sameSite: 'strict',
     maxAge:   8 * 60 * 60 * 1000,  // 8 hours
   });

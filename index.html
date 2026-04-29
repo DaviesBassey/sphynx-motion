@@ -19,8 +19,57 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+// One-time SW cache bust for v6 — runs once, then never again
+if ('serviceWorker' in navigator && localStorage.getItem('sw_bust') !== 'v6') {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    return Promise.all(regs.map(r => r.unregister()));
+  }).then(() => {
+    localStorage.setItem('sw_bust', 'v6');
+    location.reload(true);
+  });
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- Analytics + error tracking — loaded async, never blocks render -->
+<script>
+// ─── Lightweight analytics stub ───────────────────────────────────────────────
+// Replace window._track with your real analytics (PostHog, Plausible, etc.)
+// No PII is logged — user_id is only included when the user is authenticated.
+window._track = function(event, props) {
+  // PostHog: posthog.capture(event, props)
+  // Plausible: plausible(event, { props })
+  // For now, just console.debug in dev
+  if (typeof window.__SPHYNX_ANALYTICS === 'function') {
+    try { window.__SPHYNX_ANALYTICS(event, props); } catch {}
+  }
+};
+
+// ─── Sentry browser error tracking (replace DSN before shipping) ──────────────
+// Remove this block if you are not using Sentry.
+(function() {
+  const SENTRY_DSN = ''; // Paste your DSN here: https://sentry.io/settings/projects/
+  if (!SENTRY_DSN) return;
+  const s = document.createElement('script');
+  s.src = 'https://browser.sentry-cdn.com/7/bundle.min.js';
+  s.crossOrigin = 'anonymous';
+  s.onload = function() {
+    Sentry.init({
+      dsn:         SENTRY_DSN,
+      release:     'sphynx-motion@1.0.0',
+      environment: location.hostname === 'app.sphynxmotion.com' ? 'production' : 'development',
+      // Never send sensitive fields
+      beforeSend: function(event) {
+        if (event.request) delete event.request.cookies;
+        return event;
+      },
+    });
+  };
+  document.head.appendChild(s);
+})();
+</script>
 <style>
 /* ─── TOKENS ─────────────────────────────────────────────────────────────── */
 :root {
@@ -176,6 +225,7 @@ body::after {
   border: none;
   color: var(--text-faint);
 }
+.nav-btn:hover { color: var(--text-dim); background: rgba(255,255,255,.04); }
 .nav-btn.active { color: var(--red); }
 .nav-btn svg { width: 22px; height: 22px; }
 .nav-btn span { font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
@@ -1196,6 +1246,32 @@ svg defs { position: absolute; width: 0; height: 0; }
 .toast-soul { border-color: rgba(230,30,36,.3); color: var(--red-bright); }
 .toast-warn { border-color: rgba(232,151,30,.3); color: #F0B840; }
 
+/* ─── PWA INSTALL BANNER ─────────────────────────────────────────────────── */
+#installBanner {
+  display: none;
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 420px;
+  background: var(--surface2);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  z-index: 800;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+}
+#installBanner.show { display: flex; }
+#installBanner .ib-icon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; }
+#installBanner .ib-text { flex: 1; }
+#installBanner .ib-title { font-size: 13px; font-weight: 700; color: var(--text); }
+#installBanner .ib-sub { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+#installBanner .ib-btn { background: var(--red); color: #fff; border: none; border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+#installBanner .ib-dismiss { background: none; border: none; color: var(--text-faint); font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0; }
+
 /* ─── VOICE PREVIEW ──────────────────────────────────────────────────────── */
 .voice-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.04); cursor: pointer; border-radius: 8px; transition: background .2s; }
 .voice-row.playing { background: rgba(230,30,36,.06); }
@@ -1220,111 +1296,140 @@ svg defs { position: absolute; width: 0; height: 0; }
 }
 
 /* ─── VIDEO PLAYER MODAL ─────────────────────────────────────────────────── */
+/* ─── IMMERSIVE VERTICAL PLAYER ─────────────────────────────────────────── */
 .video-overlay {
-  position: absolute;
-  inset: 0;
-  background: #000;
-  z-index: 600;
-  display: flex;
-  flex-direction: column;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .35s;
+  position: absolute; inset: 0;
+  background: #000; z-index: 600;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s; overflow: hidden;
 }
-.video-overlay.open {
-  opacity: 1;
-  pointer-events: all;
+.video-overlay.open { opacity: 1; pointer-events: all; }
+
+#mainVideo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
 }
-.video-player-wrap {
-  position: relative;
-  flex: 1;
-  background: #000;
-  display: flex;
-  align-items: center;
+
+/* States */
+.video-state {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,.8); color: #fff; text-align: center;
+  pointer-events: none; opacity: 0; transition: opacity .25s; z-index: 10;
 }
-.video-player-wrap video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.video-state.visible { opacity: 1; pointer-events: all; }
+.video-state-icon { font-size: 36px; margin-bottom: 10px; }
+.video-state-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.video-state-sub { font-size: 12px; color: rgba(255,255,255,.6); max-width: 220px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.video-spinner {
+  width: 36px; height: 36px; margin-bottom: 12px;
+  border: 3px solid rgba(255,255,255,.15); border-top-color: #fff;
+  border-radius: 50%; animation: spin .7s linear infinite;
 }
-.video-controls {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 16px;
-  background: linear-gradient(to top, rgba(0,0,0,.9), transparent);
-  opacity: 0;
-  transition: opacity .2s;
+
+/* Tap zone — full-screen transparent click area */
+#videoWrap { position: absolute; inset: 0; z-index: 5; }
+
+/* Top bar */
+.vp-top {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  padding: max(env(safe-area-inset-top,0px),14px) 16px 32px;
+  background: linear-gradient(to bottom,rgba(0,0,0,.72),transparent);
+  display: flex; align-items: flex-start; gap: 10px;
+  opacity: 0; transition: opacity .2s; pointer-events: none;
 }
-.video-player-wrap:hover .video-controls,
-.video-player-wrap.show-controls .video-controls { opacity: 1; }
+.video-overlay.show-controls .vp-top { opacity: 1; pointer-events: all; }
+.vp-close-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,.12); backdrop-filter: blur(6px);
+  border: none; color: #fff; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.vp-title-block { flex: 1; min-width: 0; }
+.vp-series-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vp-ep-label-top { font-size: 10px; color: rgba(255,255,255,.5); margin-top: 2px; }
+.vp-ep-counter {
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.12); backdrop-filter: blur(6px);
+  border-radius: 12px; padding: 3px 10px; flex-shrink: 0; white-space: nowrap;
+}
+
+/* Right rail */
+.vp-rail {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 20px;
+  opacity: 0; transition: opacity .2s; pointer-events: none;
+}
+.video-overlay.show-controls .vp-rail { opacity: 1; pointer-events: all; }
+.vp-rail-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: none; border: none; cursor: pointer; color: #fff; padding: 0;
+}
+.vp-rail-icon {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: rgba(255,255,255,.12); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.vp-rail-icon.active { background: rgba(230,30,36,.35); border-color: rgba(230,30,36,.5); }
+.vp-rail-label { font-size: 10px; color: rgba(255,255,255,.6); font-weight: 500; }
+
+/* Bottom bar */
+.vp-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+  padding: 0 16px max(env(safe-area-inset-bottom,0px),16px);
+  background: linear-gradient(to top,rgba(0,0,0,.85),transparent);
+}
 .video-progress {
-  width: 100%; height: 3px;
-  background: rgba(255,255,255,.2);
-  border-radius: 3px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  position: relative;
+  width: 100%; height: 3px; background: rgba(255,255,255,.2);
+  border-radius: 3px; margin-bottom: 12px; cursor: pointer; position: relative;
 }
 .video-progress-fill {
-  height: 100%;
-  background: linear-gradient(to right, var(--red), var(--red-dark));
-  border-radius: 3px;
-  width: 0%;
-  transition: width .5s linear;
-  pointer-events: none;
+  height: 100%; background: var(--red); border-radius: 3px;
+  width: 0%; transition: width .5s linear; pointer-events: none;
 }
-.video-btns {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.vp-ctrl-row {
+  display: flex; align-items: center; gap: 12px;
+  opacity: 0; transition: opacity .2s;
 }
+.video-overlay.show-controls .vp-ctrl-row { opacity: 1; }
 .video-btn-play {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  background: var(--red);
-  border: none;
-  color: var(--obsidian);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--red); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.video-time {
-  font-size: 11px;
-  color: rgba(255,255,255,.7);
-  font-family: 'Space Grotesk', sans-serif;
-  flex: 1;
-}
+.video-time { font-size: 11px; color: rgba(255,255,255,.7); font-family: 'Space Grotesk',sans-serif; flex: 1; }
 .video-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.1);
-  border: none;
-  color: white;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.1); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.video-header {
-  padding: 14px 16px 10px;
-  background: linear-gradient(to bottom, rgba(0,0,0,.9), transparent);
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+
+/* Swipe hints */
+.vp-swipe-hint {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  z-index: 25; background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,.15); border-radius: 20px;
+  padding: 7px 16px; font-size: 12px; color: rgba(255,255,255,.9);
+  font-weight: 600; pointer-events: none; opacity: 0; transition: opacity .15s;
+  white-space: nowrap;
 }
-.video-header-title {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 700;
-  color: white;
+.vp-swipe-hint.show { opacity: 1; }
+#vpSwipeNext { bottom: 28%; }
+#vpSwipePrev { top: 22%; }
+
+/* Episode end / autoplay card */
+.vp-end-card {
+  position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,.88);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .3s; padding: 32px;
+  text-align: center;
 }
-.video-header-ep {
-  font-size: 10px;
-  color: rgba(255,255,255,.5);
-  margin-top: 2px;
-}
+.vp-end-card.show { opacity: 1; pointer-events: all; }
 
 /* Admin dashboard moved to /admin/ — not in user app */
 
@@ -1350,7 +1455,9 @@ svg defs { position: absolute; width: 0; height: 0; }
   display: flex; align-items: center; gap: 8px;
   padding: 9px 12px;
   cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
 }
+.search-field:hover { border-color: rgba(255,36,48,.35); background: rgba(255,255,255,.04); }
 .search-field svg { flex-shrink: 0; }
 .search-placeholder { font-size: 12px; color: var(--text-faint); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .topbar-icon {
@@ -1360,7 +1467,10 @@ svg defs { position: absolute; width: 0; height: 0; }
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0;
   position: relative;
+  transition: background .15s ease, transform .15s ease;
 }
+.topbar-icon:hover { background: rgba(255,36,48,.15); }
+.topbar-icon:active { transform: scale(.9); }
 .topbar-badge {
   position: absolute; top: -3px; right: -3px;
   background: var(--red); color: #fff;
@@ -1389,6 +1499,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   transition: color .2s;
   white-space: nowrap;
 }
+.tab-btn:hover { color: var(--text-dim); }
 .tab-btn.active { color: var(--text); }
 .tab-btn.active::after {
   content: '';
@@ -1406,7 +1517,12 @@ svg defs { position: absolute; width: 0; height: 0; }
   gap: 10px;
   padding: 12px 12px 0;
 }
-.g-card { cursor: pointer; }
+.g-card { cursor: pointer; transition: transform .18s ease, opacity .18s ease; }
+.g-card-skeleton { aspect-ratio:9/13; border-radius:12px; background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%); background-size:200% 100%; animation:skel-shimmer 1.4s infinite; }
+.t-card-skeleton { height:80px; border-radius:10px; background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%); background-size:200% 100%; animation:skel-shimmer 1.4s infinite; }
+@keyframes skel-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.g-card:hover { transform: translateY(-3px); opacity: .9; }
+.g-card:active { transform: scale(.97); }
 .g-thumb {
   width: 100%; aspect-ratio: 2/3;
   border-radius: 8px;
@@ -1467,6 +1583,40 @@ svg defs { position: absolute; width: 0; height: 0; }
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; cursor: pointer; flex-shrink: 0;
 }
+
+/* ─── RECOMMENDATION ROWS ────────────────────────────────────────────────── */
+.rec-section { padding: 14px 0 2px; }
+.rec-label {
+  padding: 0 16px 8px;
+  font-size: 13px; font-weight: 700; color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  display: flex; align-items: center; gap: 6px;
+}
+.rec-label-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.rec-scroll {
+  display: flex; gap: 10px;
+  overflow-x: auto; overflow-y: visible;
+  padding: 0 16px 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.rec-scroll::-webkit-scrollbar { display: none; }
+.rec-card {
+  flex-shrink: 0; width: 96px;
+  border-radius: 10px; overflow: hidden;
+  cursor: pointer; position: relative;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,.05);
+  transition: transform .15s;
+}
+.rec-card:active { transform: scale(.96); }
+.rec-card img { width: 100%; height: 136px; object-fit: cover; display: block; }
+.rec-card-info { padding: 5px 6px 7px; }
+.rec-card-title { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.rec-card-sub { font-size: 9px; color: var(--text-faint); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rec-progress { position: absolute; bottom: 34px; left: 0; right: 0; height: 2px; background: rgba(255,255,255,.12); }
+.rec-progress-fill { height: 100%; background: var(--red); border-radius: 0 1px 1px 0; }
+.rec-empty { padding: 0 16px 12px; font-size: 11px; color: var(--text-faint); }
 
 /* ─── FOR YOU FEED ───────────────────────────────────────────────────────── */
 #foryou { background: #000; overflow: hidden !important; padding: 0 !important; }
@@ -1597,7 +1747,10 @@ svg defs { position: absolute; width: 0; height: 0; }
   font-size: 13px; font-weight: 800;
   padding: 9px 20px; border-radius: 999px;
   border: none; cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
+.member-join-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.member-join-btn:active { transform: scale(.96); }
 .member-discount { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.8); }
 .benefit-grid {
   display: grid; grid-template-columns: repeat(4, 1fr);
@@ -1611,7 +1764,8 @@ svg defs { position: absolute; width: 0; height: 0; }
 .benefit-label { font-size: 9px; color: var(--text-dim); line-height: 1.3; }
 .plan-row {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 10px; padding: 0 16px;
+  gap: 10px; padding: 6px 16px 10px;
+  overflow: visible;
 }
 .plan-card {
   background: var(--surface2);
@@ -1620,9 +1774,23 @@ svg defs { position: absolute; width: 0; height: 0; }
   border: 1px solid rgba(255,255,255,.05);
   position: relative;
   cursor: pointer;
-  transition: border-color .2s;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
 }
-.plan-card.featured { border-color: var(--red); }
+.plan-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,36,48,.65);
+  background: rgba(255,36,48,.04);
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.45),
+    0 0 28px rgba(255,36,48,.22);
+}
+.plan-card:hover .plan-button { transform: translateY(-1px); }
+.plan-card.featured { border-color: rgba(255,36,48,.7); }
+.plan-card.featured:hover { border-color: rgba(255,36,48,.95); }
 .plan-card.featured::before {
   content: 'BEST VALUE';
   position: absolute; top: -1px; right: 12px;
@@ -1635,14 +1803,46 @@ svg defs { position: absolute; width: 0; height: 0; }
 .plan-price { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 2px; }
 .plan-period { font-size: 10px; color: var(--text-faint); margin-bottom: 10px; }
 .plan-features { font-size: 10px; color: var(--text-dim); line-height: 1.8; }
-.plan-btn {
+.plan-button {
   width: 100%; margin-top: 12px;
-  padding: 9px; border-radius: 8px; border: none;
-  font-size: 11px; font-weight: 800; cursor: pointer;
-  transition: all .2s;
+  padding: 9px; border-radius: 8px;
+  font-size: 11px; font-weight: 800; font-family: inherit;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    background 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    box-shadow 220ms ease;
 }
-.plan-btn--red { background: var(--red); color: #fff; }
-.plan-btn--outline { background: transparent; border: 1px solid rgba(255,255,255,.1); color: var(--text-dim); }
+.plan-button.secondary {
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.8);
+}
+.plan-button.secondary:hover {
+  border-color: rgba(255,36,48,.9);
+  background: rgba(255,36,48,.14);
+  color: #fff;
+  box-shadow: 0 0 26px rgba(255,36,48,.3), inset 0 0 12px rgba(255,36,48,.08);
+}
+.plan-button.primary {
+  background: var(--red);
+  color: #fff;
+  border: none;
+}
+.plan-button.primary:hover {
+  background: linear-gradient(135deg,#ff2935,#d80f1c);
+  box-shadow:
+    0 10px 30px rgba(255,36,48,.35),
+    0 0 22px rgba(255,36,48,.3);
+}
+.plan-button:active { transform: scale(0.98); }
+.plan-card:active {
+  transform: translateY(-2px) scale(0.99);
+  border-color: rgba(255,36,48,.8);
+  background: rgba(255,36,48,.07);
+}
 .soul-topup {
   margin: 0 16px;
   background: var(--surface2);
@@ -1686,6 +1886,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   position: relative;
   transition: color .2s;
 }
+.list-tab:hover { color: var(--text-dim); }
 .list-tab.active { color: var(--text); }
 .list-tab.active::after {
   content: '';
@@ -1715,7 +1916,9 @@ svg defs { position: absolute; width: 0; height: 0; }
 .trending-section { padding: 16px 16px 0; }
 .trending-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
 .trending-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.t-card { cursor: pointer; position: relative; }
+.t-card { cursor: pointer; position: relative; transition: transform .18s ease; }
+.t-card:hover { transform: translateY(-2px); }
+.t-card:active { transform: scale(.97); }
 .t-thumb {
   width: 100%; aspect-ratio: 2/3;
   border-radius: 8px; overflow: hidden;
@@ -1750,7 +1953,10 @@ svg defs { position: absolute; width: 0; height: 0; }
   border-radius: 8px; background: var(--surface2);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
 }
+.prof-settings:hover { background: rgba(255,36,48,.15); }
+.prof-settings:active { transform: scale(.92); }
 .prof-header {
   display: flex; align-items: center; gap: 14px;
   padding: 0 16px 16px;
@@ -1912,9 +2118,12 @@ svg defs { position: absolute; width: 0; height: 0; }
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span class="search-placeholder">Search series, genres, creators...</span>
         </div>
-        <div class="topbar-icon" onclick="openModal('gold-veins')">
+        <div class="topbar-icon" onclick="openModal('notifications')" aria-label="Notifications" role="button" tabindex="0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="topbar-badge">3</span>
+          <span class="topbar-badge" id="notifBadge" style="display:none">0</span>
+        </div>
+        <div class="topbar-icon" onclick="openModal('settings')" aria-label="Settings" role="button" tabindex="0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </div>
       </div>
 
@@ -1927,110 +2136,36 @@ svg defs { position: absolute; width: 0; height: 0; }
         <button class="tab-btn" onclick="switchHomeTab(this,'all')">All</button>
       </div>
 
-      <!-- Card grid -->
+      <!-- Section title -->
+      <div id="homeSectionTitle" style="padding:10px 16px 2px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Most Popular</div>
+
+      <!-- Card grid — filled by loadContent() from Supabase -->
       <div class="card-grid" id="homeGrid">
-
-        <div class="g-card" onclick="openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-11.jpg" alt="Gold Veins">
-            <div class="g-badge g-badge--hot">Hot</div>
-            <div class="g-views">▶ 8.4K</div>
-            <button class="report-btn" onclick="event.stopPropagation();openModal('report')" title="Report">⋯</button>
-          </div>
-          <div class="g-title">Gold Veins</div>
-          <div class="g-genre">Neo-Noir</div>
-        </div>
-
-        <div class="g-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--hot">Hot</div>
-            <div class="g-views">▶ 5.1K</div>
-          </div>
-          <div class="g-title">Frequency</div>
-          <div class="g-genre">Tech Thriller</div>
-        </div>
-
-        <div class="g-card" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-16.jpg" alt="The Last Lobola" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--new">New</div>
-            <div class="g-views">▶ 3.8K</div>
-          </div>
-          <div class="g-title">The Last Lobola</div>
-          <div class="g-genre">Diaspora</div>
-        </div>
-
-        <div class="g-card" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-17.jpg" alt="Nairobi Signal" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--new">New</div>
-            <div class="g-views">▶ 2.1K</div>
-          </div>
-          <div class="g-title">Nairobi Signal</div>
-          <div class="g-genre">Underground</div>
-        </div>
-
-        <div class="g-card" onclick="openVideoPlayer('assets/videos/gold-veins-e4.mp4','Gold Veins','E4 — The Gold Room')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-13.jpg" alt="Gold Veins E4" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--hot">Hot</div>
-            <div class="g-views">▶ 6.2K</div>
-          </div>
-          <div class="g-title">Gold Veins E4</div>
-          <div class="g-genre">Neo-Noir</div>
-        </div>
-
-        <div class="g-card" onclick="openVideoPlayer('assets/videos/gold-veins-e5.mp4','Gold Veins','E5 — Two Mothers')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-14.jpg" alt="Gold Veins E5" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--following">Following</div>
-            <div class="g-views">▶ 4.7K</div>
-          </div>
-          <div class="g-title">Gold Veins E5</div>
-          <div class="g-genre">Neo-Noir</div>
-        </div>
-
-        <div class="g-card" onclick="openModal('coming')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-18.jpg" alt="Royal Bloodlines" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--new">Soon</div>
-          </div>
-          <div class="g-title">Royal Bloodlines</div>
-          <div class="g-genre">Historical Drama</div>
-        </div>
-
-        <div class="g-card" onclick="openModal('coming')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-19.jpg" alt="Afrofuturism 2099" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--new">Soon</div>
-          </div>
-          <div class="g-title">Afrofuturism 2099</div>
-          <div class="g-genre">Sci-Fi</div>
-        </div>
-
-        <div class="g-card" onclick="openModal('coming')">
-          <div class="g-thumb">
-            <img src="assets/posters/image-20.jpg" alt="Township Grunge" style="width:100%;height:100%;object-fit:cover">
-            <div class="g-badge g-badge--new">Soon</div>
-          </div>
-          <div class="g-title">Township Grunge</div>
-          <div class="g-genre">Urban Drama</div>
-        </div>
+        <div class="g-card-skeleton"></div>
+        <div class="g-card-skeleton"></div>
+        <div class="g-card-skeleton"></div>
+        <div class="g-card-skeleton"></div>
+        <div class="g-card-skeleton"></div>
+        <div class="g-card-skeleton"></div>
 
       </div>
 
-      <!-- Resume watching bar -->
-      <div class="resume-bar" id="resumeBar">
-        <div class="resume-thumb">
-          <img src="assets/posters/image-11.jpg" alt="">
-        </div>
-        <div class="resume-info">
-          <div class="resume-title">Gold Veins — The Third Name</div>
-          <div class="resume-ep">E3 / E24 · 34% watched</div>
-        </div>
-        <button class="resume-cta" onclick="event.stopPropagation();openVideoPlayer()">Continue</button>
-        <button class="resume-bar-close" onclick="event.stopPropagation();this.closest('.resume-bar').style.display='none'">✕</button>
+      <!-- Continue Watching — populated by loadRecommendations() for logged-in users -->
+      <div class="rec-section" id="cwSection" style="display:none">
+        <div class="rec-label"><span class="rec-label-dot"></span>Continue Watching</div>
+        <div class="rec-scroll" id="cwScroll"></div>
+      </div>
+
+      <!-- Similar to What You Watched — same genre as last-watched series -->
+      <div class="rec-section" id="simSection" style="display:none">
+        <div class="rec-label"><span class="rec-label-dot"></span><span id="simLabel">More Like This</span></div>
+        <div class="rec-scroll" id="simScroll"></div>
+      </div>
+
+      <!-- In Your Language — filtered by selected UI language -->
+      <div class="rec-section" id="langSection" style="display:none">
+        <div class="rec-label"><span class="rec-label-dot"></span><span id="langLabel">In Your Language</span></div>
+        <div class="rec-scroll" id="langScroll"></div>
       </div>
 
       <div style="height:80px"></div>
@@ -2039,155 +2174,9 @@ svg defs { position: absolute; width: 0; height: 0; }
     <!-- ── FOR YOU ────────────────────────────────────────────────────── -->
     <div class="screen" id="foryou">
       <div class="fy-stack" id="fyStack">
-
-        <!-- Slide 1 — Gold Veins -->
-        <div class="fy-slide">
-          <img class="fy-bg" src="assets/posters/image-11.jpg" alt="Gold Veins">
-          <div class="fy-grad"></div>
-          <div class="fy-right">
-            <div class="fy-action" onclick="fyBookmark(this)">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div class="fy-action-count">8.4K</div>
-            </div>
-            <div class="fy-action" onclick="fyShare()">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              </div>
-              <div class="fy-action-count">Share</div>
-            </div>
-            <div class="fy-action" onclick="openVideoPlayer()">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
-              </div>
-              <div class="fy-action-count">Play</div>
-            </div>
-          </div>
-          <div class="fy-bottom">
-            <div class="fy-series-label">● Live · Joburg Neo-Noir</div>
-            <div class="fy-title">Gold Veins</div>
-            <div class="fy-tags">
-              <span class="fy-tag">Hot</span>
-              <span class="fy-tag">Crime Drama</span>
-              <span class="fy-tag">Family Secrets</span>
-            </div>
-            <div class="fy-desc">Trailer | A fractured family controls Johannesburg's underground gold trade. When the matriarch vanishes, three siblings unravel a secret that could destroy everything. ... more</div>
-            <button class="fy-watch-btn" onclick="openVideoPlayer()">Start Watching</button>
-          </div>
+        <div class="fy-slide" style="display:flex;align-items:center;justify-content:center;background:var(--surface)">
+          <div style="text-align:center;color:rgba(255,255,255,.25);font-size:13px">Loading…</div>
         </div>
-
-        <!-- Slide 2 — Frequency -->
-        <div class="fy-slide">
-          <img class="fy-bg" src="assets/posters/image-15.jpg" alt="Frequency">
-          <div class="fy-grad"></div>
-          <div class="fy-right">
-            <div class="fy-action" onclick="fyBookmark(this)">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div class="fy-action-count">5.1K</div>
-            </div>
-            <div class="fy-action" onclick="fyShare()">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              </div>
-              <div class="fy-action-count">Share</div>
-            </div>
-            <div class="fy-action" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
-              </div>
-              <div class="fy-action-count">Play</div>
-            </div>
-          </div>
-          <div class="fy-bottom">
-            <div class="fy-series-label">New · Lagos Tech Underground</div>
-            <div class="fy-title">Frequency</div>
-            <div class="fy-tags">
-              <span class="fy-tag">Hot</span>
-              <span class="fy-tag">Tech Thriller</span>
-              <span class="fy-tag">Conspiracy</span>
-            </div>
-            <div class="fy-desc">Trailer | A rogue signal broadcasts impossible transmissions from Lagos. A young engineer traces it to a network that could rewire everything. ... more</div>
-            <button class="fy-watch-btn" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">Start Watching</button>
-          </div>
-        </div>
-
-        <!-- Slide 3 — The Last Lobola -->
-        <div class="fy-slide">
-          <img class="fy-bg" src="assets/posters/image-16.jpg" alt="The Last Lobola">
-          <div class="fy-grad"></div>
-          <div class="fy-right">
-            <div class="fy-action" onclick="fyBookmark(this)">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div class="fy-action-count">3.8K</div>
-            </div>
-            <div class="fy-action" onclick="fyShare()">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              </div>
-              <div class="fy-action-count">Share</div>
-            </div>
-            <div class="fy-action" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
-              </div>
-              <div class="fy-action-count">Play</div>
-            </div>
-          </div>
-          <div class="fy-bottom">
-            <div class="fy-series-label">New · Diaspora Tension</div>
-            <div class="fy-title">The Last Lobola</div>
-            <div class="fy-tags">
-              <span class="fy-tag">New</span>
-              <span class="fy-tag">Romance</span>
-              <span class="fy-tag">Culture Clash</span>
-            </div>
-            <div class="fy-desc">Trailer | A woman caught between two worlds must decide if love is worth the price of tradition. ... more</div>
-            <button class="fy-watch-btn" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">Start Watching</button>
-          </div>
-        </div>
-
-        <!-- Slide 4 — Nairobi Signal -->
-        <div class="fy-slide">
-          <img class="fy-bg" src="assets/posters/image-17.jpg" alt="Nairobi Signal">
-          <div class="fy-grad"></div>
-          <div class="fy-right">
-            <div class="fy-action" onclick="fyBookmark(this)">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div class="fy-action-count">2.1K</div>
-            </div>
-            <div class="fy-action" onclick="fyShare()">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              </div>
-              <div class="fy-action-count">Share</div>
-            </div>
-            <div class="fy-action" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">
-              <div class="fy-action-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
-              </div>
-              <div class="fy-action-count">Play</div>
-            </div>
-          </div>
-          <div class="fy-bottom">
-            <div class="fy-series-label">New · Nairobi Underground</div>
-            <div class="fy-title">Nairobi Signal</div>
-            <div class="fy-tags">
-              <span class="fy-tag">New</span>
-              <span class="fy-tag">Action</span>
-              <span class="fy-tag">Underground</span>
-            </div>
-            <div class="fy-desc">Trailer | The city's power grid goes dark. One woman's search for the truth leads her deeper into Nairobi's most dangerous network. ... more</div>
-            <button class="fy-watch-btn" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">Start Watching</button>
-          </div>
-        </div>
-
       </div>
     </div><!-- /foryou -->
 
@@ -2195,95 +2184,95 @@ svg defs { position: absolute; width: 0; height: 0; }
     <div class="screen" id="member">
 
       <div class="screen-header" style="padding-bottom:4px">
-        <div class="screen-title">Soul Pass</div>
+        <div class="screen-title" data-i18n="nav.soul_pass">Soul Pass</div>
         <div class="pill pill-red" style="font-size:9px">20% OFF</div>
       </div>
 
       <!-- Banner -->
       <div class="member-banner">
         <div class="member-banner-label">Soul Pass</div>
-        <div class="member-banner-title">Join Soul Pass</div>
-        <div class="member-banner-sub">Enjoy all exclusive benefits</div>
+        <div class="member-banner-title" data-i18n="member.join_soul_pass">Join Soul Pass</div>
+        <div class="member-banner-sub">Exclusive original series · African storytelling</div>
         <div class="member-banner-row">
-          <button class="member-join-btn" onclick="openModal('join')">Join Now</button>
+          <button class="member-join-btn" onclick="startSoulPassCheckout('monthly')" data-i18n="member.join_now">Join Now</button>
           <span class="member-discount">Save 20% this week</span>
         </div>
       </div>
 
       <!-- Benefits -->
       <div class="benefit-grid" style="margin-top:10px">
-        <div class="benefit-item"><span class="benefit-icon">📺</span><span class="benefit-label">All original series</span></div>
-        <div class="benefit-item"><span class="benefit-icon">⚡</span><span class="benefit-label">Daily Soul Points</span></div>
-        <div class="benefit-item"><span class="benefit-icon">🎬</span><span class="benefit-label">HD Quality</span></div>
-        <div class="benefit-item"><span class="benefit-icon">🗳️</span><span class="benefit-label">Echo Voting</span></div>
+        <div class="benefit-item"><span class="benefit-icon">📺</span><span class="benefit-label" data-i18n="member.all_series">All original series</span></div>
+        <div class="benefit-item"><span class="benefit-icon">⚡</span><span class="benefit-label" data-i18n="member.daily_soul">Daily Soul Points</span></div>
+        <div class="benefit-item"><span class="benefit-icon">🎬</span><span class="benefit-label" data-i18n="member.hd_quality">HD Quality</span></div>
+        <div class="benefit-item"><span class="benefit-icon">🗳️</span><span class="benefit-label" data-i18n="member.echo_voting">Echo Voting</span></div>
       </div>
 
-      <div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Choose Plan</div>
+      <div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase" data-i18n="member.choose_plan">Choose Plan</div>
 
       <!-- Plan Cards -->
       <div class="plan-row">
-        <div class="plan-card">
-          <div class="plan-name">Monthly</div>
+        <div class="plan-card" onclick="startSoulPassCheckout('monthly')">
+          <div class="plan-name" data-i18n="member.monthly">Monthly</div>
           <div class="plan-price">R89</div>
           <div class="plan-period">per month</div>
           <div class="plan-features">✓ All series<br>✓ HD streaming<br>✓ 100 Soul / month<br>✓ Echo voting</div>
-          <button class="plan-btn plan-btn--outline" onclick="openModal('join')">Get Monthly</button>
+          <button class="plan-button secondary" onclick="event.stopPropagation();startSoulPassCheckout('monthly')" data-i18n="member.get_monthly">Get Monthly</button>
         </div>
-        <div class="plan-card featured">
-          <div class="plan-name">Annual</div>
+        <div class="plan-card featured" onclick="startSoulPassCheckout('annual')">
+          <div class="plan-name" data-i18n="member.annual">Annual</div>
           <div class="plan-price">R59</div>
           <div class="plan-period">per month · R708/yr</div>
           <div class="plan-features">✓ All series<br>✓ HD streaming<br>✓ 200 Soul / month<br>✓ Early access releases</div>
-          <button class="plan-btn plan-btn--red" onclick="openModal('join')">Get Annual</button>
+          <button class="plan-button primary" onclick="event.stopPropagation();startSoulPassCheckout('annual')" data-i18n="member.get_annual">Get Annual</button>
         </div>
       </div>
 
-      <div style="padding:16px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Buy Soul Tokens</div>
+      <div style="padding:16px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Top Up Soul Tokens</div>
 
       <!-- Soul Token packages -->
       <div class="soul-topup">
         <div class="soul-topup-title">Soul Tokens</div>
         <div class="soul-topup-sub">Unlock episodes, vote in Echo events & unlock exclusive content</div>
         <div class="soul-pkg-row">
-          <div class="soul-pkg" onclick="selectPkg(this)">
+          <div class="soul-pkg" onclick="selectPkg(this)" data-pkg="starter">
             <span class="soul-pkg-n">50</span>
             <span class="soul-pkg-label">Soul</span>
             <span class="soul-pkg-price">R15</span>
           </div>
-          <div class="soul-pkg active" onclick="selectPkg(this)">
+          <div class="soul-pkg active" onclick="selectPkg(this)" data-pkg="boost">
             <span class="soul-pkg-n">150</span>
             <span class="soul-pkg-label">Soul</span>
             <span class="soul-pkg-price">R39</span>
           </div>
-          <div class="soul-pkg" onclick="selectPkg(this)">
+          <div class="soul-pkg" onclick="selectPkg(this)" data-pkg="power">
             <span class="soul-pkg-n">400</span>
             <span class="soul-pkg-label">Soul</span>
             <span class="soul-pkg-price">R89</span>
           </div>
-          <div class="soul-pkg" onclick="selectPkg(this)">
+          <div class="soul-pkg" onclick="selectPkg(this)" data-pkg="mega">
             <span class="soul-pkg-n">1000</span>
             <span class="soul-pkg-label">Soul</span>
             <span class="soul-pkg-price">R199</span>
           </div>
         </div>
-        <button class="btn-generate" style="margin-top:12px;font-size:12px;padding:11px" onclick="openModal('join')">Get Soul Tokens →</button>
+        <button class="btn-generate" style="margin-top:12px;font-size:12px;padding:11px" onclick="buyTokens()">Top Up →</button>
         <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text-faint)">
           Soul Tokens have no cash value. <span style="color:var(--red);cursor:pointer" onclick="openModal('soul-terms')">Token Terms</span>
         </div>
       </div>
 
-      <!-- Website & App Store links -->
+      <!-- Get the App -->
       <div style="margin:16px 16px 0;padding:16px;background:var(--surface2);border-radius:16px;text-align:center">
-        <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Also Available On</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Get the App</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button onclick="window.open('https://www.sphynxmotion.com','_blank')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
             <span style="font-size:14px">🌐</span> sphynxmotion.com
           </button>
-          <button onclick="openModal('coming')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <span style="font-size:14px"></span> App Store
+          <button onclick="installPWA()" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">📲</span> Add to Home Screen
           </button>
-          <button onclick="openModal('coming')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <span style="font-size:14px">▶</span> Google Play
+          <button onclick="openModal('app-coming')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text-dim);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">📱</span> Mobile App Soon
           </button>
         </div>
       </div>
@@ -2306,7 +2295,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 
       <!-- Following tab content -->
       <div id="tab-following">
-        <div class="follow-card" onclick="openVideoPlayer()">
+        <div class="follow-card" onclick="openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')">
           <div class="follow-thumb">
             <img src="assets/posters/image-11.jpg" alt="">
             <div class="g-badge g-badge--hot" style="position:absolute;top:4px;right:4px;font-size:8px">Hot</div>
@@ -2329,7 +2318,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 
       <!-- History tab (hidden) -->
       <div id="tab-history" style="display:none">
-        <div class="follow-card" onclick="openVideoPlayer()">
+        <div class="follow-card" onclick="openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')">
           <div class="follow-thumb"><img src="assets/posters/image-11.jpg" alt=""></div>
           <div class="follow-info">
             <div class="follow-title">Gold Veins — E3</div>
@@ -2337,7 +2326,7 @@ svg defs { position: absolute; width: 0; height: 0; }
             <div class="follow-ep">Continue →</div>
           </div>
         </div>
-        <div class="follow-card">
+        <div class="follow-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
           <div class="follow-thumb"><img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover"></div>
           <div class="follow-info">
             <div class="follow-title">Frequency — E1</div>
@@ -2345,7 +2334,7 @@ svg defs { position: absolute; width: 0; height: 0; }
             <div class="follow-ep">Watch E2 →</div>
           </div>
         </div>
-        <div class="follow-card">
+        <div class="follow-card" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
           <div class="follow-thumb"><img src="assets/posters/image-16.jpg" alt="The Last Lobola" style="width:100%;height:100%;object-fit:cover"></div>
           <div class="follow-info">
             <div class="follow-title">The Last Lobola — E2</div>
@@ -2366,70 +2355,18 @@ svg defs { position: absolute; width: 0; height: 0; }
 
       <!-- Most Trending -->
       <div class="trending-section">
-        <div class="trending-title">Most Trending</div>
+        <div class="trending-title" data-i18n="home.most_trending">Most Trending</div>
         <div class="trending-grid" id="trendingGrid">
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
 
-          <div class="t-card" onclick="openVideoPlayer()">
-            <div class="t-thumb">
-              <img src="assets/posters/image-11.jpg" alt="">
-              <div class="t-rank">1</div>
-              <div class="t-fire">🔥 8.4K</div>
-            </div>
-            <div class="t-title">Gold Veins</div>
-            <div class="t-genre">Neo-Noir</div>
-          </div>
-
-          <div class="t-card" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
-            <div class="t-thumb">
-              <img src="assets/posters/image-16.jpg" alt="The Last Lobola" style="width:100%;height:100%;object-fit:cover">
-              <div class="t-rank">2</div>
-              <div class="t-fire">🔥 3.8K</div>
-            </div>
-            <div class="t-title">The Last Lobola</div>
-            <div class="t-genre">Diaspora</div>
-          </div>
-
-          <div class="t-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
-            <div class="t-thumb">
-              <img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover">
-              <div class="t-rank">3</div>
-              <div class="t-fire">🔥 5.1K</div>
-            </div>
-            <div class="t-title">Frequency</div>
-            <div class="t-genre">Tech Thriller</div>
-          </div>
-
-          <div class="t-card" onclick="openVideoPlayer('assets/videos/nairobi-e1.mp4','Nairobi Signal','E1 — Grid Down')">
-            <div class="t-thumb">
-              <img src="assets/posters/image-17.jpg" alt="Nairobi Signal" style="width:100%;height:100%;object-fit:cover">
-              <div class="t-rank">4</div>
-              <div class="t-fire">🔥 2.1K</div>
-            </div>
-            <div class="t-title">Nairobi Signal</div>
-            <div class="t-genre">Underground</div>
-          </div>
-
-          <div class="t-card" onclick="openVideoPlayer('assets/videos/gold-veins-e4.mp4','Gold Veins','E4 — The Gold Room')">
-            <div class="t-thumb">
-              <img src="assets/posters/image-13.jpg" alt="Gold Veins E4" style="width:100%;height:100%;object-fit:cover">
-              <div class="t-rank">5</div>
-              <div class="t-fire">🔥 6.2K</div>
-            </div>
-            <div class="t-title">Gold Veins E4</div>
-            <div class="t-genre">Neo-Noir</div>
-          </div>
-
-          <div class="t-card" onclick="openVideoPlayer('assets/videos/gold-veins-e5.mp4','Gold Veins','E5 — Two Mothers')">
-            <div class="t-thumb">
-              <img src="assets/posters/image-14.jpg" alt="Gold Veins E5" style="width:100%;height:100%;object-fit:cover">
-              <div class="t-rank">6</div>
-              <div class="t-fire">🔥 4.7K</div>
-            </div>
-            <div class="t-title">Gold Veins E5</div>
-            <div class="t-genre">Neo-Noir</div>
-          </div>
-
+          
         </div>
+      </div>
       </div>
 
       <div style="height:20px"></div>
@@ -2439,105 +2376,116 @@ svg defs { position: absolute; width: 0; height: 0; }
     <div class="screen" id="profile">
 
       <div class="prof-topbar">
-        <span style="font-size:15px;font-weight:700;color:var(--text)">Profile</span>
-        <div class="prof-settings">
+        <span style="font-size:15px;font-weight:700;color:var(--text)" data-i18n="profile.title">Profile</span>
+        <div class="prof-settings" onclick="openModal('settings')" role="button" tabindex="0" aria-label="Settings" onkeydown="if(event.key==='Enter'||event.key===' ')openModal('settings')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </div>
       </div>
 
-      <!-- Avatar + Login -->
-      <div class="prof-header">
-        <div class="prof-avatar-wrap">👤</div>
-        <div>
-          <button id="profLoginBtn" class="prof-login-btn" onclick="openModal('login')">Log in <span style="color:var(--red)">›</span></button>
-          <button id="profLogoutBtn" class="prof-login-btn" style="display:none" onclick="logoutUser()">Log out <span style="color:var(--text-faint)">›</span></button>
-          <div class="prof-id">ID: 455938882 &nbsp;·&nbsp; <span style="color:var(--text-dim)">Following 0</span></div>
+      <!-- ═══ GUEST SECTION — visible by default, hidden when logged in ══════ -->
+      <div id="profGuestSection">
+        <div class="prof-header">
+          <div class="prof-avatar-wrap">👤</div>
+          <div>
+            <button class="prof-login-btn" onclick="openModal('login')"><span data-i18n="profile.log_in">Log in</span> <span style="color:var(--red)">›</span></button>
+            <div class="prof-id">Guest &nbsp;·&nbsp; <span style="color:var(--text-dim)">Log in to sync</span></div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:14px;padding:16px;margin:0 16px 14px;text-align:center;border:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:22px;margin-bottom:8px">𓂀</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Track your Soul Score</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:12px">Create an account to track your Soul Score, watch history, wallet, and Echo Votes.</div>
+          <button class="btn-generate" style="margin-bottom:8px" onclick="openModal('login')" data-i18n="profile.log_in_btn">Log In →</button>
+          <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);border:1px solid rgba(255,255,255,.1)" onclick="openModal('join')" data-i18n="profile.create_account">Create Account</button>
         </div>
       </div>
 
-      <!-- Guest CTA (hidden when logged in) -->
-      <div id="profGuestCta" style="background:var(--surface2);border-radius:14px;padding:16px;margin:0 16px 14px;text-align:center;border:1px solid rgba(255,255,255,.06)">
-        <div style="font-size:22px;margin-bottom:8px">𓂀</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Track your Soul Score</div>
-        <div style="font-size:12px;color:var(--text-faint);margin-bottom:12px">Log in to see your stats, history, and earned Soul Tokens across devices.</div>
-        <button class="btn-generate" style="margin-bottom:8px" onclick="openModal('login')">Log In →</button>
-        <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);border:1px solid rgba(255,255,255,.1)" onclick="openModal('join')">Create Account</button>
-      </div>
+      <!-- ═══ AUTH SECTION — hidden by default (inline), shown when logged in ══ -->
+      <div id="profAuthSection" style="display:none">
+        <div class="prof-header">
+          <div class="prof-avatar-wrap">👤</div>
+          <div>
+            <div id="profDisplayName" style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px"></div>
+            <div class="prof-id" id="profIdLine"></div>
+          </div>
+        </div>
 
-      <!-- Soul score summary (hidden for guest) -->
-      <div id="profSoulRow" class="prof-soul-row" style="display:none">
-        <div class="psr-ring">
-          <svg viewBox="0 0 52 52">
-            <circle fill="none" stroke="var(--surface3)" stroke-width="5" cx="26" cy="26" r="21"/>
-            <circle fill="none" stroke="url(#soulGrad)" stroke-width="5" stroke-linecap="round"
-              stroke-dasharray="132" stroke-dashoffset="37"
-              transform="rotate(-90 26 26)" cx="26" cy="26" r="21"/>
-          </svg>
-          <div class="psr-inner">𓂀</div>
+        <!-- Soul score summary -->
+        <div id="profSoulRow" class="prof-soul-row">
+          <div class="psr-ring">
+            <svg viewBox="0 0 52 52">
+              <circle fill="none" stroke="var(--surface3)" stroke-width="5" cx="26" cy="26" r="21"/>
+              <circle fill="none" stroke="url(#soulGrad)" stroke-width="5" stroke-linecap="round"
+                stroke-dasharray="132" id="profSoulArc" stroke-dashoffset="132"
+                transform="rotate(-90 26 26)" cx="26" cy="26" r="21"/>
+            </svg>
+            <div class="psr-inner">𓂀</div>
+          </div>
+          <div class="psr-info">
+            <div class="psr-score" id="profSoulScore">—</div>
+            <div class="psr-label" data-i18n="profile.soul_score">Soul Score</div>
+            <div class="psr-rank" id="profSoulRank"></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--text-faint)" data-i18n="profile.episodes">Episodes</div>
+            <div style="font-size:18px;font-weight:800;color:var(--text)" id="profEpCount">—</div>
+            <div style="font-size:10px;color:var(--text-faint);margin-top:4px" data-i18n="profile.echo_votes">Echo Votes</div>
+            <div style="font-size:18px;font-weight:800;color:var(--text)" id="profVoteCount">—</div>
+          </div>
         </div>
-        <div class="psr-info">
-          <div class="psr-score">847</div>
-          <div class="psr-label">Soul Score</div>
-          <div class="psr-rank">✦ Deep Watcher · Top 12%</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:10px;color:var(--text-faint)">Episodes</div>
-          <div style="font-size:18px;font-weight:800;color:var(--text)">142</div>
-          <div style="font-size:10px;color:var(--text-faint);margin-top:4px">Echo Votes</div>
-          <div style="font-size:18px;font-weight:800;color:var(--text)">4</div>
-        </div>
-      </div>
 
-      <!-- Membership Banner -->
-      <div class="prof-member-banner">
-        <div class="pmb-discount">20% off</div>
-        <div class="pmb-label">Join Soul Pass</div>
-        <div class="pmb-sub">Enjoy exclusive benefits &amp; all series</div>
-        <div class="pmb-perks">
-          <div class="pmb-perk"><span class="pmb-perk-icon">📺</span><span class="pmb-perk-label">All original series</span></div>
-          <div class="pmb-perk"><span class="pmb-perk-icon">⚡</span><span class="pmb-perk-label">Daily points</span></div>
-          <div class="pmb-perk"><span class="pmb-perk-icon">🗳️</span><span class="pmb-perk-label">Echo voting</span></div>
-          <div class="pmb-perk"><span class="pmb-perk-icon">🎬</span><span class="pmb-perk-label">HD quality</span></div>
+        <!-- Membership banner (hidden when already subscribed) -->
+        <div class="prof-member-banner" id="profMemberBanner">
+          <div class="pmb-discount">20% off</div>
+          <div class="pmb-label" data-i18n="member.join_soul_pass">Join Soul Pass</div>
+          <div class="pmb-sub">Enjoy exclusive benefits &amp; all series</div>
+          <div class="pmb-perks">
+            <div class="pmb-perk"><span class="pmb-perk-icon">📺</span><span class="pmb-perk-label" data-i18n="member.all_series">All original series</span></div>
+            <div class="pmb-perk"><span class="pmb-perk-icon">⚡</span><span class="pmb-perk-label" data-i18n="member.daily_soul">Daily points</span></div>
+            <div class="pmb-perk"><span class="pmb-perk-icon">🗳️</span><span class="pmb-perk-label" data-i18n="member.echo_voting">Echo voting</span></div>
+            <div class="pmb-perk"><span class="pmb-perk-icon">🎬</span><span class="pmb-perk-label" data-i18n="member.hd_quality">HD quality</span></div>
+          </div>
+          <button class="pmb-join-btn" onclick="switchScreen('member',document.querySelectorAll('.nav-btn')[2])" data-i18n="member.join_now">Join Now</button>
         </div>
-        <button class="pmb-join-btn" onclick="switchScreen('member',document.querySelectorAll('.nav-btn')[2])">Join Now</button>
-      </div>
 
-      <!-- Menu groups -->
+        <!-- Auth-only menu items -->
+        <div class="prof-menu-group">
+          <div class="prof-menu-item" onclick="switchScreen('member',document.querySelectorAll('.nav-btn')[2])">
+            <span class="pmi-icon">💳</span>
+            <span class="pmi-label" data-i18n="nav.soul_pass">Soul Pass</span>
+            <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+          </div>
+          <div class="prof-menu-item" onclick="openModal('wallet')">
+            <span class="pmi-icon">👛</span>
+            <span class="pmi-label" data-i18n="profile.wallet">My Wallet</span>
+            <div class="pmi-right"><span class="pmi-value" id="profWalletValue">— Soul</span><span class="pmi-chevron">›</span></div>
+          </div>
+          <div class="prof-menu-item" onclick="openModal('rewards')">
+            <span class="pmi-icon">🎁</span>
+            <span class="pmi-label" data-i18n="profile.earn_soul">Earn Soul</span>
+            <div class="pmi-right"><span class="pmi-badge">+70</span><span class="pmi-chevron">›</span></div>
+          </div>
+          <div class="prof-menu-item" onclick="switchScreen('mylist',document.querySelectorAll('.nav-btn')[3])">
+            <span class="pmi-icon">🕐</span>
+            <span class="pmi-label" data-i18n="profile.history">History</span>
+            <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+          </div>
+        </div>
+      </div><!-- /profAuthSection -->
+
+      <!-- ═══ PUBLIC MENU — always visible for guest and logged-in ════════════ -->
       <div class="prof-menu-group">
-        <div class="prof-menu-item" onclick="switchScreen('member',document.querySelectorAll('.nav-btn')[2])">
-          <span class="pmi-icon">💳</span>
-          <span class="pmi-label">Soul Pass</span>
-          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
-        </div>
-        <div class="prof-menu-item" onclick="openModal('wallet')">
-          <span class="pmi-icon">👛</span>
-          <span class="pmi-label">My Wallet</span>
-          <div class="pmi-right"><span class="pmi-value">847 Soul</span><span class="pmi-chevron">›</span></div>
-        </div>
-        <div class="prof-menu-item" onclick="openModal('rewards')">
-          <span class="pmi-icon">🎁</span>
-          <span class="pmi-label">Earn Soul</span>
-          <div class="pmi-right"><span class="pmi-badge">+70</span><span class="pmi-chevron">›</span></div>
-        </div>
-        <div class="prof-menu-item" onclick="switchScreen('mylist',document.querySelectorAll('.nav-btn')[3])">
-          <span class="pmi-icon">🕐</span>
-          <span class="pmi-label">History</span>
-          <div class="pmi-right"><span class="pmi-chevron">›</span></div>
-        </div>
-      </div>
-
-      <div class="prof-menu-group">
-        <div class="prof-menu-item" onclick="openModal('coming')">
+        <div class="prof-menu-item" onclick="openModal('language')">
           <span class="pmi-icon">🌍</span>
-          <span class="pmi-label">Language</span>
-          <div class="pmi-right"><span class="pmi-value">English</span><span class="pmi-chevron">›</span></div>
+          <span class="pmi-label" data-i18n="profile.language">Language</span>
+          <div class="pmi-right"><span class="pmi-value" id="langDisplayName">English</span><span class="pmi-chevron">›</span></div>
         </div>
         <div class="prof-menu-item" onclick="openModal('support')">
           <span class="pmi-icon">💬</span>
-          <span class="pmi-label">Help &amp; Support</span>
+          <span class="pmi-label" data-i18n="profile.support">Help &amp; Support</span>
           <div class="pmi-right"><span class="pmi-chevron">›</span></div>
         </div>
-        <div class="prof-menu-item" onclick="window.open('privacy.html','_blank')">
+        <div class="prof-menu-item" onclick="openModal('privacy')">
           <span class="pmi-icon">🔒</span>
           <span class="pmi-label">Privacy Policy</span>
           <div class="pmi-right"><span class="pmi-chevron">›</span></div>
@@ -2552,18 +2500,26 @@ svg defs { position: absolute; width: 0; height: 0; }
           <span class="pmi-label">Content Policy</span>
           <div class="pmi-right"><span class="pmi-chevron">›</span></div>
         </div>
-      </div>
-
-      <div class="prof-menu-group">
-        <div class="prof-menu-item" onclick="window.open('https://www.sphynxmotion.com','_blank')">
-          <span class="pmi-icon">🌐</span>
-          <span class="pmi-label">Visit sphynxmotion.com</span>
+        <div class="prof-menu-item" onclick="openModal('soul-terms')">
+          <span class="pmi-icon">⚡</span>
+          <span class="pmi-label">Soul Token Terms</span>
           <div class="pmi-right"><span class="pmi-chevron">›</span></div>
         </div>
-        <div class="prof-menu-item" onclick="openModal('delete-account')" style="color:var(--danger)">
-          <span class="pmi-icon">🗑️</span>
-          <span class="pmi-label" style="color:var(--danger)">Delete Account</span>
-          <div class="pmi-right"><span class="pmi-chevron" style="color:var(--danger)">›</span></div>
+      </div>
+
+      <!-- ═══ AUTH FOOTER — hidden by default (inline), shown when logged in ══ -->
+      <div id="profAuthFooter" style="display:none">
+        <div class="prof-menu-group">
+          <div class="prof-menu-item" onclick="openModal('delete-account')" style="color:var(--danger)">
+            <span class="pmi-icon">🗑️</span>
+            <span class="pmi-label" style="color:var(--danger)">Delete Account</span>
+            <div class="pmi-right"><span class="pmi-chevron" style="color:var(--danger)">›</span></div>
+          </div>
+          <div class="prof-menu-item" onclick="logoutUser()">
+            <span class="pmi-icon">🚪</span>
+            <span class="pmi-label" style="color:var(--danger)" data-i18n="profile.log_out">Sign Out</span>
+            <div class="pmi-right"><span class="pmi-chevron" style="color:var(--danger)">›</span></div>
+          </div>
         </div>
       </div>
 
@@ -2583,36 +2539,101 @@ svg defs { position: absolute; width: 0; height: 0; }
 
   <!-- VIDEO PLAYER OVERLAY -->
   <div class="video-overlay" id="videoOverlay">
-    <div class="video-header">
-      <button class="video-close" onclick="closeVideoPlayer()">✕</button>
-      <div>
-        <div class="video-header-title" id="videoTitle">Gold Veins</div>
-        <div class="video-header-ep" id="videoEp">S1 · E3 — "The Third Name"</div>
+
+    <!-- Full-screen video -->
+    <video id="mainVideo" playsinline
+      style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+      ontimeupdate="updateVideoProgress()"
+      onloadedmetadata="_onVideoReady()"
+      onwaiting="_videoShowLoading()"
+      oncanplay="_videoHideLoading()"
+      onplay="updatePlayBtn();_videoHideLoading()"
+      onpause="updatePlayBtn()"
+      onended="videoEnded()"
+      onerror="_onVideoError()"></video>
+
+    <!-- Loading -->
+    <div class="video-state" id="videoStateLoading">
+      <div class="video-spinner"></div>
+      <div class="video-state-title">Loading…</div>
+    </div>
+
+    <!-- Error / coming soon -->
+    <div class="video-state" id="videoStateError">
+      <div class="video-state-icon">🎬</div>
+      <div class="video-state-title" id="videoStateTitle">Video Coming Soon</div>
+      <div class="video-state-sub" id="videoStateSub">This episode is being prepared. Check back soon.</div>
+      <button onclick="closeVideoPlayer()" style="margin-top:16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;cursor:pointer">Close</button>
+    </div>
+
+    <!-- Tap zone — full-screen, sits above video, below UI -->
+    <div id="videoWrap" onclick="toggleVideoControls()"></div>
+
+    <!-- TOP BAR -->
+    <div class="vp-top">
+      <button class="vp-close-btn" onclick="closeVideoPlayer()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="vp-title-block">
+        <div class="vp-series-name" id="videoTitle">SPHYNX MOTION</div>
+        <div class="vp-ep-label-top" id="videoEp"></div>
+      </div>
+      <div class="vp-ep-counter" id="vpEpCounter" style="display:none"></div>
+    </div>
+
+    <!-- RIGHT RAIL: watchlist · share · next -->
+    <div class="vp-rail" id="vpRail">
+      <button class="vp-rail-btn" id="vpWatchlistBtn" onclick="event.stopPropagation();vpToggleWatchlist()" aria-label="Save to Watchlist">
+        <div class="vp-rail-icon" id="vpWatchlistIcon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="vp-rail-label">Save</span>
+      </button>
+      <button class="vp-rail-btn" onclick="event.stopPropagation();vpShare()" aria-label="Share">
+        <div class="vp-rail-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </div>
+        <span class="vp-rail-label">Share</span>
+      </button>
+      <button class="vp-rail-btn" id="vpNextBtn" onclick="event.stopPropagation();_nextEpisode()" aria-label="Next Episode">
+        <div class="vp-rail-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        </div>
+        <span class="vp-rail-label">Next</span>
+      </button>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="vp-bottom">
+      <div class="video-progress" onclick="seekVideo(event)">
+        <div class="video-progress-fill" id="videoProgressFill"></div>
+      </div>
+      <div class="vp-ctrl-row">
+        <button class="video-btn-play" id="playPauseBtn" onclick="event.stopPropagation();togglePlay()" aria-label="Play/Pause">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+        <div class="video-time" id="videoTime">—:— / —:—</div>
+        <button class="video-close" onclick="event.stopPropagation();_toggleMute()" aria-label="Mute" id="muteBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
       </div>
     </div>
-    <div class="video-player-wrap" id="videoWrap" onclick="toggleVideoControls()">
-      <video id="mainVideo" src="assets/videos/gold-veins-e3.mp4" playsinline
-             style="width:100%;height:100%;object-fit:contain"
-             ontimeupdate="updateVideoProgress()"
-             onloadedmetadata="updateVideoProgress()"
-             onplay="updatePlayBtn()"
-             onpause="updatePlayBtn()"
-             onended="videoEnded()"></video>
-      <div class="video-controls" id="videoControls">
-        <div class="video-progress" onclick="seekVideo(event)">
-          <div class="video-progress-fill" id="videoProgressFill"></div>
-        </div>
-        <div class="video-btns">
-          <button class="video-btn-play" id="playPauseBtn" onclick="event.stopPropagation();togglePlay()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-          </button>
-          <div class="video-time" id="videoTime">0:00 / 0:00</div>
-          <button class="video-close" onclick="event.stopPropagation();document.getElementById('mainVideo').muted=!document.getElementById('mainVideo').muted">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-          </button>
-        </div>
-      </div>
+
+    <!-- Swipe direction hints -->
+    <div class="vp-swipe-hint" id="vpSwipeNext">↑ Next Episode</div>
+    <div class="vp-swipe-hint" id="vpSwipePrev">↓ Prev Episode</div>
+
+    <!-- Autoplay / end card -->
+    <div class="vp-end-card" id="vpEndCard">
+      <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px">Up Next</div>
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px" id="vpEndTitle">—</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:28px" id="vpEndLabel">—</div>
+      <button onclick="document.getElementById('vpEndCard').classList.remove('show');clearTimeout(window._autoNextTimer);_nextEpisode()"
+        style="background:var(--red);border:none;color:#fff;padding:13px 32px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Play Next →</button>
+      <button onclick="closeVideoPlayer()"
+        style="background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);padding:10px 24px;border-radius:24px;font-size:12px;cursor:pointer">Back to Series</button>
     </div>
+
   </div>
 
   <!-- BOTTOM NAV -->
@@ -2621,32 +2642,32 @@ svg defs { position: absolute; width: 0; height: 0; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
-      <span>Home</span>
+      <span data-i18n="nav.home">Home</span>
     </button>
     <button class="nav-btn" onclick="switchScreen('foryou', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <rect x="2" y="3" width="20" height="14" rx="2"/><polygon points="8 21 16 21 12 17"/>
         <circle cx="12" cy="10" r="3" fill="currentColor" opacity=".5"/>
       </svg>
-      <span>Discover</span>
+      <span data-i18n="nav.discover">Discover</span>
     </button>
     <button class="nav-btn" onclick="switchScreen('member', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
       </svg>
-      <span>Soul Pass</span>
+      <span data-i18n="nav.soul_pass">Soul Pass</span>
     </button>
     <button class="nav-btn" onclick="switchScreen('mylist', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
       </svg>
-      <span>Watchlist</span>
+      <span data-i18n="nav.watchlist">Watchlist</span>
     </button>
     <button class="nav-btn" onclick="switchScreen('profile', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
-      <span>Profile</span>
+      <span data-i18n="nav.profile">Profile</span>
       <div style="position:absolute;top:6px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--obsidian)"></div>
     </button>
   </div>
@@ -2715,13 +2736,19 @@ function switchScreen(id, btn) {
   if (btn) btn.classList.add('active');
   if (id !== 'foryou') document.querySelectorAll('#fyStack video').forEach(v => v.pause());
   if (id === 'foryou') fyPlayCurrent();
+  if (id === 'mylist') loadWatchlist();
 }
 
 /* ─── HOME TABS ──────────────────────────────────────────────────────────── */
+const _tabTitles = { popular: 'Most Popular', new: 'New This Week', rankings: 'Top Rankings', categories: 'Browse Categories', all: 'All Series' };
 function switchHomeTab(btn, tab) {
   document.querySelectorAll('#homeTabStrip .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Could filter grid — for now just visual switch
+  _activeHomeTab = tab;
+  const titleEl = document.getElementById('homeSectionTitle');
+  if (titleEl) titleEl.textContent = _tabTitles[tab] || tab;
+  // Re-render grid from cached data (no network round-trip)
+  if (window._allSeries) _renderHomeGrid(tab);
 }
 
 /* ─── MY LIST TABS ───────────────────────────────────────────────────────── */
@@ -2731,12 +2758,155 @@ function switchListTab(btn, tab) {
   document.getElementById('tab-following').style.display = tab === 'following' ? '' : 'none';
   document.getElementById('tab-history').style.display   = tab === 'history'   ? '' : 'none';
   document.getElementById('tab-reminder').style.display  = tab === 'reminder'  ? '' : 'none';
+  if (tab === 'history') loadWatchHistory();
+}
+
+/* ─── WATCHLIST (Supabase-backed) ────────────────────────────────────────── */
+async function loadWatchlist() {
+  const container = document.getElementById('tab-following');
+  if (!container) return;
+  if (!isLoggedIn) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Log in to save series to your watchlist.</div>';
+    return;
+  }
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Loading…</div>';
+  try {
+    const res = await fetch('/api/engage/watchlist', { credentials: 'include' });
+    if (!res.ok) throw new Error();
+    const { watchlist } = await res.json();
+    if (!watchlist.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Your watchlist is empty.<br>Tap the bookmark icon on any series to add it here.</div>';
+      return;
+    }
+    container.innerHTML = watchlist.map(s => `
+      <div class="follow-card" onclick="playSeries('${esc(s.id)}')">
+        <div class="follow-thumb">
+          <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(s.title)}" style="width:100%;height:100%;object-fit:cover">
+        </div>
+        <div class="follow-info">
+          <div class="follow-title">${esc(s.title)}</div>
+          <div class="follow-genres">${esc(s.genre || '')}</div>
+          <div class="follow-ep">Tap to watch →</div>
+        </div>
+        <button onclick="event.stopPropagation();removeFromWatchlist('${esc(s.id)}',this)"
+          style="background:transparent;border:none;color:var(--text-faint);font-size:20px;padding:10px;cursor:pointer;flex-shrink:0">×</button>
+      </div>`).join('');
+  } catch {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Could not load watchlist.</div>';
+  }
+}
+
+async function removeFromWatchlist(seriesId, btn) {
+  try {
+    await fetch('/api/engage/watchlist/' + seriesId, { method: 'DELETE', credentials: 'include' });
+    const card = btn?.closest('.follow-card');
+    if (card) card.remove();
+    const container = document.getElementById('tab-following');
+    if (container && !container.querySelector('.follow-card')) {
+      container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Your watchlist is empty.</div>';
+    }
+    toast('Removed from Watchlist');
+  } catch { toast('Could not remove — try again'); }
+}
+
+async function loadWatchHistory() {
+  const container = document.getElementById('tab-history');
+  if (!container) return;
+  if (!isLoggedIn) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Log in to see your watch history.</div>';
+    return;
+  }
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Loading…</div>';
+  try {
+    const res = await fetch('/api/engage/progress', { credentials: 'include' });
+    if (!res.ok) throw new Error();
+    const { progress } = await res.json();
+    if (!progress.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">No watch history yet.<br>Start watching to track your progress.</div>';
+      return;
+    }
+    container.innerHTML = progress.slice(0, 30).map(p => {
+      const ep = p.episodes || {};
+      const label = ep.episode_number ? 'E' + ep.episode_number + (ep.title ? ' — ' + ep.title : '') : 'Episode';
+      const pct = p.progress_pct || 0;
+      return `
+        <div class="follow-card" onclick="playEpisode('${esc(p.episode_id)}','${esc(ep.title||'')}','${esc(label)}')">
+          <div class="follow-thumb" style="position:relative">
+            <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15)">
+              <div style="width:${pct}%;height:100%;background:var(--red)"></div>
+            </div>
+          </div>
+          <div class="follow-info">
+            <div class="follow-title">${esc(label)}</div>
+            <div class="follow-genres">${pct >= 90 ? 'Completed' : pct + '% watched'}</div>
+            <div class="follow-ep">${pct >= 90 ? 'Rewatch →' : 'Continue →'}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Could not load history.</div>';
+  }
+}
+
+/* ─── DAILY LOGIN REWARD ─────────────────────────────────────────────────── */
+async function claimDailyLogin() {
+  if (!isLoggedIn) return;
+  try {
+    const res = await fetch('/api/engage/rewards/daily-login', { method: 'POST', credentials: 'include' });
+    const data = await res.json();
+    if (data.claimed) {
+      toast('+10 Soul · Daily login bonus!', 'soul');
+      _loadProfileData();
+    }
+  } catch {}
+}
+
+/* ─── SEARCH ─────────────────────────────────────────────────────────────── */
+let _searchTimer;
+async function doSearch(q) {
+  clearTimeout(_searchTimer);
+  const res = document.getElementById('searchResults');
+  if (!res) return;
+  if (!q.trim()) {
+    res.innerHTML = _searchPopular();
+    return;
+  }
+  _searchTimer = setTimeout(async () => {
+    res.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:12px">Searching…</div>';
+    try {
+      const r = await fetch('/api/content/series?search=' + encodeURIComponent(q));
+      const { series } = await r.json();
+      if (!series?.length) {
+        res.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:12px">No results for "' + esc(q) + '"</div>';
+        return;
+      }
+      res.innerHTML = series.map(s => `
+        <div onclick="closeModal();playSeries('${esc(s.id)}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer">
+          <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" style="width:38px;height:50px;border-radius:6px;object-fit:cover;flex-shrink:0">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(s.title)}</div>
+            <div style="font-size:11px;color:var(--text-faint);margin-top:2px">${esc(s.genre || '')}</div>
+          </div>
+        </div>`).join('');
+    } catch {
+      res.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:12px">Search unavailable</div>';
+    }
+  }, 300);
+}
+function _searchPopular() {
+  return ['Gold Veins','Frequency','The Last Lobola','Nairobi Signal','Neo-Noir','Romance'].map(t => `
+    <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:8px"
+      onclick="document.getElementById('searchInput').value='${t}';doSearch('${t}')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${t}
+    </div>`).join('');
 }
 
 /* ─── SOUL TOKEN PACKAGES ────────────────────────────────────────────────── */
+let _selectedPkg = 'boost';
 function selectPkg(el) {
   document.querySelectorAll('.soul-pkg').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
+  if (el.dataset.pkg) _selectedPkg = el.dataset.pkg;
 }
 
 /* ─── FOR YOU FEED ───────────────────────────────────────────────────────── */
@@ -2763,7 +2933,7 @@ function fyPlayCurrent() {
 }
 
 /* ─── FOR YOU ACTIONS ────────────────────────────────────────────────────── */
-function fyBookmark(el) {
+function fyBookmark(el, seriesId) {
   const icon = el.querySelector('.fy-action-icon');
   const path = icon.querySelector('svg path');
   const bookmarked = el.dataset.bookmarked === '1';
@@ -2772,11 +2942,17 @@ function fyBookmark(el) {
     icon.style.background = 'rgba(230,30,36,.3)';
     el.dataset.bookmarked = '1';
     toast('✓ Added to Watchlist', 'success');
+    if (isLoggedIn && seriesId) {
+      fetch('/api/engage/watchlist/' + seriesId, { method: 'POST', credentials: 'include' }).catch(() => {});
+    } else if (!isLoggedIn) openModal('login');
   } else {
     if (path) path.setAttribute('fill', 'none');
     icon.style.background = '';
     el.dataset.bookmarked = '0';
     toast('Removed from Watchlist');
+    if (isLoggedIn && seriesId) {
+      fetch('/api/engage/watchlist/' + seriesId, { method: 'DELETE', credentials: 'include' }).catch(() => {});
+    }
   }
 }
 function fyShare() {
@@ -2811,33 +2987,49 @@ function selectVoteChoice(el, idx) {
   voteState.selected = idx;
 }
 
-function confirmVote() {
+async function confirmVote() {
   if (voteState.cast) return;
   if (voteState.selected < 0) { toast('⚠️ Select a choice first', 'warn'); return; }
-  voteState.cast = true;
+  if (!isLoggedIn) { openModal('login'); return; }
 
+  const btn = document.querySelector('.btn-vote');
+  if (btn) { btn.textContent = 'Casting…'; btn.disabled = true; }
+
+  if (_currentEpisodeId) {
+    try {
+      const res = await fetch('/api/engage/votes/' + _currentEpisodeId, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ choice_idx: voteState.selected }),
+      });
+      const data = await res.json();
+      if (res.status === 409) { toast('Already voted on this episode'); if (btn) { btn.textContent = '✓ Already Voted'; } return; }
+      if (res.status === 403) { toast(data.error || 'Not enough Soul Tokens'); if (btn) { btn.textContent = 'Cast Vote'; btn.disabled = false; } return; }
+      if (!res.ok) throw new Error(data.error);
+    } catch (e) {
+      toast(e.message || 'Vote failed'); if (btn) { btn.textContent = 'Cast Vote'; btn.disabled = false; } return;
+    }
+  }
+
+  voteState.cast = true;
   const section = document.querySelector('.vote-section') || document.querySelector('.vote-choices')?.parentElement;
   if (section) section.classList.add('votes-revealed');
-
   document.querySelectorAll('.vote-choice').forEach((c, i) => {
     c.style.cursor = 'default';
     if (i === voteState.selected) c.classList.add('voted');
   });
-
   const countEl = document.getElementById('voteCount');
   if (countEl) {
     const cur = parseInt((countEl.textContent || '0').replace(/[^0-9]/g, ''));
     countEl.textContent = (cur + 1).toLocaleString() + ' votes';
   }
-
-  const btn = document.querySelector('.btn-vote');
   if (btn) {
     btn.textContent = '✓ Vote Cast';
     btn.style.background = 'linear-gradient(135deg,#50C878,#1A6640)';
     btn.style.color = '#fff';
-    btn.disabled = true;
   }
   toast('⚡ +15 Soul spent · Vote cast!', 'soul');
+  _loadProfileData();
 }
 
 /* ─── REACTIONS ──────────────────────────────────────────────────────────── */
@@ -2879,27 +3071,101 @@ const modalContent = {
       <div class="modal-sub">This feature is in production. Stay tuned for the next SPHYNX MOTION update.</div>
     </div>
   `,
-  'search': `
+  'app-coming': `
+    <div style="text-align:center;padding:10px 0">
+      <div style="font-size:36px;margin-bottom:12px">📱</div>
+      <div class="modal-title">Mobile App Coming Soon</div>
+      <div class="modal-sub" style="margin-bottom:16px">Native iOS and Android apps are in development. In the meantime, install SPHYNX MOTION as a PWA for the full app experience — no App Store needed.</div>
+      <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.15);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-dim);line-height:1.8;text-align:left">
+        ✓ Works offline<br>
+        ✓ Push notifications<br>
+        ✓ Full-screen mode<br>
+        ✓ No App Store download required
+      </div>
+    </div>
+    <button class="btn-generate" onclick="closeModal();installPWA()">Add to Home Screen →</button>
+    <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Maybe Later</button>
+  `,
+  'token-checkout': () => {
+    const pkg = window._tokenPkg || { soul: 150, price: 'R39', id: 'boost' };
+    return `
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Soul Tokens</div>
+        <div class="modal-title">${pkg.soul.toLocaleString()} Soul</div>
+        <div style="font-size:32px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;margin:10px 0 4px">${pkg.price}</div>
+        <div style="font-size:11px;color:var(--text-faint)">One-time purchase · No subscription</div>
+      </div>
+      <div style="background:rgba(255,36,48,.06);border:1px solid rgba(255,36,48,.2);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--text-dim);line-height:1.8">
+          ✓ ${pkg.soul.toLocaleString()} Soul Tokens added instantly<br>
+          ✓ Use to unlock episodes &amp; Echo voting<br>
+          ✓ Tokens never expire while account is active
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:16px;text-align:center">
+        <div style="font-size:11px;color:var(--text-faint)">💳 Soul Token checkout is being activated</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Available very soon. Join the waitlist below.</div>
+      </div>
+      <button class="btn-generate" onclick="toast('✓ You\'ll be notified when Soul Token purchases go live!','success');closeModal()">Notify Me When Ready →</button>
+      <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Maybe Later</button>
+    `;
+  },
+  'plan-checkout': () => {
+    const plan = window._checkoutPlan || 'monthly';
+    const isAnnual = plan === 'annual';
+    return `
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Soul Pass</div>
+        <div class="modal-title">${isAnnual ? 'Annual Plan' : 'Monthly Plan'}</div>
+        <div style="font-size:32px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;margin:10px 0 4px">
+          ${isAnnual ? 'R59<span style="font-size:14px;font-weight:400">/mo · R708/yr</span>' : 'R89<span style="font-size:14px;font-weight:400">/month</span>'}
+        </div>
+        <div style="font-size:11px;color:var(--text-faint)">${isAnnual ? 'Save 29% vs monthly · Billed annually' : 'Billed monthly · Cancel anytime'}</div>
+      </div>
+      <div style="background:rgba(255,36,48,.06);border:1px solid rgba(255,36,48,.2);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">What you get</div>
+        <div style="font-size:11px;color:var(--text-dim);line-height:2">
+          ✓ All series, all episodes<br>
+          ✓ HD streaming<br>
+          ✓ ${isAnnual ? '200' : '100'} Soul Tokens per month<br>
+          ✓ Echo voting on every episode${isAnnual ? '<br>✓ Early access releases' : ''}
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:16px;text-align:center">
+        <div style="font-size:11px;color:var(--text-faint)">💳 Payments are being activated</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">This plan will be available very soon. Join the waitlist to be notified first.</div>
+      </div>
+      <button class="btn-generate" onclick="toast('✓ Waitlisted! We'll notify you when payments go live.','success');closeModal()">Notify Me When Ready →</button>
+      <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Maybe Later</button>
+    `;
+  },
+  'search': () => `
     <div class="modal-title">Search</div>
     <div style="background:var(--surface2);border-radius:10px;display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:14px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span style="font-size:13px;color:var(--text-faint)">Search series, genres...</span>
+      <input id="searchInput" type="text" placeholder="Search series, genres…" autofocus
+        style="background:transparent;border:none;outline:none;font-size:13px;color:var(--text);font-family:inherit;flex:1;min-width:0"
+        oninput="doSearch(this.value)">
     </div>
-    <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Popular Searches</div>
-    ${['Gold Veins','Frequency','The Last Lobola','Nairobi Signal','Neo-Noir','Romance'].map(t => `
-      <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:8px" onclick="closeModal()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${t}
-      </div>`).join('')}
+    <div id="searchResults">
+      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Popular Searches</div>
+      ${_searchPopular()}
+    </div>
   `,
   'join': `
     <div class="modal-title">Join Soul Pass</div>
-    <div class="modal-sub">Unlock all series, download episodes, and earn double Soul Tokens every day.</div>
-    <div style="background:linear-gradient(135deg,var(--red-dark),var(--red));border-radius:12px;padding:16px;margin-bottom:14px;text-align:center">
+    <div class="modal-sub">Unlock all series, earn double Soul Tokens, and support African storytelling.</div>
+    <div style="background:linear-gradient(135deg,var(--red-dark),var(--red));border-radius:12px;padding:16px;margin-bottom:10px;text-align:center;cursor:pointer" onclick="startSoulPassCheckout('month')">
       <div style="font-size:28px;font-weight:800;color:#fff;font-family:'Space Grotesk',sans-serif">R59<span style="font-size:14px;font-weight:400">/month</span></div>
-      <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Billed annually · Cancel anytime</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Billed monthly · Cancel anytime</div>
     </div>
-    <button class="btn-generate" style="margin-bottom:8px">Subscribe via App Store →</button>
-    <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim)">Subscribe via Google Play →</button>
+    <div style="background:var(--surface2);border:1px solid rgba(230,30,36,.3);border-radius:12px;padding:14px;margin-bottom:14px;text-align:center;cursor:pointer;position:relative" onclick="startSoulPassCheckout('year')">
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.06em">BEST VALUE</div>
+      <div style="font-size:22px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif">R499<span style="font-size:12px;font-weight:400;color:var(--text-dim)">/year</span></div>
+      <div style="font-size:11px;color:var(--red);margin-top:4px;font-weight:600">Save 29% — that's R209 off</div>
+    </div>
+    <button class="btn-generate" id="joinBtn" onclick="startSoulPassCheckout('month')">Subscribe Now →</button>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-faint)">Secure payment · Cancel anytime · All major cards accepted</div>
   `,
   'login': `
     <div class="modal-title">Log in to SPHYNX MOTION</div>
@@ -2908,8 +3174,11 @@ const modalContent = {
     <input id="loginEmail" type="email" placeholder="Email" autocomplete="email"
       style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
     <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password"
-      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:14px"
+      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:6px"
       onkeydown="if(event.key==='Enter')loginUser()">
+    <div style="text-align:right;margin-bottom:14px">
+      <a href="#" onclick="forgotPassword();return false" style="font-size:12px;color:var(--text-faint)">Forgot password?</a>
+    </div>
     <button class="btn-generate" onclick="loginUser()" id="loginSubmitBtn">Sign in →</button>
     <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-faint)">
       Don't have an account? <a href="#" onclick="openModal('signup');return false" style="color:var(--red);font-weight:600">Create one →</a>
@@ -2933,16 +3202,19 @@ const modalContent = {
   'wallet': `
     <div class="modal-title">My Wallet</div>
     <div style="background:var(--surface2);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px;border:1px solid rgba(230,30,36,.15)">
-      <div style="font-size:38px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1">847</div>
+      <div style="font-size:38px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1" id="walletBalance">—</div>
       <div style="font-size:10px;color:var(--text-faint);letter-spacing:.12em;text-transform:uppercase;margin-top:4px">Soul Tokens</div>
     </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-bottom:10px">Recent transactions</div>
-    ${[['Episode unlock · Gold Veins E4','-15 Soul'],['Daily login bonus','+10 Soul'],['Echo vote · Gold Veins E6','-15 Soul'],['Top Up · 150 Soul','+150 Soul']].map(([label,amount]) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-        <span style="font-size:12px;color:var(--text-dim)">${label}</span>
-        <span style="font-size:12px;font-weight:700;color:${amount.startsWith('+') ? 'var(--success)' : 'var(--text-dim)'}">${amount}</span>
+    <div style="font-size:12px;font-weight:700;color:var(--text-dim);margin-bottom:10px">Top Up</div>
+    ${[['starter','150 Soul','R19'],['boost','500 Soul','R49'],['power','1 200 Soul','R99'],['mega','3 000 Soul','R199']].map(([id,label,price]) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${label}</div>
+          <div style="font-size:10px;color:var(--text-faint);margin-top:1px">${price} · once-off</div>
+        </div>
+        <button onclick="buyTokens('${id}')" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">Buy →</button>
       </div>`).join('')}
-    <button class="btn-generate" style="margin-top:14px">Buy Soul Tokens →</button>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-faint);text-align:center">Soul Pass members earn 2× tokens daily</div>
   `,
   'rewards': `
     <div class="modal-title">Earn Soul</div>
@@ -2971,7 +3243,7 @@ const modalContent = {
       </div>
     </div>
     <div class="modal-sub">A fractured family controls half of Johannesburg's underground gold trade. When the matriarch vanishes, her three children — a cop, a club owner, a preacher — unravel a secret that could destroy everything.</div>
-    <button class="btn-watch" style="width:100%;padding:13px;font-size:14px">▶ Continue Episode 3</button>
+    <button class="btn-watch" onclick="closeModal();openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')" style="width:100%;padding:13px;font-size:14px">▶ Continue Episode 3</button>
     <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--text-faint)">34% through arc · 15 Soul for Episode 6+</div>
   `,
   'script': `
@@ -3080,6 +3352,56 @@ const modalContent = {
     </div>
     <button class="btn-generate">Submit for Review →</button>
   `,
+  'privacy': `
+    <div class="modal-title">Privacy Policy</div>
+    <div class="modal-sub" style="margin-bottom:14px">Effective: 21 April 2026 · SPHYNX MOTION (Pty) Ltd · POPIA &amp; GDPR</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.85;max-height:380px;overflow-y:auto;padding-right:6px">
+
+      <strong style="color:var(--text)">1. Overview</strong><br>
+      SPHYNX MOTION (Pty) Ltd operates the SPHYNX MOTION streaming platform. This policy describes how we collect, use, and protect your personal information. By using the Service you agree to this policy.<br><br>
+
+      <strong style="color:var(--text)">2. Information We Collect</strong><br>
+      <em style="color:var(--text-dim)">You provide:</em> name, email, password, profile photo, payment details (processed by Apple / Google — we never store card numbers).<br>
+      <em style="color:var(--text-dim)">Automatically:</em> device info, watch history &amp; playback position, IP address, session tokens, approximate location (from IP).<br><br>
+
+      <strong style="color:var(--text)">3. How We Use Your Data</strong><br>
+      Account management · personalised recommendations · payment processing · security &amp; fraud prevention · legal compliance. We do <strong>not</strong> sell your personal information.<br><br>
+
+      <strong style="color:var(--text)">4. Sharing</strong><br>
+      Only with trusted service providers (hosting, analytics, support) under confidentiality obligations; when required by law; and in a business transfer (with prior notice).<br><br>
+
+      <strong style="color:var(--text)">5. Data Retention</strong><br>
+      Account data: until deletion + 30 days. Watch history: account lifetime + 6 months. Payment records: 7 years (statutory). Logs: 12 months.<br><br>
+
+      <strong style="color:var(--text)">6. Security</strong><br>
+      TLS encryption in transit · encrypted data at rest · role-based access controls · regular security reviews.<br><br>
+
+      <strong style="color:var(--text)">7. Cookies &amp; Tracking</strong><br>
+      Essential (auth sessions), analytics (aggregated), and preference (language, playback) cookies. You can disable non-essential cookies in browser/device settings.<br><br>
+
+      <strong style="color:var(--text)">8. Soul Tokens</strong><br>
+      Soul Tokens are a virtual in-app currency with no monetary value. Purchased via Apple IAP or Google Play Billing. Non-refundable except where required by applicable platform policy.<br><br>
+
+      <strong style="color:var(--text)">9. Children's Privacy</strong><br>
+      Service is intended for users 16+. We do not knowingly collect data from under-16s. Contact privacy@sphynxmotion.com to request deletion of a child's data.<br><br>
+
+      <strong style="color:var(--text)">10. Your Rights</strong><br>
+      Access · Correction · Deletion · Restriction · Portability · Object to processing · Opt out of marketing · Lodge a complaint with the Information Regulator of South Africa.<br>
+      To delete your account: Profile → Settings → Delete Account, or email privacy@sphynxmotion.com.<br><br>
+
+      <strong style="color:var(--text)">11. International Transfers</strong><br>
+      Data may be processed by providers outside South Africa. Appropriate safeguards (standard contractual clauses) are in place.<br><br>
+
+      <strong style="color:var(--text)">12. Policy Changes</strong><br>
+      Material changes are notified by email and in-app. Continued use constitutes acceptance.<br><br>
+
+      <strong style="color:var(--text)">13. Contact</strong><br>
+      <span style="color:var(--red)">privacy@sphynxmotion.com</span> · info@sphynxmotion.com<br>
+      SPHYNX MOTION (Pty) Ltd · South Africa — we aim to respond within 5 business days.
+    </div>
+    <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">I Understand →</button>
+  `,
+
   'terms': `
     <div class="modal-title">Terms of Use</div>
     <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SPHYNX MOTION (Pty) Ltd</div>
@@ -3133,18 +3455,31 @@ const modalContent = {
     </div>
     <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">Got It →</button>
   `,
-  'delete-account': `
-    <div style="text-align:center;padding:10px 0 6px">
-      <div style="font-size:36px;margin-bottom:10px">⚠️</div>
-      <div class="modal-title" style="color:var(--danger)">Delete Account</div>
-      <div class="modal-sub" style="margin-bottom:16px">This action is permanent and cannot be undone. Your Soul Tokens, watch history, and profile data will be permanently deleted.</div>
-    </div>
-    <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.2);border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--text-dim);line-height:1.6">
-      Before deleting, you may request a copy of your data by emailing <span style="color:var(--text)">support@sphynxmotion.com</span>
-    </div>
-    <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);margin-bottom:8px" onclick="closeModal()">Cancel — Keep My Account</button>
-    <button class="btn-generate" style="background:var(--danger)" onclick="toast('📧 Deletion request sent to support@sphynxmotion.com');closeModal()">Send Deletion Request →</button>
-  `,
+  'delete-account': () => {
+    if (!isLoggedIn) return `
+      <div style="text-align:center;padding:20px 0 10px">
+        <div style="font-size:36px;margin-bottom:12px">🔐</div>
+        <div class="modal-title">Delete Account</div>
+        <div class="modal-sub">Please log in to manage or delete your account.</div>
+      </div>
+      <button class="btn-generate" onclick="closeModal();openModal('login')">Log In →</button>
+      <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Cancel</button>
+    `;
+    return `
+      <div style="text-align:center;padding:10px 0 6px">
+        <div style="font-size:36px;margin-bottom:10px">⚠️</div>
+        <div class="modal-title" style="color:var(--danger)">Delete Account</div>
+        <div class="modal-sub" style="margin-bottom:16px">This permanently deletes your account, Soul Tokens, watch history, and all data. This cannot be undone.</div>
+      </div>
+      <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.2);border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--text-dim);line-height:1.6">
+        Signed in as <strong style="color:var(--text)">${_currentUser?.email || 'your account'}</strong>.<br>
+        You may request a copy of your data first by emailing <span style="color:var(--text)">support@sphynxmotion.com</span>.<br>
+        Deletion is processed within 30 days.
+      </div>
+      <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);margin-bottom:8px" onclick="closeModal()">Cancel — Keep My Account</button>
+      <button class="btn-generate" style="background:var(--danger)" onclick="confirmDeleteAccount()">I Understand — Delete My Account →</button>
+    `;
+  },
   'report': `
     <div class="modal-title">Report Content</div>
     <div class="modal-sub">Select the reason that best describes the issue.</div>
@@ -3184,6 +3519,93 @@ const modalContent = {
     </div>
     <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">I Understand →</button>
   `,
+  'notifications': `
+    <div class="modal-title">Notifications</div>
+    <div class="modal-sub">Activity from your watchlist and Echo events</div>
+    <div style="text-align:center;padding:32px 0;color:var(--text-faint)">
+      <div style="font-size:32px;margin-bottom:10px">🔔</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">All caught up</div>
+      <div style="font-size:12px">New episodes, Echo votes, and Soul rewards will appear here.</div>
+      <button class="btn-generate" style="margin-top:16px;font-size:12px" onclick="requestPushPermission();closeModal()">Enable Push Notifications →</button>
+    </div>
+  `,
+  'language': () => {
+    const langs = _availableLangs.length ? _availableLangs : _fallbackLangs;
+    return `
+    <div class="modal-title">Language · <span style="font-size:12px;font-weight:400;color:var(--text-faint)">${langs.length} available</span></div>
+    <div class="modal-sub">Choose your preferred language for the app</div>
+    <div id="langList">${langs.map(l => `
+      <div id="lang-row-${l.code}" onclick="setLanguage('${l.code}')"
+        style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:${l.code===_currentLang?'var(--red)':'var(--text)'}">${l.native_name || l.name}</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:2px">${l.name}</div>
+        </div>
+        ${l.code === _currentLang ? '<span style="color:var(--red);font-size:18px;font-weight:800">✓</span>' : '<span style="width:18px"></span>'}
+      </div>`).join('')}
+    </div>`;
+  },
+  'settings': () => `
+    <div class="modal-title">Settings</div>
+    <div style="margin-bottom:4px">
+      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Preferences</div>
+      <div class="prof-menu-item" onclick="closeModal();openModal('language')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="pmi-icon">🌍</span><span class="pmi-label">Language</span>
+        <div class="pmi-right"><span class="pmi-value">${(_availableLangs||[]).find(l=>l.code===_currentLang)?.native_name||document.getElementById('langDisplayName')?.textContent||'English'}</span><span class="pmi-chevron">›</span></div>
+      </div>
+      <div class="prof-menu-item" onclick="closeModal();openModal('coming')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="pmi-icon">🔔</span><span class="pmi-label">Notifications</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+    </div>
+    ${isLoggedIn ? `<div style="margin-bottom:4px;margin-top:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Membership</div>
+      <div class="prof-menu-item" onclick="closeModal();switchScreen('member',document.querySelectorAll('.nav-btn')[2])" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="pmi-icon">💳</span><span class="pmi-label">Soul Pass</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+      <div class="prof-menu-item" onclick="closeModal();openModal('wallet')" style="padding:13px 0">
+        <span class="pmi-icon">👛</span><span class="pmi-label">My Wallet</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+    </div>` : ''}
+    <div style="margin-bottom:4px;margin-top:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Legal</div>
+      <div class="prof-menu-item" onclick="openModal('privacy')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="pmi-icon">🔒</span><span class="pmi-label">Privacy Policy</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+      <div class="prof-menu-item" onclick="closeModal();openModal('terms')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="pmi-icon">📄</span><span class="pmi-label">Terms of Service</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+      <div class="prof-menu-item" onclick="closeModal();openModal('content-policy')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="pmi-icon">🎬</span><span class="pmi-label">Content Policy</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+      <div class="prof-menu-item" onclick="closeModal();openModal('soul-terms')" style="padding:13px 0">
+        <span class="pmi-icon">⚡</span><span class="pmi-label">Soul Token Terms</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Account</div>
+      <div class="prof-menu-item" onclick="closeModal();openModal('support')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span class="pmi-icon">💬</span><span class="pmi-label">Help &amp; Support</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>
+      ${isLoggedIn ? `<div class="prof-menu-item" onclick="closeModal();openModal('delete-account')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05);color:var(--danger)">
+        <span class="pmi-icon">🗑️</span><span class="pmi-label" style="color:var(--danger)">Delete Account</span>
+        <div class="pmi-right"><span class="pmi-chevron" style="color:var(--danger)">›</span></div>
+      </div>
+      <div class="prof-menu-item" onclick="closeModal();logoutUser()" style="padding:13px 0;color:var(--danger)">
+        <span class="pmi-icon">🚪</span><span class="pmi-label" style="color:var(--danger)">Sign Out</span>
+      </div>` : `<div class="prof-menu-item" onclick="closeModal();openModal('login')" style="padding:13px 0">
+        <span class="pmi-icon">👤</span><span class="pmi-label">Sign In</span>
+        <div class="pmi-right"><span class="pmi-chevron">›</span></div>
+      </div>`}
+    </div>
+  `,
 };
 
 function submitReport(reason) {
@@ -3199,23 +3621,75 @@ function submitReport(reason) {
 function openModal(key) {
   const overlay = document.getElementById('modal');
   const content = document.getElementById('modalContent');
-  content.innerHTML = modalContent[key] || '<div class="modal-title">Coming Soon</div>';
+  const raw     = modalContent[key];
+  content.innerHTML = (typeof raw === 'function' ? raw() : raw) || '<div class="modal-title">Coming Soon</div>';
   overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
   initVoting();
+  if (key === 'wallet')   loadWalletBalance();
+  // language modal is now a function — no post-render load needed
+  if (key === 'search')   setTimeout(() => document.getElementById('searchInput')?.focus(), 50);
+  // Translate any data-i18n nodes inside the modal
+  if (_currentLang !== 'en') _applyTransToEl(content);
+}
+
+async function loadWalletBalance() {
+  const el = document.getElementById('walletBalance');
+  if (!el || !_sb || !_currentUser) return;
+  try {
+    const { data } = await _sb.from('profiles').select('soul_balance').eq('id', _currentUser.id).single();
+    if (data) el.textContent = (data.soul_balance ?? 0).toLocaleString();
+  } catch {}
 }
 
 function closeModal(e) {
   if (!e || e.target === document.getElementById('modal')) {
     document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
   }
 }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('modal');
+    if (modal?.classList.contains('open')) closeModal();
+    const video = document.getElementById('videoOverlay');
+    if (video?.classList.contains('open')) closeVideoPlayer();
+  }
+});
 
 /* ─── VIDEO PLAYER — defined below with HLS support ─────────────────────── */
 
 function closeVideoPlayer() {
   const video = document.getElementById('mainVideo');
+  if (video.duration && _currentEpisodeId) {
+    _saveProgress(Math.round((video.currentTime / video.duration) * 100));
+  }
   video.pause();
-  document.getElementById('videoOverlay').classList.remove('open');
+  if (window._hls) { window._hls.destroy(); window._hls = null; }
+  video.removeAttribute('src');
+  clearTimeout(window._autoNextTimer);
+  clearTimeout(controlsTimeout);
+  const overlay = document.getElementById('videoOverlay');
+  overlay.classList.remove('open', 'show-controls');
+  document.getElementById('vpEndCard')?.classList.remove('show');
+  document.getElementById('videoStateLoading')?.classList.remove('visible');
+  document.getElementById('videoStateError')?.classList.remove('visible');
+  document.body.style.overflow = '';
+  // Refresh Continue Watching row after player closes
+  setTimeout(() => { if (typeof _loadContinueWatching === 'function') _loadContinueWatching(); }, 500);
+}
+
+async function _saveProgress(pct) {
+  if (!_currentEpisodeId || !isLoggedIn) return;
+  window._lastProgressSave = Date.now();
+  try {
+    await fetch('/api/engage/progress/' + _currentEpisodeId, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ progress_pct: pct }),
+    });
+  } catch {}
 }
 
 function togglePlay() {
@@ -3234,32 +3708,48 @@ function updatePlayBtn() {
 
 function updateVideoProgress() {
   const video = document.getElementById('mainVideo');
-  if (!video.duration) return;
+  if (!video.duration || isNaN(video.duration)) return;
   const pct = (video.currentTime / video.duration) * 100;
   document.getElementById('videoProgressFill').style.width = pct + '%';
-  const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+  const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   document.getElementById('videoTime').textContent = `${fmt(video.currentTime)} / ${fmt(video.duration)}`;
   updatePlayBtn();
+  if (!window._lastProgressSave || Date.now() - window._lastProgressSave > 30000) {
+    _saveProgress(Math.round(pct));
+  }
 }
 
 function videoEnded() {
   updatePlayBtn();
+  const overlay = document.getElementById('videoOverlay');
+  overlay?.classList.remove('show-controls');
+  if (_playlist.length > 1 && _epIndex >= 0 && _epIndex < _playlist.length - 1) {
+    const next = _playlist[_epIndex + 1];
+    const card = document.getElementById('vpEndCard');
+    const t    = document.getElementById('vpEndTitle');
+    const l    = document.getElementById('vpEndLabel');
+    if (t) t.textContent = next.title || ('Episode ' + next.episode_number);
+    if (l) l.textContent = 'E' + next.episode_number + ' · ' + (_epIndex + 2) + ' of ' + _playlist.length;
+    card?.classList.add('show');
+    clearTimeout(window._autoNextTimer);
+    window._autoNextTimer = setTimeout(() => _nextEpisode(), 6000);
+  }
 }
 
 function seekVideo(e) {
   const video = document.getElementById('mainVideo');
   const bar   = e.currentTarget;
-  const ratio = e.offsetX / bar.offsetWidth;
-  video.currentTime = ratio * video.duration;
+  const ratio = Math.max(0, Math.min(1, e.offsetX / bar.offsetWidth));
+  if (video.duration) video.currentTime = ratio * video.duration;
 }
 
 let controlsTimeout;
 function toggleVideoControls() {
-  const wrap = document.getElementById('videoWrap');
-  wrap.classList.toggle('show-controls');
+  const overlay = document.getElementById('videoOverlay');
+  overlay.classList.toggle('show-controls');
   clearTimeout(controlsTimeout);
-  if (wrap.classList.contains('show-controls')) {
-    controlsTimeout = setTimeout(() => wrap.classList.remove('show-controls'), 3000);
+  if (overlay.classList.contains('show-controls')) {
+    controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 3500);
   }
 }
 
@@ -3362,6 +3852,8 @@ function handleVersionTap() {
 let _sb = null;
 let isLoggedIn = false;
 let _currentUser = null;
+let _currentEpisodeId = null;
+let _currentSeriesId  = null;
 
 async function initSupabase() {
   try {
@@ -3380,28 +3872,91 @@ async function initSupabase() {
         if (session) document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax`;
         else document.cookie = 'sphynx_session=;path=/;max-age=0';
         updateProfileUI();
+        if (event === 'SIGNED_IN') setTimeout(claimDailyLogin, 1500);
       });
     }
   } catch {}
 }
 
 function updateProfileUI() {
-  const soulRow   = document.getElementById('profSoulRow');
-  const guestCta  = document.getElementById('profGuestCta');
-  const loginBtn  = document.getElementById('profLoginBtn');
-  const logoutBtn = document.getElementById('profLogoutBtn');
-  if (!soulRow) return;
-  if (isLoggedIn) {
-    soulRow.style.display   = '';
-    guestCta.style.display  = 'none';
-    loginBtn.style.display  = 'none';
-    logoutBtn.style.display = '';
-  } else {
-    soulRow.style.display   = 'none';
-    guestCta.style.display  = '';
-    loginBtn.style.display  = '';
-    logoutBtn.style.display = 'none';
+  const isAuth = isLoggedIn && !!_currentUser;
+
+  // Toggle the two top-level containers — plain inline style, no CSS dependency
+  const guestSection = document.getElementById('profGuestSection');
+  const authSection  = document.getElementById('profAuthSection');
+  const authFooter   = document.getElementById('profAuthFooter');
+
+  if (guestSection) guestSection.style.display = isAuth ? 'none' : 'block';
+  if (authSection)  authSection.style.display  = isAuth ? 'block' : 'none';
+  if (authFooter)   authFooter.style.display   = isAuth ? 'block' : 'none';
+
+  if (isAuth) {
+    const nameEl = document.getElementById('profDisplayName');
+    if (nameEl) nameEl.textContent = _currentUser.user_metadata?.display_name
+      || _currentUser.email?.split('@')[0] || 'Member';
+    const idLine = document.getElementById('profIdLine');
+    if (idLine) idLine.textContent = _currentUser.email || '';
+    _loadProfileData();
   }
+
+  // Refresh the Continue Watching row whenever auth state changes
+  if (typeof _loadContinueWatching === 'function') _loadContinueWatching();
+}
+
+async function _loadProfileData() {
+  if (!_sb || !_currentUser) return;
+  try {
+    const [profileRes, epRes, voteRes] = await Promise.all([
+      _sb.from('profiles').select('soul_balance, subscription_status, display_name').eq('id', _currentUser.id).single(),
+      _sb.from('episode_progress').select('id', { count: 'exact', head: true }).eq('user_id', _currentUser.id).eq('completed', true),
+      _sb.from('echo_votes').select('id', { count: 'exact', head: true }).eq('user_id', _currentUser.id),
+    ]);
+
+    const data = profileRes.data;
+    if (!data) return;
+
+    const soul = data.soul_balance ?? 0;
+    const eps  = epRes.count  ?? 0;
+    const votes = voteRes.count ?? 0;
+
+    // Wallet
+    const walletVal = document.getElementById('profWalletValue');
+    if (walletVal) walletVal.textContent = soul.toLocaleString() + ' Soul';
+    const walletBal = document.getElementById('walletBalance');
+    if (walletBal) walletBal.textContent = soul.toLocaleString();
+
+    // Name
+    const nameEl = document.getElementById('profDisplayName');
+    if (nameEl && data.display_name) nameEl.textContent = data.display_name;
+
+    // Stats
+    const scoreEl = document.getElementById('profSoulScore');
+    if (scoreEl) scoreEl.textContent = soul.toLocaleString();
+
+    const arcEl = document.getElementById('profSoulArc');
+    if (arcEl) {
+      // Arc: max display at 5000 soul; dashoffset 132→0 as soul increases
+      const ratio = Math.min(soul / 5000, 1);
+      arcEl.setAttribute('stroke-dashoffset', String(Math.round(132 - ratio * 132)));
+    }
+
+    const rankEl = document.getElementById('profSoulRank');
+    if (rankEl) {
+      const rank = soul >= 5000 ? '✦ Soul Master' : soul >= 2000 ? '✦ Deep Watcher' : soul >= 500 ? '✦ Echo Seeker' : '✦ New Soul';
+      rankEl.textContent = rank;
+    }
+
+    const epEl = document.getElementById('profEpCount');
+    if (epEl) epEl.textContent = eps;
+
+    const voteEl = document.getElementById('profVoteCount');
+    if (voteEl) voteEl.textContent = votes;
+
+    // Hide "Join Soul Pass" banner if already subscribed
+    const banner = document.getElementById('profMemberBanner');
+    if (banner) banner.style.display = data.subscription_status === 'active' ? 'none' : '';
+
+  } catch {}
 }
 
 async function loginUser() {
@@ -3416,12 +3971,33 @@ async function loginUser() {
     const { error } = await _sb.auth.signInWithPassword({ email, password: pass });
     if (error) throw error;
     closeModal();
+    _track('login', { method: 'email' });
     toast('Welcome back!', 'success');
+    setTimeout(claimDailyLogin, 1000);
+    setTimeout(requestPushPermission, 2000);
   } catch (e) {
-    if (errEl) { errEl.textContent = e.message || 'Login failed.'; errEl.style.display = ''; }
+    if (errEl) {
+      const msg = e.message || '';
+      errEl.textContent = (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials'))
+        ? 'Email or password is incorrect. Use "Forgot password?" to reset.'
+        : msg || 'Login failed. Please try again.';
+      errEl.style.display = '';
+    }
   } finally {
     if (btn) btn.textContent = 'Sign in →';
   }
+}
+
+async function forgotPassword() {
+  const email = document.getElementById('loginEmail')?.value?.trim();
+  const errEl = document.getElementById('loginError');
+  if (!email) {
+    if (errEl) { errEl.textContent = 'Enter your email above first.'; errEl.style.display = ''; }
+    return;
+  }
+  if (!_sb) return;
+  await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  if (errEl) { errEl.style.background = 'rgba(80,200,120,.1)'; errEl.style.borderColor = 'rgba(80,200,120,.3)'; errEl.style.color = '#50C878'; errEl.textContent = 'Password reset email sent — check your inbox.'; errEl.style.display = ''; }
 }
 
 async function signupUser() {
@@ -3433,14 +4009,28 @@ async function signupUser() {
     if (errEl) { errEl.textContent = 'Valid email and password (min 8 chars) required.'; errEl.style.display = ''; }
     return;
   }
+  const btn = document.querySelector('#modalContent .btn-generate');
+  if (btn) btn.textContent = 'Creating account…';
   try {
     if (!_sb) throw new Error('App not fully configured — Supabase keys missing in server/.env');
-    const { error } = await _sb.auth.signUp({ email, password: pass, options: { data: { display_name: name || email.split('@')[0] } } });
+    const { data, error } = await _sb.auth.signUp({ email, password: pass, options: { data: { display_name: name || email.split('@')[0] } } });
     if (error) throw error;
+    const needsConfirm = !data.session;
     closeModal();
-    toast('Account created! Check your email to confirm.', 'success');
+    _track('signup', { method: 'email' });
+    if (needsConfirm) {
+      toast('Account created! Check your email to confirm, then log in.', 'success');
+    } else {
+      toast('Welcome to SPHYNX MOTION!', 'success');
+    }
   } catch (e) {
-    if (errEl) { errEl.textContent = e.message || 'Signup failed.'; errEl.style.display = ''; }
+    if (errEl) {
+      errEl.textContent = e.message?.includes('already registered')
+        ? 'An account with this email already exists. Log in instead.'
+        : e.message || 'Signup failed. Please try again.';
+      errEl.style.display = '';
+    }
+    if (btn) btn.textContent = 'Create Account →';
   }
 }
 
@@ -3453,58 +4043,306 @@ async function logoutUser() {
   updateProfileUI();
 }
 
-/* ─── VIDEO PLAYER — HLS SUPPORT ────────────────────────────────────────── */
-function openVideoPlayer(src, title, ep, type) {
+function confirmDeleteAccount() {
+  const content = document.getElementById('modalContent');
+  if (!content) return;
+  content.innerHTML = `
+    <div style="text-align:center;padding:10px 0 6px">
+      <div style="font-size:36px;margin-bottom:10px">🗑️</div>
+      <div class="modal-title" style="color:var(--danger)">Final Confirmation</div>
+      <div class="modal-sub" style="margin-bottom:16px">This will permanently delete your account and all associated data. You will be signed out immediately.</div>
+    </div>
+    <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.25);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-dim);line-height:1.7">
+      ✗ Soul Tokens balance (non-refundable)<br>
+      ✗ Watch history and Echo Votes<br>
+      ✗ Soul Pass membership<br>
+      ✗ Profile and all saved data
+    </div>
+    <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);margin-bottom:8px" onclick="closeModal()">Cancel — Keep My Account</button>
+    <button class="btn-generate" style="background:var(--danger)" onclick="submitDeleteAccount()">Delete My Account Permanently →</button>
+  `;
+}
+
+async function submitDeleteAccount() {
+  const content = document.getElementById('modalContent');
+  if (content) {
+    content.innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:32px;margin-bottom:12px">⏳</div>
+        <div class="modal-title">Deleting Account…</div>
+        <div class="modal-sub">Please wait, this may take a moment.</div>
+      </div>`;
+  }
+
+  try {
+    const session = _sb ? (await _sb.auth.getSession()).data.session : null;
+    const token   = session?.access_token;
+    if (!token) throw new Error('No session');
+
+    const res = await fetch('/api/account', {
+      method:  'DELETE',
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Deletion failed');
+
+    closeModal();
+    toast('Your account has been permanently deleted.', 'success');
+    await new Promise(r => setTimeout(r, 1800));
+    logoutUser();
+  } catch (e) {
+    closeModal();
+    toast('Could not delete account: ' + e.message, 'error');
+  }
+}
+
+/* ─── VIDEO PLAYER ───────────────────────────────────────────────────────── */
+
+// Playlist state for the immersive player
+let _playlist      = [];
+let _epIndex       = -1;
+let _vpWatchlisted = false;
+
+function openVideoPlayer(src, seriesTitle, epLabel, type) {
   const overlay = document.getElementById('videoOverlay');
   const video   = document.getElementById('mainVideo');
 
-  if (src) {
-    const isHls = type === 'hls' || src.includes('.m3u8');
-    if (isHls && window.Hls && Hls.isSupported()) {
-      if (window._hls) { window._hls.destroy(); window._hls = null; }
-      const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
-      hls.loadSource(src);
-      hls.attachMedia(video);
-      window._hls = hls;
-    } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = src; // Safari native HLS
-    } else if (!isHls) {
-      if (window._hls) { window._hls.destroy(); window._hls = null; }
-      if (video.src !== new URL(src, location.href).href) video.src = src;
-    }
-    document.getElementById('videoProgressFill').style.width = '0%';
-    document.getElementById('videoTime').textContent = '0:00 / --:--';
+  document.getElementById('videoProgressFill').style.width = '0%';
+  document.getElementById('videoTime').textContent = '—:— / —:—';
+  _videoHideLoading();
+  document.getElementById('videoStateError').classList.remove('visible');
+  document.getElementById('vpEndCard')?.classList.remove('show');
+  clearTimeout(window._autoNextTimer);
+
+  if (seriesTitle) document.getElementById('videoTitle').textContent = seriesTitle;
+  if (epLabel)     document.getElementById('videoEp').textContent    = epLabel;
+  _updateVpCounter();
+
+  overlay.classList.add('open', 'show-controls');
+  document.body.style.overflow = 'hidden';
+  clearTimeout(controlsTimeout);
+  controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 3500);
+
+  if (!src) {
+    if (!video.src || video.error) { _videoShowComingSoon(); return; }
+    video.play().catch(() => {}); updatePlayBtn(); return;
   }
 
-  document.getElementById('videoTitle').textContent = title || 'Gold Veins';
-  document.getElementById('videoEp').textContent    = ep    || 'S1 · E3 — "The Third Name"';
-  overlay.classList.add('open');
-  video.play().catch(() => {});
-  updatePlayBtn();
+  _videoShowLoading();
+  const isHls = type === 'hls' || src.includes('.m3u8');
+  if (isHls && window.Hls && Hls.isSupported()) {
+    if (window._hls) { window._hls.destroy(); window._hls = null; }
+    const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+    hls.on(Hls.Events.ERROR, (ev, d) => { if (d.fatal) _onVideoError(); });
+    hls.loadSource(src); hls.attachMedia(video); window._hls = hls;
+  } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = src;
+  } else {
+    if (window._hls) { window._hls.destroy(); window._hls = null; }
+    if (video.src !== new URL(src, location.href).href) video.src = src;
+  }
+  video.play().catch(() => {}); updatePlayBtn();
+}
+
+function _updateVpCounter() {
+  const el = document.getElementById('vpEpCounter');
+  if (!el) return;
+  if (_playlist.length > 1 && _epIndex >= 0) {
+    el.textContent = 'E' + (_epIndex + 1) + ' / ' + _playlist.length;
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+  const nextBtn = document.getElementById('vpNextBtn');
+  if (nextBtn) nextBtn.style.opacity = (_epIndex >= _playlist.length - 1) ? '0.3' : '1';
+}
+
+async function _loadPlaylist(seriesId) {
+  try {
+    const res  = await fetch('/api/content/series/' + seriesId);
+    const data = await res.json();
+    _playlist  = (data.series?.episodes || [])
+      .filter(ep => ep.status === 'live')
+      .sort((a, b) => a.episode_number - b.episode_number);
+    return data.series;
+  } catch { _playlist = []; return null; }
+}
+
+async function _gotoEpisode(idx) {
+  if (idx < 0 || idx >= _playlist.length) return;
+  _epIndex = idx;
+  document.getElementById('vpEndCard')?.classList.remove('show');
+  clearTimeout(window._autoNextTimer);
+  _updateVpCounter();
+  const ep          = _playlist[idx];
+  const seriesTitle = document.getElementById('videoTitle')?.textContent || '';
+  const epLabel     = 'E' + ep.episode_number + (ep.title ? ' — ' + ep.title : '');
+  await playEpisode(ep.id, seriesTitle, epLabel);
+}
+
+function _nextEpisode() {
+  if (_epIndex < _playlist.length - 1) _gotoEpisode(_epIndex + 1);
+}
+function _prevEpisode() {
+  if (_epIndex > 0) _gotoEpisode(_epIndex - 1);
+}
+
+function vpToggleWatchlist() {
+  if (!isLoggedIn) { openModal('login'); return; }
+  const sid = _currentSeriesId;
+  if (!sid) return;
+  _vpWatchlisted = !_vpWatchlisted;
+  const icon = document.getElementById('vpWatchlistIcon');
+  icon?.classList.toggle('active', _vpWatchlisted);
+  fetch('/api/engage/watchlist/' + sid, {
+    method: _vpWatchlisted ? 'POST' : 'DELETE',
+    credentials: 'include',
+  }).then(() => {
+    toast(_vpWatchlisted ? 'Added to watchlist' : 'Removed from watchlist');
+  }).catch(() => {
+    _vpWatchlisted = !_vpWatchlisted;
+    icon?.classList.toggle('active', _vpWatchlisted);
+  });
+}
+
+function vpShare() {
+  const title = document.getElementById('videoTitle')?.textContent || 'SPHYNX MOTION';
+  const ep    = document.getElementById('videoEp')?.textContent || '';
+  const url   = window.location.origin;
+  if (navigator.share) {
+    navigator.share({ title: title + (ep ? ' · ' + ep : ''), text: 'Watch on SPHYNX MOTION', url }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(url).then(() => toast('Link copied!')).catch(() => {});
+  }
+}
+
+function _initSwipe() {
+  const overlay = document.getElementById('videoOverlay');
+  let startY = 0, startX = 0, swiping = false;
+
+  overlay.addEventListener('touchstart', e => {
+    if (e.target.closest('.vp-rail-btn,.vp-close-btn,.vp-bottom,.vp-rail,.video-state,.vp-end-card')) return;
+    startY = e.touches[0].clientY; startX = e.touches[0].clientX; swiping = false;
+  }, { passive: true });
+
+  overlay.addEventListener('touchmove', e => {
+    const dy = e.touches[0].clientY - startY;
+    const dx = e.touches[0].clientX - startX;
+    if (!swiping && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) swiping = true;
+    if (!swiping) return;
+    const THRESH = 60;
+    const canNext = _epIndex < _playlist.length - 1;
+    const canPrev = _epIndex > 0;
+    document.getElementById('vpSwipeNext')?.classList.toggle('show', dy < -THRESH && canNext);
+    document.getElementById('vpSwipePrev')?.classList.toggle('show', dy > THRESH  && canPrev);
+  }, { passive: true });
+
+  overlay.addEventListener('touchend', e => {
+    document.getElementById('vpSwipeNext')?.classList.remove('show');
+    document.getElementById('vpSwipePrev')?.classList.remove('show');
+    if (!swiping) { toggleVideoControls(); return; }
+    const dy = e.changedTouches[0].clientY - startY;
+    if      (dy < -80) _nextEpisode();
+    else if (dy >  80) _prevEpisode();
+  }, { passive: true });
+}
+
+function _onVideoReady() {
+  _videoHideLoading();
+  updateVideoProgress();
+}
+function _videoShowLoading() {
+  document.getElementById('videoStateLoading').classList.add('visible');
+  document.getElementById('videoStateError').classList.remove('visible');
+}
+function _videoHideLoading() {
+  document.getElementById('videoStateLoading').classList.remove('visible');
+}
+function _onVideoError() {
+  _videoHideLoading();
+  _videoShowComingSoon();
+}
+function _videoShowComingSoon(title, sub) {
+  document.getElementById('videoStateTitle').textContent = title || 'Video Coming Soon';
+  document.getElementById('videoStateSub').textContent   = sub   || 'This episode is being prepared. Check back soon.';
+  document.getElementById('videoStateError').classList.add('visible');
+  document.getElementById('videoStateLoading').classList.remove('visible');
+}
+function _toggleMute() {
+  const video = document.getElementById('mainVideo');
+  video.muted = !video.muted;
+  const btn = document.getElementById('muteBtn');
+  if (btn) btn.style.opacity = video.muted ? '0.4' : '1';
 }
 
 /* ─── EPISODE / SERIES PLAYBACK FROM API ────────────────────────────────── */
 async function playSeries(seriesId) {
+  _currentSeriesId  = seriesId;
+  _playlist         = [];
+  _epIndex          = -1;
+  _vpWatchlisted    = false;
+
+  // Open overlay immediately to show loading state
+  const overlay = document.getElementById('videoOverlay');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  _videoShowLoading();
+
   try {
-    const res  = await fetch('/api/content/series/' + seriesId);
-    const data = await res.json();
-    const ep   = (data.series?.episodes || [])[0];
-    if (!ep) { toast('No episodes available yet'); return; }
-    playEpisode(ep.id, data.series.title, 'E' + ep.episode_number + ' — ' + ep.title);
-  } catch { toast('Could not load episode'); }
+    const series = await _loadPlaylist(seriesId);
+    if (!_playlist.length) { closeVideoPlayer(); toast('No episodes available yet'); return; }
+
+    // Cache genre/lang so recommendation rows can update after player closes
+    if (series?.genre)    _lastWatchedGenre = series.genre;
+    if (series?.language) _lastWatchedLang  = series.language;
+
+    _track('series_view', { series_id: seriesId, title: series?.title, genre: series?.genre });
+
+    // Series title
+    document.getElementById('videoTitle').textContent = series?.title || 'SPHYNX MOTION';
+
+    // Check watchlist state async
+    if (isLoggedIn) {
+      fetch('/api/engage/watchlist', { credentials: 'include' }).then(r => r.json()).then(d => {
+        _vpWatchlisted = (d.watchlist || []).some(s => s.id === seriesId || s.series_id === seriesId);
+        document.getElementById('vpWatchlistIcon')?.classList.toggle('active', _vpWatchlisted);
+      }).catch(() => {});
+    }
+
+    // Find resume point
+    let startIdx = 0;
+    if (isLoggedIn && _sb && _currentUser) {
+      try {
+        const { data } = await _sb.from('episode_progress')
+          .select('episode_id, progress_pct').in('episode_id', _playlist.map(e => e.id))
+          .eq('user_id', _currentUser.id).order('updated_at', { ascending: false }).limit(1).single();
+        if (data) {
+          const idx = _playlist.findIndex(e => e.id === data.episode_id);
+          if (idx >= 0) startIdx = data.progress_pct >= 95 ? Math.min(idx + 1, _playlist.length - 1) : idx;
+        }
+      } catch {}
+    }
+
+    await _gotoEpisode(startIdx);
+  } catch { closeVideoPlayer(); toast('Could not load series'); }
 }
 
-async function playEpisode(episodeId, title, epLabel) {
+async function playEpisode(episodeId, seriesTitle, epLabel) {
+  _currentEpisodeId = episodeId;
+  const idx = _playlist.findIndex(e => e.id === episodeId);
+  if (idx >= 0) { _epIndex = idx; _updateVpCounter(); }
+
   try {
-    const res  = await fetch('/api/content/episodes/' + episodeId + '/play', {
+    const session = _sb ? (await _sb.auth.getSession()).data.session : null;
+    const res = await fetch('/api/content/episodes/' + episodeId + '/play', {
       credentials: 'include',
-      headers: _currentUser ? { Authorization: 'Bearer ' + (_sb ? (await _sb.auth.getSession()).data.session?.access_token : '') } : {},
+      headers: session ? { Authorization: 'Bearer ' + session.access_token } : {},
     });
     const data = await res.json();
     if (res.status === 401) { openModal('login'); return; }
-    if (res.status === 403) { toast(data.cost + ' Soul required — buy Soul Tokens to watch'); return; }
+    if (res.status === 403) { toast((data.cost || '?') + ' Soul required to watch'); return; }
     if (!res.ok) { toast(data.error || 'Playback error'); return; }
-    openVideoPlayer(data.url, title, epLabel, data.type);
+    openVideoPlayer(data.url, seriesTitle, epLabel, data.type);
   } catch { toast('Could not load video'); }
 }
 
@@ -3535,7 +4373,7 @@ function renderSlide(s) {
       <img class="fy-bg" src="${esc(poster)}" alt="${esc(s.title)}">
       <div class="fy-grad"></div>
       <div class="fy-right">
-        <div class="fy-action" onclick="fyBookmark(this)">
+        <div class="fy-action" onclick="fyBookmark(this,'${esc(s.id)}')">
           <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
           <div class="fy-action-count">—</div>
         </div>
@@ -3573,37 +4411,529 @@ function renderTCard(s, rank) {
     </div>`;
 }
 
+// Track the active home tab for re-fetching
+let _activeHomeTab = 'popular';
+
 async function loadContent() {
+  const homeGrid  = document.getElementById('homeGrid');
+  const fyStack   = document.getElementById('fyStack');
+  const trendGrid = document.getElementById('trendingGrid');
+
   try {
-    const res  = await fetch('/api/content/featured');
-    if (!res.ok) return;
-    const { featured = [], trending = [] } = await res.json();
-    if (!featured.length && !trending.length) return; // no real content yet — keep demo
+    const [featRes, allRes] = await Promise.all([
+      fetch('/api/content/featured'),
+      fetch('/api/content/series?limit=48'),
+    ]);
 
-    const allSeries = [...featured, ...trending].filter((s, i, a) => a.findIndex(x => x.id === s.id) === i);
+    const { featured = [], trending = [] } = featRes.ok ? await featRes.json() : {};
+    const { series: liveSeries = [] }      = allRes.ok  ? await allRes.json()  : {};
 
-    if (allSeries.length) {
-      document.getElementById('homeGrid').innerHTML = allSeries.map(s => renderCard(s)).join('');
-    }
-    if (featured.length) {
-      document.getElementById('fyStack').innerHTML = featured.map(s => renderSlide(s)).join('');
+    // Cache all series for tab filtering without re-fetching
+    window._allSeries    = liveSeries;
+    window._featuredList = featured;
+    window._trendingList = trending;
+
+    // Render the initial (popular) home grid
+    _renderHomeGrid(_activeHomeTab);
+
+    // For You stack — featured first, then live series as fallback
+    const fyCards = featured.length ? featured : liveSeries.slice(0, 4);
+    if (fyStack) {
+      fyStack.innerHTML = fyCards.length
+        ? fyCards.map(s => renderSlide(s)).join('')
+        : '<div class="fy-slide" style="display:flex;align-items:center;justify-content:center"><div style="color:rgba(255,255,255,.3);font-size:13px">Coming soon.</div></div>';
       initFyScroll();
     }
-    if (trending.length) {
-      const tg = document.getElementById('trendingGrid');
-      if (tg) tg.innerHTML = trending.map((s, i) => renderTCard(s, i + 1)).join('');
+
+    // Trending grid
+    const trendCards = trending.length ? trending : liveSeries.slice(0, 6);
+    if (trendGrid) {
+      trendGrid.innerHTML = trendCards.map((s, i) => renderTCard(s, i + 1)).join('');
     }
-  } catch { /* API unavailable — keep demo content */ }
+
+    // Load personalised rows after main content is painted
+    loadRecommendations();
+  } catch {
+    if (homeGrid) homeGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">Could not load content.</div>';
+  }
+}
+
+function _renderHomeGrid(tab) {
+  const homeGrid = document.getElementById('homeGrid');
+  if (!homeGrid) return;
+  const all      = window._allSeries    || [];
+  const trending = window._trendingList || [];
+  const featured = window._featuredList || [];
+
+  let cards;
+  if (tab === 'popular') {
+    // Trending-flagged first, then rest
+    const trendIds = new Set(trending.map(s => s.id));
+    cards = [...trending, ...all.filter(s => !trendIds.has(s.id))];
+  } else if (tab === 'new') {
+    // Already ordered by created_at desc — just show all
+    cards = all;
+  } else if (tab === 'rankings') {
+    // Sort by views descending
+    cards = [...all].sort((a, b) => (b.views || 0) - (a.views || 0));
+  } else if (tab === 'categories') {
+    // Group by genre — show a genre selector
+    _renderCategoriesGrid(homeGrid, all);
+    return;
+  } else {
+    // 'all' tab
+    cards = all;
+  }
+
+  homeGrid.innerHTML = cards.length
+    ? cards.map(s => renderCard(s)).join('')
+    : '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No series published yet.</div>';
+}
+
+function _renderCategoriesGrid(container, all) {
+  const genres = [...new Set(all.map(s => s.genre).filter(Boolean))].sort();
+  if (!genres.length) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No categories yet.</div>';
+    return;
+  }
+  container.innerHTML = genres.map(g => {
+    const sample = all.find(s => s.genre === g);
+    return `<div class="g-card" style="cursor:pointer" onclick="filterByGenre('${esc(g)}')">
+      <div class="g-card-thumb" style="position:relative;overflow:hidden;border-radius:var(--r-card)">
+        ${sample?.poster_url ? `<img src="${esc(sample.poster_url)}" alt="${esc(g)}" style="width:100%;height:100%;object-fit:cover;display:block">` : '<div style="width:100%;height:100%;background:var(--surface2)"></div>'}
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);display:flex;align-items:flex-end;padding:10px">
+          <span style="font-size:11px;font-weight:700;color:#fff">${esc(g)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function filterByGenre(genre) {
+  _activeHomeTab = 'all';
+  document.querySelectorAll('#homeTabStrip .tab-btn').forEach(b => b.classList.remove('active'));
+  const titleEl = document.getElementById('homeSectionTitle');
+  if (titleEl) titleEl.textContent = genre;
+  const homeGrid = document.getElementById('homeGrid');
+  if (homeGrid) homeGrid.innerHTML = '<div class="g-card-skeleton"></div>'.repeat(6);
+  try {
+    const res = await fetch(`/api/content/series?genre=${encodeURIComponent(genre)}&limit=48`);
+    const { series = [] } = res.ok ? await res.json() : {};
+    if (homeGrid) homeGrid.innerHTML = series.length
+      ? series.map(s => renderCard(s)).join('')
+      : `<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No ${esc(genre)} series yet.</div>`;
+  } catch {
+    if (homeGrid) homeGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">Could not load.</div>';
+  }
+}
+
+/* ─── RECOMMENDATIONS ────────────────────────────────────────────────────── */
+
+// Stores the genre of the last-watched series so the Similar row can refresh
+let _lastWatchedGenre    = null;
+let _lastWatchedLang     = null;
+
+async function loadRecommendations() {
+  // Continue Watching — only for logged-in users
+  _loadContinueWatching();
+  // Genre + language rows can run in parallel
+  _loadSimilarRow();
+  _loadLanguageRow();
+}
+
+async function _loadContinueWatching() {
+  const section = document.getElementById('cwSection');
+  const scroll  = document.getElementById('cwScroll');
+  if (!section || !scroll) return;
+
+  if (!isLoggedIn || !_sb || !_currentUser) {
+    section.style.display = 'none';
+    return;
+  }
+
+  try {
+    const token = _currentUser?.access_token || (await _sb.auth.getSession()).data?.session?.access_token;
+    const res = await fetch('/api/engage/continue-watching', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: 'include',
+    });
+    if (!res.ok) { section.style.display = 'none'; return; }
+    const { items = [] } = await res.json();
+    if (!items.length) { section.style.display = 'none'; return; }
+
+    // Remember last-watched genre/lang for recommendation rows
+    if (items[0].genre)    _lastWatchedGenre = items[0].genre;
+    if (items[0].language) _lastWatchedLang  = items[0].language;
+
+    scroll.innerHTML = items.map(item => `
+      <div class="rec-card" onclick="playSeries('${esc(item.series_id)}')">
+        <img src="${esc(item.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(item.series_title)}" loading="lazy">
+        <div class="rec-progress"><div class="rec-progress-fill" style="width:${item.progress_pct}%"></div></div>
+        <div class="rec-card-info">
+          <div class="rec-card-title">${esc(item.series_title)}</div>
+          <div class="rec-card-sub">E${item.episode_number} · ${item.progress_pct}% watched</div>
+        </div>
+      </div>`).join('');
+
+    section.style.display = '';
+    // Refresh similar row now that we know the genre
+    _loadSimilarRow();
+    _loadLanguageRow();
+  } catch {
+    section.style.display = 'none';
+  }
+}
+
+async function _loadSimilarRow() {
+  const section = document.getElementById('simSection');
+  const scroll  = document.getElementById('simScroll');
+  const label   = document.getElementById('simLabel');
+  if (!section || !scroll) return;
+
+  const genre = _lastWatchedGenre;
+  if (!genre) { section.style.display = 'none'; return; }
+
+  try {
+    const res = await fetch(`/api/content/series?genre=${encodeURIComponent(genre)}&limit=12`);
+    if (!res.ok) { section.style.display = 'none'; return; }
+    const { series = [] } = await res.json();
+    if (!series.length) { section.style.display = 'none'; return; }
+
+    if (label) label.textContent = `More ${genre}`;
+    scroll.innerHTML = series.map(s => `
+      <div class="rec-card" onclick="playSeries('${esc(s.id)}')">
+        <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(s.title)}" loading="lazy">
+        <div class="rec-card-info">
+          <div class="rec-card-title">${esc(s.title)}</div>
+          <div class="rec-card-sub">${esc(s.genre || '')}</div>
+        </div>
+      </div>`).join('');
+
+    section.style.display = '';
+  } catch {
+    section.style.display = 'none';
+  }
+}
+
+async function _loadLanguageRow() {
+  const section = document.getElementById('langSection');
+  const scroll  = document.getElementById('langScroll');
+  const label   = document.getElementById('langLabel');
+  if (!section || !scroll) return;
+
+  // Use last-watched language or the selected UI language (if not English)
+  const lang = _lastWatchedLang || (_currentLang !== 'en' ? _currentLang : null);
+  if (!lang || lang === 'en') { section.style.display = 'none'; return; }
+
+  try {
+    const res = await fetch(`/api/content/series?language=${encodeURIComponent(lang)}&limit=12`);
+    if (!res.ok) { section.style.display = 'none'; return; }
+    const { series = [] } = await res.json();
+    if (!series.length) { section.style.display = 'none'; return; }
+
+    const langName = _availableLangs.find(l => l.code === lang)?.native_name || lang.toUpperCase();
+    if (label) label.textContent = `In ${langName}`;
+    scroll.innerHTML = series.map(s => `
+      <div class="rec-card" onclick="playSeries('${esc(s.id)}')">
+        <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(s.title)}" loading="lazy">
+        <div class="rec-card-info">
+          <div class="rec-card-title">${esc(s.title)}</div>
+          <div class="rec-card-sub">${esc(s.genre || '')}</div>
+        </div>
+      </div>`).join('');
+
+    section.style.display = '';
+  } catch {
+    section.style.display = 'none';
+  }
+}
+
+/* ─── LANGUAGE / i18n ENGINE (v0.4) ─────────────────────────────────────── */
+let _currentLang    = 'en';
+let _availableLangs = [];
+let _transCache     = {}; // { namespace: { key: translatedValue } }
+
+const _fallbackLangs = [
+  { code:'en',  name:'English',          native_name:'English' },
+  { code:'zu',  name:'Zulu',             native_name:'isiZulu' },
+  { code:'xh',  name:'Xhosa',            native_name:'isiXhosa' },
+  { code:'af',  name:'Afrikaans',        native_name:'Afrikaans' },
+  { code:'st',  name:'Sesotho',          native_name:'Sesotho' },
+  { code:'tn',  name:'Setswana',         native_name:'Setswana' },
+  { code:'nso', name:'Sepedi',           native_name:'Sesepedi' },
+  { code:'ve',  name:'Tshivenda',        native_name:'Tshivenḓa' },
+  { code:'ts',  name:'Tsonga',           native_name:'Xitsonga' },
+  { code:'sw',  name:'Swahili',          native_name:'Kiswahili' },
+  { code:'yo',  name:'Yoruba',           native_name:'Yorùbá' },
+  { code:'ig',  name:'Igbo',             native_name:'Igbo' },
+  { code:'ha',  name:'Hausa',            native_name:'Hausa' },
+  { code:'pcm', name:'Nigerian Pidgin',  native_name:'Naijá' },
+  { code:'fr',  name:'French',           native_name:'Français' },
+  { code:'pt',  name:'Portuguese',       native_name:'Português' },
+  { code:'ar',  name:'Arabic',           native_name:'العربية' },
+];
+
+/* Cache original English text of every data-i18n element at page load.
+   This lets us restore English without re-fetching. */
+function _cacheEnglishText() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    if (!el.dataset.i18nEn) el.dataset.i18nEn = el.textContent.trim();
+  });
+}
+
+/* Apply translation cache to a root element (or document.body). */
+function _applyTransToEl(root) {
+  (root || document.body).querySelectorAll('[data-i18n]').forEach(el => {
+    const parts = (el.dataset.i18n || '').split('.');
+    if (parts.length < 2) return;
+    const [ns, key] = parts;
+    const val = _transCache[ns]?.[key];
+    if (val !== undefined && val !== null && val !== '') {
+      el.textContent = val;
+    } else if (_currentLang === 'en' && el.dataset.i18nEn) {
+      // Restore English
+      el.textContent = el.dataset.i18nEn;
+    }
+  });
+}
+
+/* Translation helper for JS-rendered strings. */
+function t(key, fallback) {
+  const parts = (key || '').split('.');
+  if (parts.length < 2) return fallback ?? key;
+  const [ns, k] = parts;
+  return _transCache[ns]?.[k] ?? fallback ?? key;
+}
+
+async function initLanguage() {
+  const stored = localStorage.getItem('sphynx_lang') || 'en';
+  _currentLang = stored;
+
+  try {
+    const { languages } = await fetch('/api/languages').then(r => r.json());
+    _availableLangs = languages?.length ? languages : _fallbackLangs;
+  } catch {
+    _availableLangs = _fallbackLangs;
+  }
+
+  // Cache English originals before any translation runs
+  _cacheEnglishText();
+  _updateLangDisplay();
+
+  if (_currentLang !== 'en') await applyTranslations(_currentLang);
+}
+
+function _updateLangDisplay() {
+  const lang = _availableLangs.find(l => l.code === _currentLang);
+  const el   = document.getElementById('langDisplayName');
+  if (el) el.textContent = lang ? (lang.native_name || lang.name) : 'English';
+}
+
+async function loadLanguageSelector() {
+  const container = document.getElementById('langList');
+  if (!container) return;
+  const langs = _availableLangs.length ? _availableLangs : _fallbackLangs;
+  container.innerHTML = langs.map(l => `
+    <div id="lang-row-${l.code}" onclick="setLanguage('${l.code}')"
+      style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;border-radius:6px;transition:background .15s"
+      onmouseenter="this.style.background='rgba(255,255,255,.04)'" onmouseleave="this.style.background=''">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:${l.code===_currentLang?'var(--red)':'var(--text)'}">${l.native_name || l.name}</div>
+        <div style="font-size:11px;color:var(--text-faint);margin-top:2px">${l.name}</div>
+      </div>
+      ${l.code === _currentLang
+        ? '<span style="color:var(--red);font-size:18px;font-weight:800;flex-shrink:0">✓</span>'
+        : '<span style="width:18px;flex-shrink:0"></span>'}
+    </div>`).join('');
+  // Scroll active item into view
+  const active = document.getElementById('lang-row-' + _currentLang);
+  if (active) setTimeout(() => active.scrollIntoView({ block: 'nearest' }), 60);
+}
+
+async function setLanguage(code) {
+  if (code === _currentLang) { closeModal(); return; }
+  _currentLang = code;
+  localStorage.setItem('sphynx_lang', code);
+
+  if (_sb && _currentUser) {
+    _sb.from('profiles').update({ preferred_language: code }).eq('id', _currentUser.id).catch(() => {});
+  }
+
+  _updateLangDisplay();
+  await applyTranslations(code);
+  closeModal();
+  const langName = (_availableLangs.find(l => l.code === code) || {}).native_name || code.toUpperCase();
+  toast(`${langName} ✓`, 'success');
+  // Refresh language recommendations row
+  if (typeof _loadLanguageRow === 'function') _loadLanguageRow();
+}
+
+async function applyTranslations(code) {
+  if (!code) return;
+
+  if (code === 'en') {
+    _transCache = {};
+    _applyTransToEl(document.body);
+    document.documentElement.dir = 'ltr';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/translations/' + code);
+    if (!res.ok) return;
+    const { translations } = await res.json();
+    _transCache = translations || {};
+
+    // Merge English fallback for any missing keys
+    try {
+      const enRes = await fetch('/api/translations/en');
+      if (enRes.ok) {
+        const { translations: enT } = await enRes.json();
+        for (const [ns, keys] of Object.entries(enT || {})) {
+          if (!_transCache[ns]) _transCache[ns] = {};
+          for (const [k, v] of Object.entries(keys)) {
+            if (_transCache[ns][k] === undefined) _transCache[ns][k] = v;
+          }
+        }
+      }
+    } catch {}
+
+    _applyTransToEl(document.body);
+
+    // RTL support
+    const lang = _availableLangs.find(l => l.code === code);
+    document.documentElement.dir = lang?.is_rtl ? 'rtl' : 'ltr';
+  } catch {}
 }
 
 /* ─── BOOT ───────────────────────────────────────────────────────────────── */
 (async () => {
+  _initSwipe();
   await initSupabase();
   updateProfileUI();
   loadContent();
+  await initLanguage();
+  // Sync language preference from profile if logged in
+  if (_sb && _currentUser) {
+    try {
+      const { data } = await _sb.from('profiles').select('preferred_language').eq('id', _currentUser.id).single();
+      if (data?.preferred_language && data.preferred_language !== _currentLang) {
+        await setLanguage(data.preferred_language);
+      }
+    } catch {}
+  }
+  // Handle Stripe / PayFast redirect callbacks
+  const params = new URLSearchParams(location.search);
+  if (params.get('payment') === 'success') {
+    toast('Payment successful! Your account has been updated.', 'success');
+    history.replaceState({}, '', location.pathname);
+  } else if (params.get('payment') === 'cancelled') {
+    toast('Payment cancelled.');
+    history.replaceState({}, '', location.pathname);
+  }
 })();
 
 /* Admin actions moved to /admin/dashboard.html */
+
+/* ─── PWA INSTALL PROMPT ─────────────────────────────────────────────────── */
+let _installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  if (!localStorage.getItem('installBannerDismissed')) showInstallBanner();
+});
+
+window.addEventListener('appinstalled', () => dismissInstallBanner());
+
+function showInstallBanner() {
+  document.getElementById('installBanner')?.classList.add('show');
+}
+
+function dismissInstallBanner() {
+  document.getElementById('installBanner')?.classList.remove('show');
+  localStorage.setItem('installBannerDismissed', '1');
+}
+
+async function installPWA() {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  await _installPrompt.userChoice;
+  _installPrompt = null;
+  dismissInstallBanner();
+}
+
+/* ─── WEB PUSH SUBSCRIPTION ──────────────────────────────────────────────── */
+function _urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function requestPushPermission() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if (Notification.permission === 'denied') return;
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const reg = await navigator.serviceWorker.ready;
+    const { key } = await fetch('/api/push/vapid-public-key').then(r => r.json());
+    if (!key) return;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlBase64ToUint8Array(key),
+    });
+    const p256dh = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('p256dh'))));
+    const auth   = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth'))));
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh, auth }, platform: 'web' }),
+    });
+  } catch {}
+}
+
+/* ─── PAYMENT FLOWS ──────────────────────────────────────────────────────── */
+function startSoulPassCheckout(plan) {
+  if (!_currentUser) { openModal('login'); return; }
+  window._checkoutPlan = (plan === 'annual' || plan === 'year') ? 'annual' : 'monthly';
+  _track('subscribe_click', { plan: window._checkoutPlan });
+  openModal('plan-checkout');
+}
+
+function buyTokens(packageId) {
+  if (!_currentUser) { openModal('login'); return; }
+  const pkgId = packageId || _selectedPkg || 'boost';
+  const pkgMeta = { starter:{soul:50,price:'R15'}, boost:{soul:150,price:'R39'}, power:{soul:400,price:'R89'}, mega:{soul:1000,price:'R199'} };
+  window._tokenPkg = { id: pkgId, ...(pkgMeta[pkgId] || pkgMeta.boost) };
+  openModal('token-checkout');
+}
+
+function _submitPayfastForm(data) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = data.action;
+  for (const [name, value] of Object.entries(data.fields || {})) {
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = name; inp.value = value;
+    form.appendChild(inp);
+  }
+  document.body.appendChild(form);
+  form.submit();
+}
 </script>
+
+<!-- PWA Install Banner -->
+<div id="installBanner">
+  <img src="SPHYNY_MOTION_FAV.png" class="ib-icon" alt="">
+  <div class="ib-text">
+    <div class="ib-title">Add to Home Screen</div>
+    <div class="ib-sub">Install for the best SPHYNX MOTION experience</div>
+  </div>
+  <button class="ib-btn" onclick="installPWA()">Install</button>
+  <button class="ib-dismiss" onclick="dismissInstallBanner()">✕</button>
+</div>
+
 </body>
 </html>

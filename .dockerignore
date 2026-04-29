@@ -1,4 +1,10 @@
 server/node_modules
 server/.env
+node_modules
 .git
+.gitignore
 *.md
+ios/
+android/
+scripts/
+capacitor.config.json.xmp

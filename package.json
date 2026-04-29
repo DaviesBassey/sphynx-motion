@@ -1,0 +1,26 @@
+{
+  "name": "sphynx-motion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SPHYNX MOTION — African vertical drama streaming PWA + native app",
+  "scripts": {
+    "start": "cd server && npm start",
+    "dev": "cd server && npm run dev",
+    "build": "echo 'Static app — no build step required'",
+    "cap:sync": "npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "cap:build:ios": "npx cap sync ios && npx cap build ios",
+    "cap:build:android": "npx cap sync android && npx cap build android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
+    "@capacitor/push-notifications": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
+  }
+}

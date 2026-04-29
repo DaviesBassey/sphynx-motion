@@ -9,7 +9,7 @@ async function requireAuth(req, res, next) {
   const token = req.cookies?.sphynx_admin_session;
 
   if (!token) {
-    if (req.path.startsWith('/api/')) {
+    if (req.originalUrl.startsWith('/api/')) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     return res.redirect('/admin/login');
@@ -20,7 +20,7 @@ async function requireAuth(req, res, next) {
 
   if (error || !data?.user) {
     res.clearCookie('sphynx_admin_session');
-    if (req.path.startsWith('/api/')) {
+    if (req.originalUrl.startsWith('/api/')) {
       return res.status(401).json({ error: 'Session expired' });
     }
     return res.redirect('/admin/login');
@@ -34,7 +34,7 @@ async function requireAuth(req, res, next) {
     .single();
 
   if (profileError || !profile) {
-    if (req.path.startsWith('/api/')) {
+    if (req.originalUrl.startsWith('/api/')) {
       return res.status(403).json({ error: 'Profile not found' });
     }
     return res.redirect('/admin/login');

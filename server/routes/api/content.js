@@ -98,15 +98,20 @@ router.get('/episodes', async (req, res) => {
 
 // POST /api/admin/content/episodes
 router.post('/episodes', requireRole('admin'), async (req, res) => {
-  const { series_id, episode_number, title, description, video_url, poster_url, duration, is_free, release_date, soul_cost } = req.body;
+  const { series_id, episode_number, season_number, title, description, video_url, mux_asset_id, poster_url, duration, is_free, release_date, soul_cost, status } = req.body;
 
   if (!series_id || !episode_number || !title) {
     return res.status(400).json({ error: 'series_id, episode_number, and title are required' });
   }
 
+  const safeStatus = ['live', 'draft', 'archived'].includes(status) ? status : 'draft';
+  const insertRow = { series_id, episode_number, title, description, video_url, poster_url, duration: duration || 0, is_free: !!is_free, release_date, soul_cost: soul_cost || 0, status: safeStatus };
+  if (season_number != null) insertRow.season_number = Number(season_number) || 1;
+  if (mux_asset_id)          insertRow.mux_asset_id  = mux_asset_id;
+
   const { data, error } = await supabaseAdmin
     .from('episodes')
-    .insert({ series_id, episode_number, title, description, video_url, poster_url, duration: duration || 0, is_free: !!is_free, release_date, soul_cost: soul_cost || 0, status: 'draft' })
+    .insert(insertRow)
     .select()
     .single();
 
@@ -118,7 +123,7 @@ router.post('/episodes', requireRole('admin'), async (req, res) => {
 
 // PUT /api/admin/content/episodes/:id
 router.put('/episodes/:id', requireRole('admin'), async (req, res) => {
-  const allowed = ['title', 'description', 'video_url', 'poster_url', 'duration', 'is_free', 'release_date', 'soul_cost', 'status'];
+  const allowed = ['title', 'description', 'video_url', 'mux_playback_id', 'mux_asset_id', 'poster_url', 'duration', 'is_free', 'release_date', 'soul_cost', 'status', 'season_number'];
   const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)));
 
   const { data, error } = await supabaseAdmin
@@ -132,6 +137,15 @@ router.put('/episodes/:id', requireRole('admin'), async (req, res) => {
 
   await audit(req.user.id, 'update_episode', 'episode', req.params.id, updates);
   res.json({ episode: data });
+});
+
+// DELETE /api/admin/content/episodes/:id (admin+)
+router.delete('/episodes/:id', requireRole('admin'), async (req, res) => {
+  const { error } = await supabaseAdmin.from('episodes').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+
+  await audit(req.user.id, 'delete_episode', 'episode', req.params.id, {});
+  res.json({ success: true });
 });
 
 // ── CATEGORIES ────────────────────────────────────────────────────────────────

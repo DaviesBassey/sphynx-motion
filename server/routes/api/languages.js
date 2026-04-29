@@ -75,4 +75,16 @@ router.put('/ui-translations', requireRole('superadmin'), async (req, res) => {
   res.json({ success: true, upserted: records.length });
 });
 
+// DELETE /api/admin/languages/:code  (superadmin only — deactivates, never hard-deletes)
+router.delete('/:code', requireRole('superadmin'), async (req, res) => {
+  if (req.params.code === 'en') return res.status(400).json({ error: 'English cannot be deactivated' });
+  const { data, error } = await supabaseAdmin
+    .from('languages')
+    .update({ is_active: false, is_default: false })
+    .eq('code', req.params.code)
+    .select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ language: data });
+});
+
 module.exports = router;

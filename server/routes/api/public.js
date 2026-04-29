@@ -26,18 +26,21 @@ router.get('/featured', async (req, res) => {
 
 // ── ALL LIVE SERIES ────────────────────────────────────────────────────────────
 router.get('/series', async (req, res) => {
-  const { page = 1, limit = 24, genre, search } = req.query;
+  const { page = 1, limit = 24, genre, language, search, sort } = req.query;
   const offset = (Number(page) - 1) * Number(limit);
+
+  const orderCol = sort === 'views' ? 'views' : 'created_at';
 
   let query = supabaseAdmin
     .from('series')
-    .select('id, title, slug, genre, age_rating, poster_url, is_featured, is_trending, views', { count: 'exact' })
+    .select('id, title, slug, genre, language, age_rating, poster_url, is_featured, is_trending, views', { count: 'exact' })
     .eq('status', 'live')
-    .order('created_at', { ascending: false })
+    .order(orderCol, { ascending: false })
     .range(offset, offset + Number(limit) - 1);
 
-  if (genre)  query = query.eq('genre', genre);
-  if (search) query = query.ilike('title', `%${search}%`);
+  if (genre)    query = query.eq('genre', genre);
+  if (language) query = query.eq('language', language);
+  if (search)   query = query.ilike('title', `%${search}%`);
 
   const { data, error, count } = await query;
   if (error) return res.status(500).json({ error: error.message });
@@ -103,9 +106,8 @@ router.get('/episodes/:id/play', async (req, res) => {
   if (!url) return res.status(503).json({ error: 'Video not available yet' });
 
   // Increment view counter (fire and forget)
-  supabaseAdmin.from('episodes').update({ views: supabaseAdmin.rpc ? undefined : undefined })
-    .eq('id', ep.id).select('views').single()
-    .then(({ data: r }) => r && supabaseAdmin.from('episodes').update({ views: (r.views || 0) + 1 }).eq('id', ep.id));
+  supabaseAdmin.from('episodes').select('views').eq('id', ep.id).single()
+    .then(({ data: r }) => r != null && supabaseAdmin.from('episodes').update({ views: (r.views || 0) + 1 }).eq('id', ep.id));
 
   res.json({ url, type: isMux ? 'hls' : 'mp4' });
 });
