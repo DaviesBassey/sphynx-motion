@@ -105,7 +105,7 @@ router.post('/episodes', requireRole('admin'), async (req, res) => {
   }
 
   const safeStatus = ['live', 'draft', 'archived'].includes(status) ? status : 'draft';
-  const insertRow = { series_id, episode_number, title, description, video_url, poster_url, duration: duration || 0, is_free: !!is_free, release_date, soul_cost: soul_cost || 0, status: safeStatus };
+  const insertRow = { series_id, episode_number, title, description, video_url, poster_url, duration: duration || 0, is_free: !!is_free, release_date: release_date || null, soul_cost: soul_cost || 0, status: safeStatus };
   if (season_number != null) insertRow.season_number = Number(season_number) || 1;
   if (mux_asset_id)          insertRow.mux_asset_id  = mux_asset_id;
 
@@ -125,6 +125,7 @@ router.post('/episodes', requireRole('admin'), async (req, res) => {
 router.put('/episodes/:id', requireRole('admin'), async (req, res) => {
   const allowed = ['title', 'description', 'video_url', 'mux_playback_id', 'mux_asset_id', 'poster_url', 'duration', 'is_free', 'release_date', 'soul_cost', 'status', 'season_number'];
   const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)));
+  if ('release_date' in updates) updates.release_date = updates.release_date || null;
 
   const { data, error } = await supabaseAdmin
     .from('episodes')
