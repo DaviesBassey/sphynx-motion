@@ -67,7 +67,13 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     const playbackId = (asset.playback_ids || []).find(p => p.policy === 'public')?.id;
     if (uploadId && playbackId) {
       await supabaseAdmin.from('episodes')
-        .update({ mux_asset_id: asset.id, mux_playback_id: playbackId, status: 'draft' })
+        .update({
+          mux_asset_id:  asset.id,
+          mux_playback_id: playbackId,
+          video_status:  'ready',
+          duration:      asset.duration ? Math.round(asset.duration) : null,
+          thumbnail_url: `https://image.mux.com/${playbackId}/thumbnail.jpg`,
+        })
         .eq('mux_upload_id', uploadId);
     }
   }
@@ -76,7 +82,16 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     const uploadId = event.data.upload_id;
     if (uploadId) {
       await supabaseAdmin.from('episodes')
-        .update({ mux_asset_id: null, mux_playback_id: null })
+        .update({ mux_asset_id: null, mux_playback_id: null, video_status: 'error' })
+        .eq('mux_upload_id', uploadId);
+    }
+  }
+
+  if (event.type === 'video.upload.asset_created') {
+    const uploadId = event.data.id;
+    if (uploadId) {
+      await supabaseAdmin.from('episodes')
+        .update({ video_status: 'processing' })
         .eq('mux_upload_id', uploadId);
     }
   }
