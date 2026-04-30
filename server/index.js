@@ -50,6 +50,10 @@ app.set('trust proxy', 1);
 
 // ── MIDDLEWARE ────────────────────────────────────────────────────────────────
 app.use(cors({ origin: process.env.PUBLIC_ORIGIN || `http://localhost:${PORT}`, credentials: true }));
+
+// Mux webhook needs raw bytes for HMAC verification — register BEFORE express.json()
+app.use('/api/mux/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
