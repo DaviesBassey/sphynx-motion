@@ -1037,7 +1037,7 @@ body::after {
 
 /* ─── MODAL OVERLAY ──────────────────────────────────────────────────────── */
 .modal-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,.85);
   z-index: 500;
@@ -1090,7 +1090,7 @@ body::after {
 
 /* ─── SPLASH SCREEN ──────────────────────────────────────────────────────── */
 .splash {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: #000;
   display: flex;
@@ -1303,7 +1303,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 /* ─── VIDEO PLAYER MODAL ─────────────────────────────────────────────────── */
 /* ─── IMMERSIVE VERTICAL PLAYER ─────────────────────────────────────────── */
 .video-overlay {
-  position: absolute; inset: 0;
+  position: fixed; inset: 0;
   background: #000; z-index: 600;
   opacity: 0; pointer-events: none;
   transition: opacity .25s; overflow: hidden;
@@ -2408,7 +2408,11 @@ svg defs { position: absolute; width: 0; height: 0; }
       <!-- ═══ AUTH SECTION — hidden by default (inline), shown when logged in ══ -->
       <div id="profAuthSection" style="display:none">
         <div class="prof-header">
-          <div class="prof-avatar-wrap">👤</div>
+          <div class="prof-avatar-wrap" style="cursor:pointer;position:relative" onclick="document.getElementById('avatarFileInput').click()" title="Change photo">
+            <span id="profAvatarInner">👤</span>
+            <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid var(--bg)">+</div>
+          </div>
+          <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadProfilePhoto(this.files[0]);this.value=''">
           <div>
             <div id="profDisplayName" style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px"></div>
             <div class="prof-id" id="profIdLine"></div>
@@ -2870,16 +2874,113 @@ async function claimDailyLogin() {
   } catch {}
 }
 
+async function loadEarnSoulState() {
+  const totalEl = document.getElementById('earnSoulTotal');
+  if (!totalEl || !isLoggedIn) return;
+  try {
+    const r = await fetch('/api/engage/rewards/status', { credentials: 'include' });
+    const { claimed } = await r.json();
+    const taskAmounts = { daily_login: 10, first_watch: 15, share_series: 25, complete_ep3: 20 };
+    let available = 0;
+    for (const [key, amt] of Object.entries(taskAmounts)) {
+      if (claimed.includes(key)) {
+        const btn = document.getElementById('earnBtn_' + key);
+        if (btn) { btn.textContent = '✓ Claimed'; btn.disabled = true; btn.style.background = 'rgba(255,255,255,.1)'; btn.style.color = 'var(--text-faint)'; btn.style.cursor = 'default'; }
+      } else {
+        available += amt;
+      }
+    }
+    totalEl.textContent = available > 0 ? `+${available} Soul available to claim!` : 'All rewards claimed today!';
+  } catch {
+    if (totalEl) totalEl.textContent = 'Rewards available!';
+  }
+}
+
+async function claimRewardTask(key, endpoint, amount) {
+  if (!isLoggedIn) { openModal('login'); return; }
+  const btn = document.getElementById('earnBtn_' + key);
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  try {
+    const r = await fetch(endpoint, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+    const data = await r.json();
+    if (data.claimed) {
+      toast(`+${amount} Soul claimed!`, 'soul');
+      if (btn) { btn.textContent = '✓ Claimed'; btn.style.background = 'rgba(255,255,255,.1)'; btn.style.color = 'var(--text-faint)'; btn.style.cursor = 'default'; }
+      _loadProfileData();
+      loadEarnSoulState();
+    } else if (data.already_claimed) {
+      if (btn) { btn.textContent = '✓ Done'; btn.style.background = 'rgba(255,255,255,.1)'; btn.style.color = 'var(--text-faint)'; btn.style.cursor = 'default'; }
+    } else {
+      if (btn) { btn.textContent = `+${amount} Soul`; btn.disabled = false; }
+      toast(data.error || 'Could not claim — try again', 'error');
+    }
+  } catch {
+    if (btn) { btn.textContent = `+${amount} Soul`; btn.disabled = false; }
+  }
+}
+
+/* ─── PROFILE PHOTO UPLOAD ────────────────────────────────────────────────── */
+async function uploadProfilePhoto(file) {
+  if (!file || !_currentUser) return;
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const allowed = ['jpg','jpeg','png','webp'];
+  if (!allowed.includes(ext)) { toast('Only JPG/PNG/WEBP images allowed', 'error'); return; }
+  if (file.size > 5 * 1024 * 1024) { toast('Image must be under 5 MB', 'error'); return; }
+  toast('Uploading…', 'soul');
+  try {
+    const fd = new FormData();
+    fd.append('avatar', file);
+    const r = await fetch('/api/engage/profile/avatar', { method: 'POST', credentials: 'include', body: fd });
+    const data = await r.json();
+    if (data.avatar_url) {
+      _updateAvatarUI(data.avatar_url);
+      toast('Profile photo updated!', 'soul');
+    } else {
+      toast(data.error || 'Upload failed', 'error');
+    }
+  } catch { toast('Upload failed', 'error'); }
+}
+
+function _updateAvatarUI(url) {
+  document.querySelectorAll('.prof-avatar-wrap').forEach(el => {
+    el.innerHTML = `<img src="${url}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  });
+}
+
 /* ─── SEARCH ─────────────────────────────────────────────────────────────── */
 let _searchTimer;
+function _renderSearchResult(s) {
+  return `<div onclick="closeModal();playSeries('${esc(s.id)}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer">
+    <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" style="width:38px;height:50px;border-radius:6px;object-fit:cover;flex-shrink:0">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(s.title)}</div>
+      <div style="font-size:11px;color:var(--text-faint);margin-top:2px">${esc(s.genre || '')}</div>
+    </div>
+  </div>`;
+}
+
 async function doSearch(q) {
   clearTimeout(_searchTimer);
   const res = document.getElementById('searchResults');
   if (!res) return;
-  if (!q.trim()) {
-    res.innerHTML = _searchPopular();
+  const term = q.trim().toLowerCase();
+  if (!term) { res.innerHTML = _searchPopular(); return; }
+
+  // Client-side filter from cached series — instant, alphabet-accurate
+  const all = window._allSeries || [];
+  if (all.length) {
+    const startsWith = all.filter(s => s.title.toLowerCase().startsWith(term));
+    const contains   = term.length >= 2 ? all.filter(s => !s.title.toLowerCase().startsWith(term) && s.title.toLowerCase().includes(term)) : [];
+    const matches    = [...startsWith, ...contains].slice(0, 12);
+    if (matches.length) {
+      res.innerHTML = matches.map(_renderSearchResult).join('');
+      return;
+    }
+    res.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:12px">No results for "' + esc(q) + '"</div>';
     return;
   }
+
+  // Fallback: API call if series not yet cached
   _searchTimer = setTimeout(async () => {
     res.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:12px">Searching…</div>';
     try {
@@ -2889,14 +2990,7 @@ async function doSearch(q) {
         res.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:12px">No results for "' + esc(q) + '"</div>';
         return;
       }
-      res.innerHTML = series.map(s => `
-        <div onclick="closeModal();playSeries('${esc(s.id)}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer">
-          <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" style="width:38px;height:50px;border-radius:6px;object-fit:cover;flex-shrink:0">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(s.title)}</div>
-            <div style="font-size:11px;color:var(--text-faint);margin-top:2px">${esc(s.genre || '')}</div>
-          </div>
-        </div>`).join('');
+      res.innerHTML = series.map(_renderSearchResult).join('');
     } catch {
       res.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:12px">Search unavailable</div>';
     }
@@ -3225,20 +3319,32 @@ const modalContent = {
       </div>`).join('')}
     <div style="margin-top:12px;font-size:11px;color:var(--text-faint);text-align:center">Soul Pass members earn 2× tokens daily</div>
   `,
-  'rewards': `
+  'rewards': () => {
+    const tasks = [
+      { key: 'daily_login',   title: 'Daily Login',   desc: 'Log in every day',               amount: 10, endpoint: '/api/engage/rewards/daily-login',   method: 'POST', body: null },
+      { key: 'first_watch',   title: 'First Watch',   desc: 'Watch any episode today',         amount: 15, endpoint: '/api/engage/rewards/first-watch',    method: 'POST', body: null },
+      { key: 'share_series',  title: 'Share Series',  desc: 'Share a series with a friend',    amount: 25, endpoint: '/api/engage/rewards/share',          method: 'POST', body: null },
+      { key: 'complete_ep3',  title: 'Complete E3',   desc: 'Finish Gold Veins Episode 3',     amount: 20, endpoint: '/api/engage/rewards/complete-ep3',   method: 'POST', body: null },
+    ];
+    return `
     <div class="modal-title">Earn Soul</div>
-    <div style="background:rgba(230,30,36,.1);border:1px solid rgba(230,30,36,.2);border-radius:12px;padding:12px;margin-bottom:14px;text-align:center">
-      <div style="font-size:11px;font-weight:700;color:var(--red)">+70 Soul available to claim!</div>
+    <div id="earnSoulBanner" style="background:rgba(230,30,36,.1);border:1px solid rgba(230,30,36,.2);border-radius:12px;padding:12px;margin-bottom:14px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--red)" id="earnSoulTotal">Checking rewards…</div>
     </div>
-    ${[['Daily Login','Log in every day','+10 Soul'],['First Watch','Watch any episode today','+15 Soul'],['Share Series','Share a series with a friend','+25 Soul'],['Complete E3','Finish Gold Veins E3','+20 Soul']].map(([title,desc,reward]) => `
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+    <div id="earnSoulList">
+      ${tasks.map(t => `
+      <div id="earnTask_${t.key}" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04)">
         <div style="flex:1">
-          <div style="font-size:12px;font-weight:600;color:var(--text)">${title}</div>
-          <div style="font-size:10px;color:var(--text-faint);margin-top:2px">${desc}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${t.title}</div>
+          <div style="font-size:10px;color:var(--text-faint);margin-top:2px">${t.desc}</div>
         </div>
-        <div style="font-size:11px;font-weight:800;color:var(--red);white-space:nowrap">${reward}</div>
+        <button onclick="claimRewardTask('${t.key}','${t.endpoint}','${t.amount}')" id="earnBtn_${t.key}"
+          style="background:var(--red);border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap">
+          +${t.amount} Soul
+        </button>
       </div>`).join('')}
-  `,
+    </div>`;
+  },
   'gold-veins': `
     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px">
       <img src="assets/posters/image-11.jpg" alt="Gold Veins" style="width:70px;height:90px;border-radius:12px;object-fit:cover;flex-shrink:0">
@@ -3364,7 +3470,7 @@ const modalContent = {
   'privacy': `
     <div class="modal-title">Privacy Policy</div>
     <div class="modal-sub" style="margin-bottom:14px">Effective: 21 April 2026 · SPHYNX MOTION (Pty) Ltd · POPIA &amp; GDPR</div>
-    <div style="font-size:12px;color:var(--text-dim);line-height:1.85;max-height:380px;overflow-y:auto;padding-right:6px">
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.85;padding-right:6px">
 
       <strong style="color:var(--text)">1. Overview</strong><br>
       SPHYNX MOTION (Pty) Ltd operates the SPHYNX MOTION streaming platform. This policy describes how we collect, use, and protect your personal information. By using the Service you agree to this policy.<br><br>
@@ -3414,7 +3520,7 @@ const modalContent = {
   'terms': `
     <div class="modal-title">Terms of Use</div>
     <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SPHYNX MOTION (Pty) Ltd</div>
-    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;max-height:320px;overflow-y:auto;padding-right:4px">
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;padding-right:4px">
       <strong style="color:var(--text)">1. Acceptance</strong><br>By accessing SPHYNX MOTION you agree to these Terms. If you do not agree, do not use the platform.<br><br>
       <strong style="color:var(--text)">2. Eligibility</strong><br>You must be 16 years or older to use this service. Users under 18 require parental consent.<br><br>
       <strong style="color:var(--text)">3. Account Responsibility</strong><br>You are responsible for all activity under your account. Do not share credentials. Notify us immediately of any unauthorised access.<br><br>
@@ -3450,7 +3556,7 @@ const modalContent = {
   'content-policy': `
     <div class="modal-title">Content Policy</div>
     <div class="modal-sub">SPHYNX MOTION is committed to a safe, inclusive viewing experience.</div>
-    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;max-height:300px;overflow-y:auto">
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.8">
       <strong style="color:var(--text)">Prohibited Content</strong><br>
       We do not permit content that includes hate speech, graphic violence, sexual exploitation, harassment, misinformation, or content that endangers minors.<br><br>
       <strong style="color:var(--text)">Age Ratings</strong><br>
@@ -3512,7 +3618,7 @@ const modalContent = {
   'soul-terms': `
     <div class="modal-title">Soul Token Terms</div>
     <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SPHYNX MOTION (Pty) Ltd</div>
-    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;max-height:320px;overflow-y:auto;padding-right:4px">
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.8;padding-right:4px">
       <strong style="color:var(--text)">1. What are Soul Tokens?</strong><br>
       Soul Tokens are a virtual in-app currency used exclusively within the SPHYNX MOTION platform. They hold no monetary value and cannot be exchanged for cash or transferred between accounts.<br><br>
       <strong style="color:var(--text)">2. Earning Soul Tokens</strong><br>
@@ -3636,7 +3742,7 @@ function openModal(key) {
   document.body.style.overflow = 'hidden';
   initVoting();
   if (key === 'wallet')   loadWalletBalance();
-  // language modal is now a function — no post-render load needed
+  if (key === 'rewards')  setTimeout(loadEarnSoulState, 50);
   if (key === 'search')   setTimeout(() => document.getElementById('searchInput')?.focus(), 50);
   // Translate any data-i18n nodes inside the modal
   if (_currentLang !== 'en') _applyTransToEl(content);
@@ -3666,6 +3772,18 @@ document.addEventListener('keydown', e => {
     if (video?.classList.contains('open')) closeVideoPlayer();
   }
 });
+
+// Lift modal sheet above keyboard on iOS when Keyboard.resize is "none"
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const sheet = document.getElementById('modalSheet');
+    if (!sheet) return;
+    const keyboardHeight = window.innerHeight - window.visualViewport.height;
+    sheet.style.paddingBottom = keyboardHeight > 0
+      ? `${keyboardHeight + 20}px`
+      : '';
+  });
+}
 
 /* ─── VIDEO PLAYER — defined below with HLS support ─────────────────────── */
 
@@ -3916,7 +4034,7 @@ async function _loadProfileData() {
   if (!_sb || !_currentUser) return;
   try {
     const [profileRes, epRes, voteRes] = await Promise.all([
-      _sb.from('profiles').select('soul_balance, subscription_status, display_name').eq('id', _currentUser.id).single(),
+      _sb.from('profiles').select('soul_balance, subscription_status, display_name, avatar_url').eq('id', _currentUser.id).single(),
       _sb.from('episode_progress').select('id', { count: 'exact', head: true }).eq('user_id', _currentUser.id).eq('completed', true),
       _sb.from('echo_votes').select('id', { count: 'exact', head: true }).eq('user_id', _currentUser.id),
     ]);
@@ -3933,6 +4051,12 @@ async function _loadProfileData() {
     if (walletVal) walletVal.textContent = soul.toLocaleString() + ' Soul';
     const walletBal = document.getElementById('walletBalance');
     if (walletBal) walletBal.textContent = soul.toLocaleString();
+
+    // Avatar
+    if (data.avatar_url) {
+      const inner = document.getElementById('profAvatarInner');
+      if (inner) inner.innerHTML = `<img src="${data.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    }
 
     // Name
     const nameEl = document.getElementById('profDisplayName');
@@ -4942,6 +5066,22 @@ function _submitPayfastForm(data) {
   </div>
   <button class="ib-btn" onclick="installPWA()">Install</button>
   <button class="ib-dismiss" onclick="dismissInstallBanner()">✕</button>
+</div>
+
+</body>
+</html></button>
+</div>
+
+</body>
+</html></button>
+</div>
+
+</body>
+</html></button>
+</div>
+
+</body>
+</html></button>
 </div>
 
 </body>

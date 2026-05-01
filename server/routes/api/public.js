@@ -40,7 +40,7 @@ router.get('/series', async (req, res) => {
 
   if (genre)    query = query.eq('genre', genre);
   if (language) query = query.eq('language', language);
-  if (search)   query = query.ilike('title', `%${search}%`);
+  if (search)   query = query.ilike('title', search.length < 3 ? `${search}%` : `%${search}%`);
 
   const { data, error, count } = await query;
   if (error) return res.status(500).json({ error: error.message });

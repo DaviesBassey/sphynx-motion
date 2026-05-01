@@ -239,6 +239,12 @@ app.get('*', (req, res) => {
 });
 
 // ── START ─────────────────────────────────────────────────────────────────────
+const { supabaseAdmin } = require('./lib/supabase');
+(async () => {
+  const { error } = await supabaseAdmin.storage.createBucket('avatars', { public: true, fileSizeLimit: 5242880, allowedMimeTypes: ['image/jpeg','image/png','image/webp'] });
+  if (error && !error.message?.includes('already exists')) console.warn('avatars bucket:', error.message);
+})();
+
 app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════╗

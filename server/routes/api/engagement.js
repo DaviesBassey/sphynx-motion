@@ -224,11 +224,82 @@ router.post('/rewards/share', async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   const { series_id } = req.body;
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'share_series').gte('rewarded_at', today + 'T00:00:00Z').maybeSingle();
+  if (existing) return res.json({ already_claimed: true, amount: 0 });
   const { data: balance, error } = await supabaseAdmin.rpc('grant_soul_reward', {
     p_user_id: user.id, p_type: 'share_series', p_amount: 25, p_metadata: { series_id },
   });
   if (error) return res.status(500).json({ error: error.message });
   res.json({ claimed: true, amount: 25, new_balance: balance });
+});
+
+// POST /api/engage/rewards/first-watch
+router.post('/rewards/first-watch', async (req, res) => {
+  const user = await getUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'first_watch').gte('rewarded_at', today + 'T00:00:00Z').maybeSingle();
+  if (existing) return res.json({ already_claimed: true, amount: 0 });
+  const { data: balance, error } = await supabaseAdmin.rpc('grant_soul_reward', {
+    p_user_id: user.id, p_type: 'first_watch', p_amount: 15, p_metadata: { date: today },
+  });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ claimed: true, amount: 15, new_balance: balance });
+});
+
+// POST /api/engage/rewards/complete-ep3
+router.post('/rewards/complete-ep3', async (req, res) => {
+  const user = await getUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_ep3').maybeSingle();
+  if (existing) return res.json({ already_claimed: true, amount: 0 });
+  const { data: balance, error } = await supabaseAdmin.rpc('grant_soul_reward', {
+    p_user_id: user.id, p_type: 'complete_ep3', p_amount: 20, p_metadata: { episode: 'gold-veins-e3' },
+  });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ claimed: true, amount: 20, new_balance: balance });
+});
+
+// GET /api/engage/rewards/status — returns which reward types already claimed today
+router.get('/rewards/status', async (req, res) => {
+  const user = await getUser(req);
+  if (!user) return res.json({ claimed: [] });
+  const today = new Date().toISOString().slice(0, 10);
+  const { data } = await supabaseAdmin
+    .from('daily_rewards')
+    .select('reward_type')
+    .eq('user_id', user.id)
+    .gte('rewarded_at', today + 'T00:00:00Z');
+  // complete_ep3 is lifetime, not daily — check separately
+  const { data: ep3 } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_ep3').maybeSingle();
+  const claimed = (data || []).map(r => r.reward_type);
+  if (ep3) claimed.push('complete_ep3');
+  res.json({ claimed });
+});
+
+// POST /api/engage/profile/avatar — upload profile photo
+const multer = require('multer');
+const memUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+router.post('/profile/avatar', memUpload.single('avatar'), async (req, res) => {
+  const user = await getUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const ext  = req.file.originalname.split('.').pop().toLowerCase();
+  const path = `avatars/${user.id}.${ext}`;
+
+  const { error: upErr } = await supabaseAdmin.storage.from('avatars').upload(path, req.file.buffer, {
+    contentType: req.file.mimetype, upsert: true,
+  });
+  if (upErr) return res.status(500).json({ error: upErr.message });
+
+  const { data: urlData } = supabaseAdmin.storage.from('avatars').getPublicUrl(path);
+  const avatar_url = urlData.publicUrl;
+
+  await supabaseAdmin.from('profiles').update({ avatar_url }).eq('id', user.id);
+  res.json({ avatar_url });
 });
 
 module.exports = router;
