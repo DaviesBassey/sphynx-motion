@@ -1897,11 +1897,12 @@ svg defs { position: absolute; width: 0; height: 0; }
 .soul-pkg-label { font-size: 9px; color: var(--text-faint); display: block; margin-bottom: 4px; }
 .soul-pkg-price { font-size: 10px; font-weight: 700; color: var(--red); }
 
-/* iOS native — hide web-only pricing and "Get the App" section */
+/* iOS native — hide web-only pricing, "Get the App", and Web Push UI */
 .ios-native .plan-price,
 .ios-native .plan-period,
 .ios-native .soul-pkg-price,
-.ios-native .member-get-app { display: none !important; }
+.ios-native .member-get-app,
+.ios-native .ios-hide { display: none !important; }
 .ios-native .plan-button::after { content: 'via App Store'; }
 .ios-native .plan-button { font-size: 9px; }
 
@@ -2307,7 +2308,7 @@ svg defs { position: absolute; width: 0; height: 0; }
       <div class="member-get-app" style="margin:16px 16px 0;padding:16px;background:var(--surface2);border-radius:16px;text-align:center">
         <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Get the App</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button onclick="window.open('https://www.sphynxmotion.com','_blank')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+          <button onclick="window.open('https://www.sphynxmotion.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
             <span style="font-size:14px">🌐</span> sphynxmotion.com
           </button>
           <button onclick="installPWA()" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
@@ -2750,6 +2751,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('offline', () => _setOfflineBanner(true, 'No internet connection'));
 window.addEventListener('online',  () => { _setOfflineBanner(false); retryConnection(); });
+
+// Refresh Supabase session when the app returns from background.
+// Tokens expire after 1 hour; without this, video playback fails with 401 on resume.
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden || !_sb) return;
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if (session) {
+      isLoggedIn = true;
+      _currentUser = session.user;
+      document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax`;
+    } else if (isLoggedIn) {
+      isLoggedIn = false;
+      _currentUser = null;
+      document.cookie = 'sphynx_session=;path=/;max-age=0';
+      updateProfileUI();
+    }
+  } catch {}
+});
 
 /* ─── PLATFORM ───────────────────────────────────────────────────────────── */
 window._isIOS = window.Capacitor?.getPlatform() === 'ios';
@@ -3613,7 +3633,7 @@ const modalContent = {
         ['📱','Instagram','@sphynxmotion','https://www.sphynxmotion.com'],
         ['❓','FAQ','Browse common questions','https://www.sphynxmotion.com'],
       ].map(([icon,label,value,href]) => `
-        <div onclick="window.open('${href}')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">
+        <div onclick="window.open('${href}','_system')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">
           <div style="font-size:20px;width:32px;text-align:center">${icon}</div>
           <div style="flex:1">
             <div style="font-size:13px;font-weight:600;color:var(--text)">${label}</div>
@@ -3683,7 +3703,7 @@ const modalContent = {
       <div class="modal-title">Admin Portal</div>
       <div class="modal-sub">The admin dashboard is a protected separate area.</div>
     </div>
-    <button class="btn-generate" onclick="closeModal();window.open('admin/index.html','_blank')">Open Admin Portal →</button>
+    <button class="btn-generate ios-hide" onclick="closeModal();window.open('/admin/index.html','_system')">Open Admin Portal →</button>
     <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Cancel</button>
   `,
   'soul-terms': `
@@ -3712,7 +3732,7 @@ const modalContent = {
       <div style="font-size:32px;margin-bottom:10px">🔔</div>
       <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">All caught up</div>
       <div style="font-size:12px">New episodes, Echo votes, and Soul rewards will appear here.</div>
-      <button class="btn-generate" style="margin-top:16px;font-size:12px" onclick="requestPushPermission();closeModal()">Enable Push Notifications →</button>
+      <button class="btn-generate ios-hide" style="margin-top:16px;font-size:12px" onclick="requestPushPermission();closeModal()">Enable Push Notifications →</button>
     </div>
   `,
   'language': () => {
@@ -4205,7 +4225,7 @@ async function loginUser() {
     _track('login', { method: 'email' });
     toast('Welcome back!', 'success');
     setTimeout(claimDailyLogin, 1000);
-    setTimeout(requestPushPermission, 2000);
+    if (!window._isIOS) setTimeout(requestPushPermission, 2000);
   } catch (e) {
     if (errEl) {
       const msg = e.message || '';
