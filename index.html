@@ -3732,14 +3732,35 @@ const modalContent = {
   `,
 };
 
-function submitReport(reason) {
-  document.getElementById('modalContent').innerHTML = `
-    <div style="text-align:center;padding:20px 0">
-      <div style="font-size:36px;margin-bottom:12px">✅</div>
-      <div class="modal-title">Report Submitted</div>
-      <div class="modal-sub">Thank you. We've received your report for: <strong style="color:var(--text)">${reason}</strong>. Our moderation team will review it within 24 hours.</div>
-      <button class="btn-generate" style="margin-top:16px" onclick="closeModal()">Done</button>
-    </div>`;
+async function submitReport(reason) {
+  const box = document.getElementById('modalContent');
+  box.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text-muted)">Submitting…</div>`;
+  try {
+    const contentType = _currentEpisodeId ? 'episode' : 'series';
+    const contentId   = _currentEpisodeId || _currentSeriesId || null;
+    const r = await fetch('/api/engage/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ content_type: contentType, content_id: contentId, reason }),
+    });
+    if (!r.ok) throw new Error((await r.json()).error || r.statusText);
+    box.innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:36px;margin-bottom:12px">✅</div>
+        <div class="modal-title">Report Submitted</div>
+        <div class="modal-sub">Thank you. We've received your report for: <strong style="color:var(--text)">${reason}</strong>. Our moderation team will review it within 24 hours.</div>
+        <button class="btn-generate" style="margin-top:16px" onclick="closeModal()">Done</button>
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div class="modal-title">Failed to Submit</div>
+        <div class="modal-sub" style="color:var(--danger)">${e.message}</div>
+        <button class="btn-generate" style="margin-top:16px" onclick="closeModal()">Close</button>
+      </div>`;
+  }
 }
 
 function openModal(key) {

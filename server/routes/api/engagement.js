@@ -307,4 +307,29 @@ router.post('/profile/avatar', memUpload.single('avatar'), async (req, res) => {
   res.json({ avatar_url });
 });
 
+// ─── CONTENT REPORTS ──────────────────────────────────────────────────────────
+
+// POST /api/engage/reports
+router.post('/reports', async (req, res) => {
+  const user = await getUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+
+  const { content_type, content_id, reason } = req.body;
+  if (!content_type || !reason) return res.status(400).json({ error: 'content_type and reason are required' });
+
+  const validTypes = ['episode', 'series', 'comment'];
+  if (!validTypes.includes(content_type)) return res.status(400).json({ error: 'Invalid content_type' });
+
+  const { error } = await supabaseAdmin.from('content_reports').insert({
+    reporter_id:  user.id,
+    content_type,
+    content_id:   content_id || null,
+    reason,
+    status:       'pending',
+  });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ reported: true });
+});
+
 module.exports = router;
