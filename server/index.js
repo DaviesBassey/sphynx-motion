@@ -239,11 +239,6 @@ app.get('*', (req, res) => {
 });
 
 // ── START ─────────────────────────────────────────────────────────────────────
-const { supabaseAdmin } = require('./lib/supabase');
-(async () => {
-  const { error } = await supabaseAdmin.storage.createBucket('avatars', { public: true, fileSizeLimit: 5242880, allowedMimeTypes: ['image/jpeg','image/png','image/webp'] });
-  if (error && !error.message?.includes('already exists')) console.warn('avatars bucket:', error.message);
-})();
 
 app.listen(PORT, () => {
   console.log(`
@@ -253,4 +248,9 @@ app.listen(PORT, () => {
   ║  Admin login: http://localhost:${PORT}/admin/login ║
   ╚═══════════════════════════════════════════╝
   `);
+  // Ensure avatars storage bucket exists (non-fatal if it fails)
+  const { supabaseAdmin: sb } = require('./lib/supabase');
+  sb.storage.createBucket('avatars', { public: true, fileSizeLimit: 5242880, allowedMimeTypes: ['image/jpeg','image/png','image/webp'] })
+    .then(({ error }) => { if (error && !error.message?.includes('already exists')) console.warn('avatars bucket:', error.message); })
+    .catch(() => {});
 });
