@@ -1,5 +1,14 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
+// ── GLOBAL CRASH GUARDS ───────────────────────────────────────────────────────
+// Node 15+ exits on unhandled rejections by default. Log and keep server alive.
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+});
+
 const express      = require('express');
 const path         = require('path');
 const cors         = require('cors');
@@ -236,6 +245,13 @@ app.use('/', legalRouter);
 // Any unmatched route → serve the public app
 app.get('*', (req, res) => {
   res.sendFile(path.join(ROOT, 'index.html'));
+});
+
+// ── GLOBAL EXPRESS ERROR HANDLER ──────────────────────────────────────────────
+// Catches errors thrown or passed via next(err) in any async route
+app.use((err, req, res, _next) => {
+  console.error('[express error]', req.method, req.path, err?.message || err);
+  if (!res.headersSent) res.status(500).json({ error: 'Internal server error' });
 });
 
 // ── START ─────────────────────────────────────────────────────────────────────
