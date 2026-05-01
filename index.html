@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background:#08080A">
 <head>
+<style>html,body{background:#08080A!important}</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2062,7 +2063,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 .psr-rank { font-size: 11px; color: var(--red); font-weight: 700; margin-top: 3px; }
 </style>
 </head>
-<body>
+<body style="background:#08080A">
 
 <div class="page">
 <div class="phone" id="phone">
@@ -2708,9 +2709,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ─── SPLASH ─────────────────────────────────────────────────────────────── */
 function initSplash() {
+  if (window.Capacitor?.Plugins?.SplashScreen) {
+    window.Capacitor.Plugins.SplashScreen.hide({ fadeOutDuration: 200 });
+  }
   setTimeout(() => {
     const splash = document.getElementById('splash');
     if (!splash) return;
+    splash.style.transition = 'opacity .6s ease';
     splash.style.opacity = '0';
     setTimeout(() => splash.style.display = 'none', 600);
   }, 2400);

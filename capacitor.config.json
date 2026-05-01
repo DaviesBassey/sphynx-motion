@@ -28,8 +28,8 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 1500,
-      "launchAutoHide": true,
+      "launchShowDuration": 0,
+      "launchAutoHide": false,
       "backgroundColor": "#08080A",
       "iosSpinnerStyle": "small",
       "spinnerColor": "#E61E24",
