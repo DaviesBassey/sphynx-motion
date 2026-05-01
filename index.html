@@ -1207,6 +1207,23 @@ body::after {
   to   { width: 100%; }
 }
 
+/* ─── OFFLINE BANNER ─────────────────────────────────────────────────────── */
+#offlineBanner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 998;
+  background: #1a0505; border-bottom: 1px solid rgba(255,36,48,.3);
+  padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+  transform: translateY(-100%); transition: transform .3s ease;
+  pointer-events: none;
+}
+#offlineBanner.visible { transform: translateY(0); pointer-events: auto; }
+#offlineBanner .ob-icon { font-size: 16px; flex-shrink: 0; }
+#offlineBanner .ob-msg  { flex: 1; font-size: 12px; color: rgba(255,255,255,.8); line-height: 1.4; }
+#offlineBanner .ob-retry {
+  background: rgba(255,36,48,.15); border: 1px solid rgba(255,36,48,.4);
+  color: var(--red); font-size: 11px; font-weight: 700; border-radius: 8px;
+  padding: 6px 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+
 /* ─── MISC UTILS ─────────────────────────────────────────────────────────── */
 .divider { height: 1px; background: rgba(255,255,255,.04); margin: 0 20px; }
 .spacer { height: 16px; }
@@ -2105,6 +2122,13 @@ svg defs { position: absolute; width: 0; height: 0; }
     <div class="splash-loader"><div class="splash-loader-fill"></div></div>
   </div>
 
+  <!-- OFFLINE BANNER -->
+  <div id="offlineBanner" role="alert" aria-live="assertive">
+    <span class="ob-icon">📡</span>
+    <span class="ob-msg" id="offlineMsg">No internet connection</span>
+    <button class="ob-retry" onclick="retryConnection()">Retry</button>
+  </div>
+
   <!-- STATUS BAR -->
   <div class="status-bar">
     <span>9:41</span>
@@ -2724,22 +2748,33 @@ document.addEventListener('DOMContentLoaded', () => {
   updateProfileUI();
 });
 
+window.addEventListener('offline', () => _setOfflineBanner(true, 'No internet connection'));
+window.addEventListener('online',  () => { _setOfflineBanner(false); retryConnection(); });
+
 /* ─── PLATFORM ───────────────────────────────────────────────────────────── */
 window._isIOS = window.Capacitor?.getPlatform() === 'ios';
 if (window._isIOS) document.body.classList.add('ios-native');
 
 /* ─── SPLASH ─────────────────────────────────────────────────────────────── */
 function initSplash() {
-  if (window.Capacitor?.Plugins?.SplashScreen) {
-    window.Capacitor.Plugins.SplashScreen.hide({ fadeOutDuration: 200 });
-  }
-  setTimeout(() => {
-    const splash = document.getElementById('splash');
-    if (!splash) return;
-    splash.style.transition = 'opacity .6s ease';
-    splash.style.opacity = '0';
-    setTimeout(() => splash.style.display = 'none', 600);
-  }, 2400);
+  try {
+    if (window.Capacitor?.Plugins?.SplashScreen) {
+      window.Capacitor.Plugins.SplashScreen.hide({ fadeOutDuration: 300 });
+    }
+  } catch (e) { console.warn('[splash]', e); }
+
+  // Dismiss web splash after animation completes (2.4s); content load can
+  // call _hideSplash() earlier once everything is painted.
+  window._splashAt = Date.now();
+  setTimeout(_hideSplash, 2400);
+}
+
+function _hideSplash() {
+  const splash = document.getElementById('splash');
+  if (!splash || splash.style.display === 'none') return;
+  splash.style.transition = 'opacity .6s ease';
+  splash.style.opacity = '0';
+  setTimeout(() => { splash.style.display = 'none'; }, 600);
 }
 
 /* ─── TOAST ──────────────────────────────────────────────────────────────── */
@@ -4649,11 +4684,43 @@ async function loadContent() {
       trendGrid.innerHTML = trendCards.map((s, i) => renderTCard(s, i + 1)).join('');
     }
 
+    // Content loaded — dismiss splash early if animation already done
+    if (Date.now() - (window._splashAt || 0) >= 2400) _hideSplash();
+
     // Load personalised rows after main content is painted
     loadRecommendations();
   } catch {
-    if (homeGrid) homeGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">Could not load content.</div>';
+    _showOffline(homeGrid);
   }
+}
+
+function _showOffline(grid) {
+  const isOnline = navigator.onLine;
+  const msg = isOnline
+    ? 'Server is temporarily unavailable'
+    : 'No internet connection';
+  _setOfflineBanner(true, msg);
+  if (grid) grid.innerHTML = `
+    <div style="grid-column:1/-1;text-align:center;padding:60px 20px">
+      <div style="font-size:36px;margin-bottom:14px">📡</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">${isOnline ? 'Server unavailable' : 'No connection'}</div>
+      <div style="font-size:12px;color:var(--text-faint);margin-bottom:20px;line-height:1.6">${isOnline ? 'We could not reach the server.<br>It may be starting up — try again in a moment.' : 'Check your internet connection<br>and tap Retry.'}</div>
+      <button onclick="retryConnection()" style="background:var(--red);border:none;color:#fff;padding:12px 28px;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer">Retry</button>
+    </div>`;
+}
+
+function _setOfflineBanner(show, msg) {
+  const banner = document.getElementById('offlineBanner');
+  if (!banner) return;
+  if (msg) document.getElementById('offlineMsg').textContent = msg;
+  banner.classList.toggle('visible', show);
+}
+
+function retryConnection() {
+  _setOfflineBanner(false);
+  const homeGrid = document.getElementById('homeGrid');
+  if (homeGrid) homeGrid.innerHTML = '';
+  loadContent();
 }
 
 function _renderHomeGrid(tab) {
