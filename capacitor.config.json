@@ -14,7 +14,7 @@
     ]
   },
   "ios": {
-    "contentInset": "always",
+    "contentInset": "automatic",
     "scrollEnabled": false,
     "backgroundColor": "#08080A",
     "preferredContentMode": "mobile",
@@ -47,8 +47,8 @@
       "presentationOptions": ["badge", "sound", "alert"]
     },
     "Keyboard": {
-      "resize": "body",
-      "resizeOnFullScreen": true
+      "resize": "none",
+      "resizeOnFullScreen": false
     }
   }
 }
