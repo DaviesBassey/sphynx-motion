@@ -1063,9 +1063,10 @@ body::after {
   transition: transform .35s cubic-bezier(.2,.9,.3,1);
   border-top: 1px solid rgba(255,255,255,.06);
   max-height: 88vh;
-  overflow-y: auto;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   scrollbar-width: none;
 }
 .modal-sheet::-webkit-scrollbar { display: none; }
@@ -2865,6 +2866,11 @@ async function loadWatchHistory() {
 }
 
 /* ─── DAILY LOGIN REWARD ─────────────────────────────────────────────────── */
+function joinWaitlist() {
+  toast('You’re on the waitlist — we’ll notify you when payments go live.', 'soul');
+  closeModal();
+}
+
 async function claimDailyLogin() {
   if (!isLoggedIn) return;
   try {
@@ -3241,7 +3247,7 @@ const modalContent = {
         <div style="font-size:11px;color:var(--text-faint)">💳 Payments are being activated</div>
         <div style="font-size:12px;color:var(--text-dim);margin-top:4px">This plan will be available very soon. Join the waitlist to be notified first.</div>
       </div>
-      <button class="btn-generate" onclick="toast('✓ Waitlisted! We'll notify you when payments go live.','success');closeModal()">Notify Me When Ready →</button>
+      <button class="btn-generate" onclick="joinWaitlist()">Notify Me When Ready →</button>
       <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Maybe Later</button>
     `;
   },
@@ -3744,6 +3750,12 @@ function openModal(key) {
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   initVoting();
+  // Allow independent scroll inside modal on iOS Capacitor (scrollEnabled:false)
+  const sheet = document.querySelector('.modal-sheet');
+  if (sheet) {
+    sheet.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+    sheet.addEventListener('touchmove',  e => e.stopPropagation(), { passive: true });
+  }
   if (key === 'wallet')   loadWalletBalance();
   if (key === 'rewards')  setTimeout(loadEarnSoulState, 50);
   if (key === 'search')   setTimeout(() => document.getElementById('searchInput')?.focus(), 50);

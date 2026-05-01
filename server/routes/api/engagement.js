@@ -239,10 +239,10 @@ router.post('/rewards/first-watch', async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   const today = new Date().toISOString().slice(0, 10);
-  const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'first_watch').gte('rewarded_at', today + 'T00:00:00Z').maybeSingle();
+  const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'watch_episode').gte('rewarded_at', today + 'T00:00:00Z').maybeSingle();
   if (existing) return res.json({ already_claimed: true, amount: 0 });
   const { data: balance, error } = await supabaseAdmin.rpc('grant_soul_reward', {
-    p_user_id: user.id, p_type: 'first_watch', p_amount: 15, p_metadata: { date: today },
+    p_user_id: user.id, p_type: 'watch_episode', p_amount: 15, p_metadata: { date: today },
   });
   if (error) return res.status(500).json({ error: error.message });
   res.json({ claimed: true, amount: 15, new_balance: balance });
@@ -252,10 +252,10 @@ router.post('/rewards/first-watch', async (req, res) => {
 router.post('/rewards/complete-ep3', async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
-  const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_ep3').maybeSingle();
+  const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_episode').maybeSingle();
   if (existing) return res.json({ already_claimed: true, amount: 0 });
   const { data: balance, error } = await supabaseAdmin.rpc('grant_soul_reward', {
-    p_user_id: user.id, p_type: 'complete_ep3', p_amount: 20, p_metadata: { episode: 'gold-veins-e3' },
+    p_user_id: user.id, p_type: 'complete_episode', p_amount: 20, p_metadata: { episode: 'gold-veins-e3' },
   });
   if (error) return res.status(500).json({ error: error.message });
   res.json({ claimed: true, amount: 20, new_balance: balance });
@@ -271,11 +271,16 @@ router.get('/rewards/status', async (req, res) => {
     .select('reward_type')
     .eq('user_id', user.id)
     .gte('rewarded_at', today + 'T00:00:00Z');
-  // complete_ep3 is lifetime, not daily — check separately
-  const { data: ep3 } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_ep3').maybeSingle();
+  // complete_episode is lifetime (one-time), not daily — check all time
+  const { data: ep3 } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_episode').maybeSingle();
   const claimed = (data || []).map(r => r.reward_type);
-  if (ep3) claimed.push('complete_ep3');
-  res.json({ claimed });
+  // map back to UI keys
+  const mapped = [];
+  if (claimed.includes('daily_login'))   mapped.push('daily_login');
+  if (claimed.includes('watch_episode')) mapped.push('first_watch');
+  if (claimed.includes('share_series'))  mapped.push('share_series');
+  if (ep3)                               mapped.push('complete_ep3');
+  res.json({ claimed: mapped });
 });
 
 // POST /api/engage/profile/avatar — upload profile photo
