@@ -2630,19 +2630,19 @@ svg defs { position: absolute; width: 0; height: 0; }
 
     <!-- RIGHT RAIL: watchlist · share · next -->
     <div class="vp-rail" id="vpRail">
-      <button class="vp-rail-btn" id="vpWatchlistBtn" onclick="event.stopPropagation();vpToggleWatchlist()" aria-label="Save to Watchlist">
+      <button class="vp-rail-btn" id="vpWatchlistBtn" onclick="event.stopPropagation();vpToggleWatchlist();_resetControlsTimer()" aria-label="Save to Watchlist">
         <div class="vp-rail-icon" id="vpWatchlistIcon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         </div>
         <span class="vp-rail-label">Save</span>
       </button>
-      <button class="vp-rail-btn" onclick="event.stopPropagation();vpShare()" aria-label="Share">
+      <button class="vp-rail-btn" onclick="event.stopPropagation();vpShare();_resetControlsTimer()" aria-label="Share">
         <div class="vp-rail-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </div>
         <span class="vp-rail-label">Share</span>
       </button>
-      <button class="vp-rail-btn" id="vpNextBtn" onclick="event.stopPropagation();_nextEpisode()" aria-label="Next Episode">
+      <button class="vp-rail-btn" id="vpNextBtn" onclick="event.stopPropagation();_nextEpisode();_resetControlsTimer()" aria-label="Next Episode">
         <div class="vp-rail-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
         </div>
@@ -3998,6 +3998,15 @@ function toggleVideoControls() {
   }
 }
 
+// Called by rail buttons after their action so the controls stay visible long
+// enough for the user to press another button without re-tapping to show them.
+function _resetControlsTimer() {
+  const overlay = document.getElementById('videoOverlay');
+  if (!overlay?.classList.contains('show-controls')) return;
+  clearTimeout(controlsTimeout);
+  controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 3500);
+}
+
 /* ─── GENERATE BUTTONS (fixed — all .btn-generate wired up) ─────────────── */
 function initBtnGenerate() {
   document.querySelectorAll('.btn-generate').forEach(btn => {
@@ -4491,6 +4500,10 @@ function _initSwipe() {
   overlay.addEventListener('touchend', e => {
     document.getElementById('vpSwipeNext')?.classList.remove('show');
     document.getElementById('vpSwipePrev')?.classList.remove('show');
+    // If the touch ended on an interactive control, let its own click handler fire —
+    // don't call toggleVideoControls() which would strip pointer-events before the
+    // synthetic click event arrives (iOS fires click ~0ms after touchend).
+    if (e.target.closest('.vp-rail-btn,.vp-close-btn,.vp-bottom,.vp-rail,.video-state,.vp-end-card')) return;
     if (!swiping) { toggleVideoControls(); return; }
     const dy = e.changedTouches[0].clientY - startY;
     if      (dy < -80) _nextEpisode();
@@ -5035,6 +5048,10 @@ async function loadLanguageSelector() {
   if (active) setTimeout(() => active.scrollIntoView({ block: 'nearest' }), 60);
 }
 
+// Per-language translation cache — switching back to a previously loaded
+// language is instant with no network round-trip.
+const _langCache = {};
+
 async function setLanguage(code) {
   if (code === _currentLang) { closeModal(); return; }
   _currentLang = code;
@@ -5045,11 +5062,22 @@ async function setLanguage(code) {
   }
 
   _updateLangDisplay();
-  await applyTranslations(code);
+
+  // Apply from cache instantly if available, then close + toast immediately.
+  // Don't await the fetch — translation updates in background.
+  if (_langCache[code]) {
+    _transCache = _langCache[code];
+    _applyTransToEl(document.body);
+    const lang = _availableLangs.find(l => l.code === code);
+    document.documentElement.dir = lang?.is_rtl ? 'rtl' : 'ltr';
+  }
+
   closeModal();
   const langName = (_availableLangs.find(l => l.code === code) || {}).native_name || code.toUpperCase();
   toast(`${langName} ✓`, 'success');
-  // Refresh language recommendations row
+
+  // Fetch / refresh translations in background (no await)
+  applyTranslations(code);
   if (typeof _loadLanguageRow === 'function') _loadLanguageRow();
 }
 
@@ -5058,8 +5086,18 @@ async function applyTranslations(code) {
 
   if (code === 'en') {
     _transCache = {};
+    _langCache['en'] = {};
     _applyTransToEl(document.body);
     document.documentElement.dir = 'ltr';
+    return;
+  }
+
+  // Return instantly from cache; fetch will update in background
+  if (_langCache[code]) {
+    _transCache = _langCache[code];
+    _applyTransToEl(document.body);
+    const lang = _availableLangs.find(l => l.code === code);
+    document.documentElement.dir = lang?.is_rtl ? 'rtl' : 'ltr';
     return;
   }
 
@@ -5067,25 +5105,11 @@ async function applyTranslations(code) {
     const res = await fetch('/api/translations/' + code);
     if (!res.ok) return;
     const { translations } = await res.json();
-    _transCache = translations || {};
-
-    // Merge English fallback for any missing keys
-    try {
-      const enRes = await fetch('/api/translations/en');
-      if (enRes.ok) {
-        const { translations: enT } = await enRes.json();
-        for (const [ns, keys] of Object.entries(enT || {})) {
-          if (!_transCache[ns]) _transCache[ns] = {};
-          for (const [k, v] of Object.entries(keys)) {
-            if (_transCache[ns][k] === undefined) _transCache[ns][k] = v;
-          }
-        }
-      }
-    } catch {}
-
+    // HTML already contains English defaults — no need for a second en fetch.
+    // Missing keys simply render their HTML default text.
+    _langCache[code] = translations || {};
+    _transCache = _langCache[code];
     _applyTransToEl(document.body);
-
-    // RTL support
     const lang = _availableLangs.find(l => l.code === code);
     document.documentElement.dir = lang?.is_rtl ? 'rtl' : 'ltr';
   } catch {}
