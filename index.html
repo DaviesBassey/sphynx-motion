@@ -218,12 +218,14 @@ body::after {
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  padding: 8px 14px;
+  padding: 8px 6px;
   border-radius: 12px;
   transition: all .2s ease;
   background: none;
   border: none;
   color: var(--text-faint);
+  flex: 1;
+  min-width: 0;
 }
 .nav-btn:hover { color: var(--text-dim); background: rgba(255,255,255,.04); }
 .nav-btn.active { color: var(--red); }
