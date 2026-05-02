@@ -1,4 +1,4 @@
-const CACHE = 'sphynx-v6';
+const CACHE = 'sphynx-v7';
 const PRECACHE = [
   '/manifest.webmanifest',
   '/SPHYNX_LOGO_WHITE.png',
