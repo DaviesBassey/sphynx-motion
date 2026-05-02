@@ -2768,7 +2768,7 @@ document.addEventListener('visibilitychange', async () => {
     if (session) {
       isLoggedIn = true;
       _currentUser = session.user;
-      document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax`;
+      document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax${location.protocol==='https:'?';Secure':''}`;
     } else if (isLoggedIn) {
       isLoggedIn = false;
       _currentUser = null;
@@ -3066,7 +3066,7 @@ async function uploadProfilePhoto(file) {
 
 function _updateAvatarUI(url) {
   document.querySelectorAll('.prof-avatar-wrap').forEach(el => {
-    el.innerHTML = `<img src="${url}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    el.innerHTML = `<img src="${esc(url)}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   });
 }
 
@@ -4063,12 +4063,12 @@ async function initSupabase() {
       if (session) {
         isLoggedIn = true;
         _currentUser = session.user;
-        document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax`;
+        document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax${location.protocol==='https:'?';Secure':''}`;
       }
       _sb.auth.onAuthStateChange((event, session) => {
         isLoggedIn = !!session;
         _currentUser = session?.user || null;
-        if (session) document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax`;
+        if (session) document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax${location.protocol==='https:'?';Secure':''}`;
         else document.cookie = 'sphynx_session=;path=/;max-age=0';
         updateProfileUI();
         if (event === 'SIGNED_IN') setTimeout(claimDailyLogin, 1500);
@@ -4127,7 +4127,7 @@ async function _loadProfileData() {
     // Avatar
     if (data.avatar_url) {
       const inner = document.getElementById('profAvatarInner');
-      if (inner) inner.innerHTML = `<img src="${data.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      if (inner) inner.innerHTML = `<img src="${esc(data.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
     }
 
     // Name

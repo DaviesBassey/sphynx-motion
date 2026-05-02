@@ -12,6 +12,7 @@ process.on('uncaughtException', (err) => {
 const express      = require('express');
 const path         = require('path');
 const cors         = require('cors');
+const helmet       = require('helmet');
 const cookieParser = require('cookie-parser');
 
 const { requireAuth } = require('./middleware/auth');
@@ -58,7 +59,15 @@ const ROOT = path.join(__dirname, '..');
 app.set('trust proxy', 1);
 
 // ── MIDDLEWARE ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.PUBLIC_ORIGIN || `http://localhost:${PORT}`, credentials: true }));
+// Security headers — disable frameguard for the embedded player iframe
+app.use(helmet({
+  contentSecurityPolicy: false, // CSP is set per-route via meta tag in HTML
+  frameguard: false,            // allow video embeds
+  crossOriginEmbedderPolicy: false,
+}));
+
+const _allowedOrigin = process.env.PUBLIC_ORIGIN || `http://localhost:${PORT}`;
+app.use(cors({ origin: _allowedOrigin, credentials: true }));
 
 // Mux webhook needs raw bytes for HMAC verification — register BEFORE express.json()
 app.use('/api/mux/webhook', express.raw({ type: 'application/json' }));

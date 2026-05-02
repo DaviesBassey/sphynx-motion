@@ -19,6 +19,7 @@ router.get('/series', async (req, res) => {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
+  if (search && search.length > 100) return res.status(400).json({ error: 'Search term too long' });
   if (status) query = query.eq('status', status);
   if (search) query = query.ilike('title', `%${search}%`);
 

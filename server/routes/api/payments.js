@@ -343,10 +343,15 @@ router.post('/payfast/itn', express.urlencoded({ extended: true }), async (req, 
  * This receives the "source of truth" events from RevenueCat.
  */
 router.post('/revenuecat/webhook', express.json(), async (req, res) => {
-  // Verify shared secret
-  const authHeader = req.headers.authorization;
-  if (process.env.REVENUECAT_WEBHOOK_SECRET && authHeader !== process.env.REVENUECAT_WEBHOOK_SECRET) {
-    return res.status(401).send('Unauthorized');
+  // Verify shared secret with constant-time comparison to prevent timing attacks
+  const authHeader = req.headers.authorization || '';
+  const secret     = process.env.REVENUECAT_WEBHOOK_SECRET || '';
+  if (secret) {
+    const a = Buffer.from(authHeader.padEnd(secret.length));
+    const b = Buffer.from(secret);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return res.status(401).send('Unauthorized');
+    }
   }
 
   const { event } = req.body;

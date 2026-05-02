@@ -44,8 +44,9 @@ router.get('/transactions', async (req, res) => {
 router.post('/grant', requireRole('admin'), async (req, res) => {
   const { user_id, amount, reason } = req.body;
 
-  if (!user_id || !amount || amount <= 0) {
-    return res.status(400).json({ error: 'user_id and positive amount are required' });
+  const MAX_GRANT = 100_000;
+  if (!user_id || !amount || amount <= 0 || amount > MAX_GRANT) {
+    return res.status(400).json({ error: `user_id and amount (1–${MAX_GRANT}) are required` });
   }
 
   // Insert transaction and update balance atomically via RPC

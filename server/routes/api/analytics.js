@@ -38,7 +38,7 @@ router.get('/top-content', async (req, res) => {
 
 // GET /api/admin/analytics/viewership?days=7
 router.get('/viewership', async (req, res) => {
-  const days = Number(req.query.days) || 7;
+  const days = Math.min(Math.max(Number(req.query.days) || 7, 1), 365);
   const from = new Date(Date.now() - days * 86400000).toISOString();
 
   const { data, error } = await supabaseAdmin

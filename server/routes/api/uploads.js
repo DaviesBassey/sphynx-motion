@@ -20,7 +20,7 @@ router.post('/poster', requireRole('admin'), memStorage.single('file'), async (r
     return res.status(400).json({ error: 'Only JPEG, PNG, and WebP images allowed' });
   }
 
-  const ext  = req.file.originalname.split('.').pop();
+  const ext  = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[req.file.mimetype] || 'jpg';
   const path = `posters/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const { data, error } = await supabaseAdmin.storage

@@ -1,7 +1,13 @@
-const express = require('express');
+const express    = require('express');
+const rateLimit  = require('express-rate-limit');
 const { supabaseAdmin } = require('../../lib/supabase');
 
 const router = express.Router();
+
+const VOTE_SOUL_COST = 15; // server-side constant — never trust client value
+
+const rewardLimiter = rateLimit({ windowMs: 60_000, max: 10, standardHeaders: true, legacyHeaders: false });
+const voteLimiter   = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false });
 
 // Auth helper — reads sphynx_session cookie or Authorization header
 async function getUser(req) {
@@ -167,12 +173,15 @@ router.get('/votes/:episodeId', async (req, res) => {
 });
 
 // POST /api/engage/votes/:episodeId
-router.post('/votes/:episodeId', async (req, res) => {
+router.post('/votes/:episodeId', voteLimiter, async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
-  const { choice_idx, soul_cost = 15 } = req.body;
-  if (choice_idx === undefined) return res.status(400).json({ error: 'choice_idx required' });
+  const { choice_idx } = req.body;
+  const soul_cost = VOTE_SOUL_COST; // always server-defined
+  if (choice_idx === undefined || !Number.isInteger(Number(choice_idx)) || Number(choice_idx) < 0) {
+    return res.status(400).json({ error: 'choice_idx must be a non-negative integer' });
+  }
 
   // Check existing vote
   const { data: existing } = await supabaseAdmin
@@ -196,7 +205,7 @@ router.post('/votes/:episodeId', async (req, res) => {
 // ─── SOUL REWARDS ─────────────────────────────────────────────────────────────
 
 // POST /api/engage/rewards/daily-login
-router.post('/rewards/daily-login', async (req, res) => {
+router.post('/rewards/daily-login', rewardLimiter, async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
@@ -220,7 +229,7 @@ router.post('/rewards/daily-login', async (req, res) => {
 });
 
 // POST /api/engage/rewards/share
-router.post('/rewards/share', async (req, res) => {
+router.post('/rewards/share', rewardLimiter, async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   const { series_id } = req.body;
@@ -235,7 +244,7 @@ router.post('/rewards/share', async (req, res) => {
 });
 
 // POST /api/engage/rewards/first-watch
-router.post('/rewards/first-watch', async (req, res) => {
+router.post('/rewards/first-watch', rewardLimiter, async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   const today = new Date().toISOString().slice(0, 10);
@@ -249,7 +258,7 @@ router.post('/rewards/first-watch', async (req, res) => {
 });
 
 // POST /api/engage/rewards/complete-ep3
-router.post('/rewards/complete-ep3', async (req, res) => {
+router.post('/rewards/complete-ep3', rewardLimiter, async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_episode').maybeSingle();
@@ -287,12 +296,16 @@ router.get('/rewards/status', async (req, res) => {
 const multer = require('multer');
 const memUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
+const AVATAR_MIME_TO_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
 router.post('/profile/avatar', memUpload.single('avatar'), async (req, res) => {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-  const ext  = req.file.originalname.split('.').pop().toLowerCase();
+  const ext = AVATAR_MIME_TO_EXT[req.file.mimetype];
+  if (!ext) return res.status(400).json({ error: 'Only JPEG, PNG, and WebP images allowed' });
+
   const path = `avatars/${user.id}.${ext}`;
 
   const { error: upErr } = await supabaseAdmin.storage.from('avatars').upload(path, req.file.buffer, {

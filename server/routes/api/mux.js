@@ -50,12 +50,18 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   const sig  = req.headers['mux-signature'];
   const body = req.body;
 
-  if (process.env.MUX_WEBHOOK_SECRET && sig) {
-    const [, ts]   = (sig.match(/t=(\d+)/) || []);
-    const [, v1]   = (sig.match(/v1=([a-f0-9]+)/) || []);
-    const hmac     = crypto.createHmac('sha256', process.env.MUX_WEBHOOK_SECRET);
-    const expected = hmac.update(`${ts}.${body.toString()}`).digest('hex');
-    if (v1 !== expected) return res.status(401).send('Bad signature');
+  if (!process.env.MUX_WEBHOOK_SECRET) {
+    console.error('MUX_WEBHOOK_SECRET not set — webhook rejected');
+    return res.status(503).send('Webhook secret not configured');
+  }
+  if (!sig) return res.status(401).send('Missing mux-signature header');
+
+  const [, ts] = (sig.match(/t=(\d+)/) || []);
+  const [, v1] = (sig.match(/v1=([a-f0-9]+)/) || []);
+  const hmac     = crypto.createHmac('sha256', process.env.MUX_WEBHOOK_SECRET);
+  const expected = hmac.update(`${ts}.${body.toString()}`).digest('hex');
+  if (!ts || !v1 || !crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(expected))) {
+    return res.status(401).send('Bad signature');
   }
 
   let event;
