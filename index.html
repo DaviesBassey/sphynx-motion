@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SPHYNX MOTION">
 <meta name="theme-color" content="#08080A">
-<meta name="description" content="SPHYNX MOTION — African vertical drama streaming. Stories That Watch Back. Watch Gold Veins, Frequency, The Last Lobola, Nairobi Signal and more.">
+<meta name="description" content="SPHYNX MOTION — African vertical drama streaming. Stories That Watch Back.">
 <meta property="og:title" content="SPHYNX MOTION">
 <meta property="og:description" content="Stories That Watch Back. African vertical drama streaming on SPHYNX MOTION.">
 <meta property="og:image" content="assets/posters/image-11.jpg">
@@ -3120,10 +3120,16 @@ async function doSearch(q) {
   }, 300);
 }
 function _searchPopular() {
-  return ['Gold Veins','Frequency','The Last Lobola','Nairobi Signal','Neo-Noir','Romance'].map(t => `
+  const all = window._allSeries || [];
+  const titles = all.slice(0, 4).map(s => s.title);
+  const genres = [...new Set(all.map(s => s.genre).filter(Boolean))].slice(0, 3);
+  const terms  = [...new Set([...titles, ...genres])].slice(0, 6);
+  if (!terms.length) return '<div style="text-align:center;padding:24px;color:#777;font-size:12px">Start typing to search…</div>';
+  return `<div style="font-size:10px;font-weight:700;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Popular</div>` +
+    terms.map(t => `
     <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:8px"
-      onclick="document.getElementById('searchInput').value='${t}';doSearch('${t}')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${t}
+      onclick="document.getElementById('searchInput').value='${esc(t)}';doSearch('${esc(t)}')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${esc(t)}
     </div>`).join('');
 }
 
@@ -3394,10 +3400,7 @@ const modalContent = {
         style="background:transparent;border:none;outline:none;font-size:13px;color:var(--text);font-family:inherit;flex:1;min-width:0"
         oninput="doSearch(this.value)">
     </div>
-    <div id="searchResults">
-      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Popular Searches</div>
-      ${_searchPopular()}
-    </div>
+    <div id="searchResults">${_searchPopular()}</div>
   `,
   'join': `
     <div class="modal-title">Join Soul Pass</div>
@@ -3468,7 +3471,7 @@ const modalContent = {
       { key: 'daily_login',   title: 'Daily Login',   desc: 'Log in every day',               amount: 10, endpoint: '/api/engage/rewards/daily-login',   method: 'POST', body: null },
       { key: 'first_watch',   title: 'First Watch',   desc: 'Watch any episode today',         amount: 15, endpoint: '/api/engage/rewards/first-watch',    method: 'POST', body: null },
       { key: 'share_series',  title: 'Share Series',  desc: 'Share a series with a friend',    amount: 25, endpoint: '/api/engage/rewards/share',          method: 'POST', body: null },
-      { key: 'complete_ep3',  title: 'Complete E3',   desc: 'Finish Gold Veins Episode 3',     amount: 20, endpoint: '/api/engage/rewards/complete-ep3',   method: 'POST', body: null },
+      { key: 'complete_ep3',  title: 'Complete E3',   desc: 'Watch any episode to completion',  amount: 20, endpoint: '/api/engage/rewards/complete-ep3',   method: 'POST', body: null },
     ];
     return `
     <div class="modal-title">Earn Soul</div>
@@ -3489,22 +3492,6 @@ const modalContent = {
       </div>`).join('')}
     </div>`;
   },
-  'gold-veins': `
-    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px">
-      <img src="assets/posters/image-11.jpg" alt="Gold Veins" style="width:70px;height:90px;border-radius:12px;object-fit:cover;flex-shrink:0">
-      <div>
-        <div style="font-size:9px;font-weight:800;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Joburg Neo-Noir · Universe 01</div>
-        <div class="modal-title">Gold Veins</div>
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <span class="pill pill-gold">S1 · 24 eps</span>
-          <span class="pill pill-red">● Live</span>
-        </div>
-      </div>
-    </div>
-    <div class="modal-sub">A fractured family controls half of Johannesburg's underground gold trade. When the matriarch vanishes, her three children — a cop, a club owner, a preacher — unravel a secret that could destroy everything.</div>
-    <button class="btn-watch" onclick="closeModal();openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')" style="width:100%;padding:13px;font-size:14px">▶ Continue Episode 3</button>
-    <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--text-faint)">34% through arc · 15 Soul for Episode 6+</div>
-  `,
   'script': `
     <div class="modal-title">Script Oracle</div>
     <div class="modal-sub">AI-generated vertical drama scripts with African narrative DNA, Ubuntu arc structure, and engineered cliffhangers every 45–90 seconds.</div>
