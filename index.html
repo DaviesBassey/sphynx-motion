@@ -4454,13 +4454,23 @@ function openVideoPlayer(src, seriesTitle, epLabel, type) {
 
   _videoShowLoading();
   const isHls = type === 'hls' || src.includes('.m3u8');
-  if (isHls && window.Hls && Hls.isSupported()) {
+  // On iOS/Safari use native HLS — faster startup, no JS overhead
+  const nativeHls = video.canPlayType('application/vnd.apple.mpegurl') !== '';
+  if (isHls && window.Hls && Hls.isSupported() && !nativeHls) {
     if (window._hls) { window._hls.destroy(); window._hls = null; }
-    const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+    const hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: false,
+      maxBufferLength: 10,        // start playing after 10s buffered (default 30)
+      maxMaxBufferLength: 30,
+      abrEwmaDefaultEstimate: 2e6, // assume 2Mbps to pick quality faster
+      startLevel: -1,
+    });
     hls.on(Hls.Events.ERROR, (ev, d) => { if (d.fatal) _onVideoError(); });
     hls.loadSource(src); hls.attachMedia(video); window._hls = hls;
-  } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = src;
+  } else if (isHls && nativeHls) {
+    if (window._hls) { window._hls.destroy(); window._hls = null; }
+    if (video.src !== src) video.src = src;
   } else {
     if (window._hls) { window._hls.destroy(); window._hls = null; }
     if (video.src !== new URL(src, location.href).href) video.src = src;
@@ -4495,12 +4505,26 @@ async function _loadPlaylist(seriesId) {
 async function _gotoEpisode(idx) {
   if (idx < 0 || idx >= _playlist.length) return;
   _epIndex = idx;
+  _currentEpisodeId = _playlist[idx].id;
   document.getElementById('vpEndCard')?.classList.remove('show');
   clearTimeout(window._autoNextTimer);
   _updateVpCounter();
   const ep          = _playlist[idx];
   const seriesTitle = document.getElementById('videoTitle')?.textContent || '';
   const epLabel     = 'E' + ep.episode_number + (ep.title ? ' — ' + ep.title : '');
+
+  // Fast path: free episode with URL in playlist — skip the /play round-trip
+  if ((ep.is_free || !ep.soul_cost) && (ep.mux_playback_id || ep.video_url)) {
+    const url  = ep.mux_playback_id ? `https://stream.mux.com/${ep.mux_playback_id}.m3u8` : ep.video_url;
+    const type = ep.mux_playback_id ? 'hls' : 'mp4';
+    document.getElementById('videoEp').textContent = epLabel;
+    openVideoPlayer(url, seriesTitle, epLabel, type);
+    // Increment view counter and deduct souls async — fire and forget
+    fetch('/api/content/episodes/' + ep.id + '/play', { credentials: 'include' }).catch(() => {});
+    return;
+  }
+
+  // Premium or missing URL — go through the gated API
   await playEpisode(ep.id, seriesTitle, epLabel);
 }
 
@@ -4617,21 +4641,28 @@ async function playSeries(seriesId) {
   _videoShowLoading();
 
   try {
+    // Kick off resume-point check in parallel with playlist fetch
+    const progressP = (isLoggedIn && _sb && _currentUser)
+      ? _sb.from('episode_progress')
+          .select('episode_id, progress_pct, episodes!inner(series_id)')
+          .eq('episodes.series_id', seriesId)
+          .eq('user_id', _currentUser.id)
+          .order('watched_at', { ascending: false })
+          .limit(1).maybeSingle()
+      : Promise.resolve({ data: null });
+
     const series = await _loadPlaylist(seriesId);
     if (!_playlist.length) { closeVideoPlayer(); toast('No episodes available yet'); return; }
 
-    // Cache genre/lang so recommendation rows can update after player closes
     if (series?.genre)    _lastWatchedGenre = series.genre;
     if (series?.language) _lastWatchedLang  = series.language;
-
     _track('series_view', { series_id: seriesId, title: series?.title, genre: series?.genre });
 
-    // Series title + age rating
     document.getElementById('videoTitle').textContent = series?.title || 'SPHYNX MOTION';
     const _ageEl = document.getElementById('vpAgeRating');
     if (_ageEl) { _ageEl.textContent = series?.age_rating || ''; _ageEl.style.display = series?.age_rating ? '' : 'none'; }
 
-    // Check watchlist state async
+    // Watchlist check — fire and forget
     if (isLoggedIn) {
       fetch('/api/engage/watchlist', { credentials: 'include' }).then(r => r.json()).then(d => {
         _vpWatchlisted = (d.watchlist || []).some(s => s.id === seriesId || s.series_id === seriesId);
@@ -4639,19 +4670,15 @@ async function playSeries(seriesId) {
       }).catch(() => {});
     }
 
-    // Find resume point
+    // Resume point — progressP was already running, just await the result
     let startIdx = 0;
-    if (isLoggedIn && _sb && _currentUser) {
-      try {
-        const { data } = await _sb.from('episode_progress')
-          .select('episode_id, progress_pct').in('episode_id', _playlist.map(e => e.id))
-          .eq('user_id', _currentUser.id).order('updated_at', { ascending: false }).limit(1).single();
-        if (data) {
-          const idx = _playlist.findIndex(e => e.id === data.episode_id);
-          if (idx >= 0) startIdx = data.progress_pct >= 95 ? Math.min(idx + 1, _playlist.length - 1) : idx;
-        }
-      } catch {}
-    }
+    try {
+      const { data } = await progressP;
+      if (data) {
+        const idx = _playlist.findIndex(e => e.id === data.episode_id);
+        if (idx >= 0) startIdx = data.progress_pct >= 95 ? Math.min(idx + 1, _playlist.length - 1) : idx;
+      }
+    } catch {}
 
     await _gotoEpisode(startIdx);
   } catch { closeVideoPlayer(); toast('Could not load series'); }
@@ -4663,10 +4690,10 @@ async function playEpisode(episodeId, seriesTitle, epLabel) {
   if (idx >= 0) { _epIndex = idx; _updateVpCounter(); }
 
   try {
-    const session = _sb ? (await _sb.auth.getSession()).data.session : null;
+    const token = _sb && _currentUser ? (await _sb.auth.getSession()).data.session?.access_token : null;
     const res = await fetch('/api/content/episodes/' + episodeId + '/play', {
       credentials: 'include',
-      headers: session ? { Authorization: 'Bearer ' + session.access_token } : {},
+      headers: token ? { Authorization: 'Bearer ' + token } : {},
     });
     const data = await res.json();
     if (res.status === 401) { openModal('login'); return; }
