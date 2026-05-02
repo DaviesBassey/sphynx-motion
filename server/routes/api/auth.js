@@ -47,13 +47,13 @@ router.post('/login', loginLimiter, async (req, res) => {
     maxAge:   8 * 60 * 60 * 1000,  // 8 hours
   });
 
-  // Log admin login
-  await supabaseAdmin.from('admin_audit_log').insert({
+  // Log admin login (non-blocking — audit failure must not break login)
+  supabaseAdmin.from('admin_audit_log').insert({
     admin_id:    data.user.id,
     action:      'login',
     target_type: 'session',
     details:     { ip: req.ip, ua: req.headers['user-agent'] },
-  });
+  }).catch(() => {});
 
   res.json({
     success: true,
@@ -63,12 +63,12 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 // POST /api/admin/auth/logout
 router.post('/logout', requireAuth, async (req, res) => {
-  await supabaseAdmin.from('admin_audit_log').insert({
+  supabaseAdmin.from('admin_audit_log').insert({
     admin_id:    req.user.id,
     action:      'logout',
     target_type: 'session',
     details:     {},
-  });
+  }).catch(() => {});
 
   res.clearCookie('sphynx_admin_session');
   res.json({ success: true });

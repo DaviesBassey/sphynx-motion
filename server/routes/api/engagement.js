@@ -107,7 +107,7 @@ router.get('/progress', async (req, res) => {
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   let query = supabaseAdmin
     .from('episode_progress')
-    .select('episode_id, progress_pct, completed, watched_at, episodes(episode_number, title, series_id)')
+    .select('episode_id, progress_pct, completed, watched_at, episodes(episode_number, title, series_id, series(title, poster_url, slug))')
     .eq('user_id', user.id)
     .order('watched_at', { ascending: false });
   if (req.query.series_id) {

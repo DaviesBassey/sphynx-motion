@@ -10,8 +10,8 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-const EMAIL = 'daviesbasseya@gmail.com';
-const PASSWORD = 'Sphynx@Admin2025!';
+const EMAIL    = process.env.ADMIN_EMAIL    || (() => { console.error('Set ADMIN_EMAIL env var'); process.exit(1); })();
+const PASSWORD = process.env.ADMIN_PASSWORD || (() => { console.error('Set ADMIN_PASSWORD env var'); process.exit(1); })();
 
 async function run() {
   console.log('Setting up superadmin user...\n');

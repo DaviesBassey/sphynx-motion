@@ -999,3 +999,13 @@ ON CONFLICT (language_code, namespace, key) DO NOTHING;
 -- ─── MIGRATION 009: season_number ─────────────────────────────────────────────
 ALTER TABLE public.episodes
   ADD COLUMN IF NOT EXISTS season_number INTEGER NOT NULL DEFAULT 1;
+
+-- ─── MIGRATION 011: atomic view counter ───────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.increment_episode_views(ep_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.episodes
+  SET views = COALESCE(views, 0) + 1
+  WHERE id = ep_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

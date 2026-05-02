@@ -14,7 +14,7 @@
 <meta property="og:image" content="assets/posters/image-11.jpg">
 <meta property="og:type" content="website">
 <title>SPHYNX MOTION</title>
-<link rel="icon" type="image/png" href="SPHYNY_MOTION_FAV.png">
+<link rel="icon" type="image/png" href="SPHYNX_MOTION_FAV.png">
 <link rel="apple-touch-icon" href="App_Cvr_Art.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -226,11 +226,11 @@ body::after {
   transition: all .2s ease;
   background: none;
   border: none;
-  color: var(--text-faint);
+  color: #777;
   flex: 1;
   min-width: 0;
 }
-.nav-btn:hover { color: var(--text-dim); background: rgba(255,255,255,.04); }
+.nav-btn:hover { color: #999; background: rgba(255,255,255,.04); }
 .nav-btn.active { color: var(--red); }
 .nav-btn svg { width: 22px; height: 22px; }
 .nav-btn span { font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
@@ -1485,7 +1485,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 }
 .search-field:hover { border-color: rgba(255,36,48,.35); background: rgba(255,255,255,.04); }
 .search-field svg { flex-shrink: 0; }
-.search-placeholder { font-size: 12px; color: var(--text-faint); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.search-placeholder { font-size: 12px; color: #777; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .topbar-icon {
   width: 34px; height: 34px;
   border-radius: 10px;
@@ -2158,7 +2158,7 @@ svg defs { position: absolute; width: 0; height: 0; }
       <!-- Top bar -->
       <div class="home-topbar">
         <div class="search-field" onclick="openModal('search')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span class="search-placeholder">Search series, genres, creators...</span>
         </div>
         <div class="topbar-icon" onclick="openModal('notifications')" aria-label="Notifications" role="button" tabindex="0">
@@ -2314,8 +2314,8 @@ svg defs { position: absolute; width: 0; height: 0; }
           <button onclick="installPWA()" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
             <span style="font-size:14px">📲</span> Add to Home Screen
           </button>
-          <button onclick="openModal('app-coming')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text-dim);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <span style="font-size:14px">📱</span> Mobile App Soon
+          <button class="ios-hide" onclick="openModal('app-coming')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text-dim);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">📱</span> Mobile App
           </button>
         </div>
       </div>
@@ -2331,60 +2331,19 @@ svg defs { position: absolute; width: 0; height: 0; }
         <button class="list-tab active" onclick="switchListTab(this,'following')">Following</button>
         <button class="list-tab" onclick="switchListTab(this,'history')">History</button>
         <button class="list-tab" onclick="switchListTab(this,'reminder')">Reminders</button>
-        <div style="margin-left:auto;display:flex;align-items:center;padding-bottom:12px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
-        </div>
+        <button onclick="openListFilter()" style="margin-left:auto;display:flex;align-items:center;padding:0 4px 12px;background:none;border:none;cursor:pointer" aria-label="Sort & filter">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+        </button>
       </div>
 
       <!-- Following tab content -->
       <div id="tab-following">
-        <div class="follow-card" onclick="openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')">
-          <div class="follow-thumb">
-            <img src="assets/posters/image-11.jpg" alt="">
-            <div class="g-badge g-badge--hot" style="position:absolute;top:4px;right:4px;font-size:8px">Hot</div>
-          </div>
-          <div class="follow-info">
-            <div class="follow-title">Gold Veins</div>
-            <div class="follow-genres">Neo-Noir · Crime Drama · Family Secrets</div>
-            <div class="follow-ep">E3 / E24</div>
-          </div>
-        </div>
-        <div class="follow-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
-          <div class="follow-thumb"><img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover"></div>
-          <div class="follow-info">
-            <div class="follow-title">Frequency</div>
-            <div class="follow-genres">Tech Thriller · Conspiracy · Lagos</div>
-            <div class="follow-ep">E1 / E18</div>
-          </div>
-        </div>
+        <div style="text-align:center;padding:30px;color:#777;font-size:12px">Loading…</div>
       </div>
 
       <!-- History tab (hidden) -->
       <div id="tab-history" style="display:none">
-        <div class="follow-card" onclick="openVideoPlayer('assets/videos/gold-veins-e3.mp4','Gold Veins','E3 — The Third Name')">
-          <div class="follow-thumb"><img src="assets/posters/image-11.jpg" alt=""></div>
-          <div class="follow-info">
-            <div class="follow-title">Gold Veins — E3</div>
-            <div class="follow-genres">Watched 2 hours ago · 34% complete</div>
-            <div class="follow-ep">Continue →</div>
-          </div>
-        </div>
-        <div class="follow-card" onclick="openVideoPlayer('assets/videos/frequency-e1.mp4','Frequency','E1 — First Contact')">
-          <div class="follow-thumb"><img src="assets/posters/image-15.jpg" alt="Frequency" style="width:100%;height:100%;object-fit:cover"></div>
-          <div class="follow-info">
-            <div class="follow-title">Frequency — E1</div>
-            <div class="follow-genres">Watched yesterday · Completed</div>
-            <div class="follow-ep">Watch E2 →</div>
-          </div>
-        </div>
-        <div class="follow-card" onclick="openVideoPlayer('assets/videos/lobola-e2.mp4','The Last Lobola','E2 — Her Price')">
-          <div class="follow-thumb"><img src="assets/posters/image-16.jpg" alt="The Last Lobola" style="width:100%;height:100%;object-fit:cover"></div>
-          <div class="follow-info">
-            <div class="follow-title">The Last Lobola — E2</div>
-            <div class="follow-genres">Watched 3 days ago · Completed</div>
-            <div class="follow-ep">Watch E3 →</div>
-          </div>
-        </div>
+        <div style="text-align:center;padding:30px;color:#777;font-size:12px">Loading…</div>
       </div>
 
       <!-- Reminder set (hidden) -->
@@ -2846,21 +2805,58 @@ function switchListTab(btn, tab) {
   if (tab === 'history') loadWatchHistory();
 }
 
+function openListFilter() {
+  document.getElementById('listSortSheet')?.remove();
+  document.getElementById('listSortOverlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'listSortOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:599';
+  const sheet = document.createElement('div');
+  sheet.id = 'listSortSheet';
+  sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--surface2);border-radius:20px 20px 0 0;padding:20px;z-index:600';
+  const opts = [
+    { key:'recent', label:'Recently Added' },
+    { key:'az',     label:'A – Z' },
+    { key:'genre',  label:'By Genre' },
+  ];
+  sheet.innerHTML = `
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px"></div>
+      <div style="font-size:14px;font-weight:700;color:var(--text)">Sort Watchlist</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${opts.map(o => `
+        <button onclick="loadWatchlist('${o.key}');document.getElementById('listSortSheet')?.remove();document.getElementById('listSortOverlay')?.remove();"
+          style="padding:14px 16px;background:${_listSort===o.key?'rgba(230,30,36,.15)':'var(--surface3)'};border:none;border-radius:12px;color:${_listSort===o.key?'var(--red)':'var(--text)'};font-size:14px;font-weight:600;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+          ${o.label}${_listSort===o.key?' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
+        </button>`).join('')}
+    </div>
+    <div style="height:max(16px,env(safe-area-inset-bottom,0px))"></div>`;
+  overlay.onclick = () => { sheet.remove(); overlay.remove(); };
+  document.body.appendChild(overlay);
+  document.body.appendChild(sheet);
+}
+
 /* ─── WATCHLIST (Supabase-backed) ────────────────────────────────────────── */
-async function loadWatchlist() {
+let _listSort = 'recent';
+
+async function loadWatchlist(sort) {
+  if (sort) _listSort = sort;
   const container = document.getElementById('tab-following');
   if (!container) return;
   if (!isLoggedIn) {
-    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Log in to save series to your watchlist.</div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#777;font-size:13px">Log in to save series to your watchlist.</div>';
     return;
   }
-  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Loading…</div>';
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:#777;font-size:12px">Loading…</div>';
   try {
     const res = await fetch('/api/engage/watchlist', { credentials: 'include' });
     if (!res.ok) throw new Error();
-    const { watchlist } = await res.json();
+    let { watchlist } = await res.json();
+    if (_listSort === 'az')    watchlist = watchlist.sort((a, b) => (a.title||'').localeCompare(b.title||''));
+    if (_listSort === 'genre') watchlist = watchlist.sort((a, b) => (a.genre||'').localeCompare(b.genre||''));
     if (!watchlist.length) {
-      container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Your watchlist is empty.<br>Tap the bookmark icon on any series to add it here.</div>';
+      container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#777;font-size:13px">Your watchlist is empty.<br>Tap the bookmark icon on any series to add it here.</div>';
       return;
     }
     container.innerHTML = watchlist.map(s => `
@@ -2871,11 +2867,12 @@ async function loadWatchlist() {
         <div class="follow-info">
           <div class="follow-title">${esc(s.title)}</div>
           <div class="follow-genres">${esc(s.genre || '')}</div>
-          <div class="follow-ep">Tap to watch →</div>
+          <div class="follow-ep" data-i18n="watchlist.tap_to_watch">Tap to watch →</div>
         </div>
         <button onclick="event.stopPropagation();removeFromWatchlist('${esc(s.id)}',this)"
           style="background:transparent;border:none;color:var(--text-faint);font-size:20px;padding:10px;cursor:pointer;flex-shrink:0">×</button>
       </div>`).join('');
+    _i18nEl(container);
   } catch {
     container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Could not load watchlist.</div>';
   }
@@ -2912,32 +2909,34 @@ async function loadWatchHistory() {
     }
     container.innerHTML = progress.slice(0, 30).map(p => {
       const ep = p.episodes || {};
-      const label = ep.episode_number ? 'E' + ep.episode_number + (ep.title ? ' — ' + ep.title : '') : 'Episode';
+      const series = ep.series || {};
+      const epLabel = ep.episode_number ? 'E' + ep.episode_number + (ep.title ? ' — ' + ep.title : '') : 'Episode';
       const pct = p.progress_pct || 0;
+      const poster = series.poster_url || '';
+      const seriesTitle = series.title || epLabel;
+      const done = pct >= 90;
       return `
-        <div class="follow-card" onclick="playEpisode('${esc(p.episode_id)}','${esc(ep.title||'')}','${esc(label)}')">
+        <div class="follow-card" onclick="playEpisode('${esc(p.episode_id)}','${esc(ep.title||'')}','${esc(epLabel)}')">
           <div class="follow-thumb" style="position:relative">
+            ${poster ? `<img src="${esc(poster)}" alt="${esc(seriesTitle)}" style="width:100%;height:100%;object-fit:cover">` : ''}
             <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15)">
               <div style="width:${pct}%;height:100%;background:var(--red)"></div>
             </div>
           </div>
           <div class="follow-info">
-            <div class="follow-title">${esc(label)}</div>
-            <div class="follow-genres">${pct >= 90 ? 'Completed' : pct + '% watched'}</div>
-            <div class="follow-ep">${pct >= 90 ? 'Rewatch →' : 'Continue →'}</div>
+            <div class="follow-title">${esc(seriesTitle)}</div>
+            <div class="follow-genres">${esc(epLabel)}</div>
+            <div class="follow-ep" data-i18n="${done ? 'history.rewatch' : 'history.continue'}">${done ? 'Rewatch →' : 'Continue →'}</div>
           </div>
         </div>`;
     }).join('');
+    _i18nEl(container);
   } catch {
     container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Could not load history.</div>';
   }
 }
 
 /* ─── DAILY LOGIN REWARD ─────────────────────────────────────────────────── */
-function joinWaitlist() {
-  toast('You’re on the waitlist — we’ll notify you when payments go live.', 'soul');
-  closeModal();
-}
 
 async function claimDailyLogin() {
   if (!isLoggedIn) return;
@@ -3253,9 +3252,9 @@ const modalContent = {
   `,
   'app-coming': `
     <div style="text-align:center;padding:10px 0">
-      <div style="font-size:36px;margin-bottom:12px">📱</div>
-      <div class="modal-title">Mobile App Coming Soon</div>
-      <div class="modal-sub" style="margin-bottom:16px">Native iOS and Android apps are in development. In the meantime, install SPHYNX MOTION as a PWA for the full app experience — no App Store needed.</div>
+      <div style="font-size:36px;margin-bottom:12px">📲</div>
+      <div class="modal-title">Get the App</div>
+      <div class="modal-sub" style="margin-bottom:16px">Install SPHYNX MOTION on your home screen for the full experience — offline access, push notifications, and full-screen mode.</div>
       <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.15);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-dim);line-height:1.8;text-align:left">
         ✓ Works offline<br>
         ✓ Push notifications<br>
@@ -3268,17 +3267,24 @@ const modalContent = {
   `,
   'ios-iap': () => `
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">App Store</div>
-      <div class="modal-title">Subscribe via App Store</div>
-      <div class="modal-sub">Soul Pass and Soul Token purchases on iOS are processed securely through Apple — your payment info stays private with Apple.</div>
+      <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Soul Pass</div>
+      <div class="modal-title">Unlock Everything</div>
+      <div class="modal-sub">Access all series and episodes, earn bonus Soul Tokens every month, and vote on every storyline.</div>
     </div>
-    <div style="background:var(--surface2);border-radius:12px;padding:20px;margin-bottom:16px;text-align:center">
-      <div style="font-size:40px;margin-bottom:10px">🍎</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">Apple In-App Purchase</div>
-      <div style="font-size:11px;color:var(--text-faint);line-height:1.7">In-App Purchase is being activated.<br>You'll be able to subscribe directly from this screen very soon.</div>
+    <div style="background:rgba(232,0,13,.06);border:1px solid rgba(232,0,13,.2);border-radius:12px;padding:16px;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text-dim);line-height:2.1">
+        ✓ All series · all episodes<br>
+        ✓ HD streaming on any device<br>
+        ✓ 100–200 Soul Tokens per month<br>
+        ✓ Echo voting on every episode<br>
+        ✓ Early access to new releases
+      </div>
     </div>
-    <button class="btn-generate" onclick="joinWaitlist()">Notify Me When Ready →</button>
-    <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Maybe Later</button>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SPHYNX MOTION v1.1</div>
+      <div style="font-size:11px;color:var(--text-faint);line-height:1.6">Soul Pass subscriptions are processed securely<br>through Apple In-App Purchase.</div>
+    </div>
+    <button class="btn-generate" onclick="closeModal()">Got It</button>
   `,
   'token-checkout': () => {
     const pkg = window._tokenPkg || { soul: 150, price: 'R39', id: 'boost' };
@@ -3296,11 +3302,11 @@ const modalContent = {
           ✓ Tokens never expire while account is active
         </div>
       </div>
-      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:16px;text-align:center">
-        <div style="font-size:11px;color:var(--text-faint)">💳 Soul Token checkout is being activated</div>
-        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Available very soon. Join the waitlist below.</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SPHYNX MOTION v1.1</div>
+        <div style="font-size:11px;color:var(--text-faint);line-height:1.6">Soul Token purchases are processed securely<br>through Apple In-App Purchase.</div>
       </div>
-      <button class="btn-generate" onclick="toast('✓ You\'ll be notified when Soul Token purchases go live!','success');closeModal()">Notify Me When Ready →</button>
+      <button class="btn-generate" onclick="closeModal()">Got It</button>
       <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Maybe Later</button>
     `;
   },
@@ -3325,11 +3331,11 @@ const modalContent = {
           ✓ Echo voting on every episode${isAnnual ? '<br>✓ Early access releases' : ''}
         </div>
       </div>
-      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:16px;text-align:center">
-        <div style="font-size:11px;color:var(--text-faint)">💳 Payments are being activated</div>
-        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">This plan will be available very soon. Join the waitlist to be notified first.</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SPHYNX MOTION v1.1</div>
+        <div style="font-size:11px;color:var(--text-faint);line-height:1.6">Soul Pass subscriptions are processed securely<br>through Apple In-App Purchase.</div>
       </div>
-      <button class="btn-generate" onclick="joinWaitlist()">Notify Me When Ready →</button>
+      <button class="btn-generate" onclick="closeModal()">Got It</button>
       <button class="btn-generate" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-dim);margin-top:8px" onclick="closeModal()">Maybe Later</button>
     `;
   },
@@ -3860,8 +3866,19 @@ function openModal(key) {
     sheet.addEventListener('touchmove',  e => e.stopPropagation(), { passive: true });
   }
   if (key === 'wallet')   loadWalletBalance();
-  if (key === 'rewards')  setTimeout(loadEarnSoulState, 50);
+  if (key === 'rewards')  setTimeout(() => loadEarnSoulState().then(() => _i18nEl(content)), 50);
   if (key === 'search')   setTimeout(() => document.getElementById('searchInput')?.focus(), 50);
+  // Pre-fetch all uncached languages in parallel the moment selector opens
+  if (key === 'language') {
+    _availableLangs.filter(l => l.code !== 'en' && !_langCache[l.code]).forEach(l => {
+      fetch('/api/translations/' + l.code)
+        .then(r => r.json())
+        .then(({ translations }) => {
+          if (translations && Object.keys(translations).length > 0) _langCache[l.code] = translations;
+        })
+        .catch(() => {});
+    });
+  }
   // Translate any data-i18n nodes inside the modal
   if (_currentLang !== 'en') _applyTransToEl(content);
 }
@@ -4615,15 +4632,19 @@ async function playEpisode(episodeId, seriesTitle, epLabel) {
 /* ─── LIVE CONTENT LOADING ──────────────────────────────────────────────── */
 function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// Apply translations to a container immediately after dynamic innerHTML injection
+function _i18nEl(el) { if (el && _currentLang !== 'en') _applyTransToEl(el); }
+
 function renderCard(s) {
   const badge = s.is_featured ? 'g-badge--hot' : 'g-badge--new';
+  const i18nKey = s.is_featured ? 'card.hot' : 'card.new';
   const label = s.is_featured ? 'Hot' : 'New';
   const poster = s.poster_url || 'assets/posters/image-11.jpg';
   return `
     <div class="g-card" onclick="playSeries('${esc(s.id)}')">
       <div class="g-thumb">
         <img src="${esc(poster)}" alt="${esc(s.title)}" style="width:100%;height:100%;object-fit:cover">
-        <div class="g-badge ${badge}">${label}</div>
+        <div class="g-badge ${badge}" data-i18n="${i18nKey}">${label}</div>
         <div class="g-views">▶ ${s.views ? (s.views > 999 ? (s.views/1000).toFixed(1)+'K' : s.views) : '—'}</div>
         <button class="report-btn" onclick="event.stopPropagation();openModal('report')" title="Report">⋯</button>
       </div>
@@ -4645,19 +4666,19 @@ function renderSlide(s) {
         </div>
         <div class="fy-action" onclick="fyShare()">
           <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-          <div class="fy-action-count">Share</div>
+          <div class="fy-action-count" data-i18n="card.share">Share</div>
         </div>
         <div class="fy-action" onclick="playSeries('${esc(s.id)}')">
           <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg></div>
-          <div class="fy-action-count">Play</div>
+          <div class="fy-action-count" data-i18n="card.play">Play</div>
         </div>
       </div>
       <div class="fy-bottom">
-        <div class="fy-series-label">● Live · ${esc(s.genre || '')}</div>
+        <div class="fy-series-label">● <span data-i18n="card.live">Live</span> · ${esc(s.genre || '')}</div>
         <div class="fy-title">${esc(s.title)}</div>
         <div class="fy-tags"><span class="fy-tag">${esc(s.genre || '')}</span>${s.age_rating ? `<span class="age-badge" style="margin-left:6px">${esc(s.age_rating)}</span>` : ''}</div>
         <div class="fy-desc">${esc(s.description || '')}</div>
-        <button class="fy-watch-btn" onclick="playSeries('${esc(s.id)}')">Start Watching</button>
+        <button class="fy-watch-btn" onclick="playSeries('${esc(s.id)}')" data-i18n="card.start_watching">Start Watching</button>
       </div>
     </div>`;
 }
@@ -4708,6 +4729,7 @@ async function loadContent() {
       fyStack.innerHTML = fyCards.length
         ? fyCards.map(s => renderSlide(s)).join('')
         : '<div class="fy-slide" style="display:flex;align-items:center;justify-content:center"><div style="color:rgba(255,255,255,.3);font-size:13px">Coming soon.</div></div>';
+      _i18nEl(fyStack);
       initFyScroll();
     }
 
@@ -4715,6 +4737,7 @@ async function loadContent() {
     const trendCards = trending.length ? trending : liveSeries.slice(0, 6);
     if (trendGrid) {
       trendGrid.innerHTML = trendCards.map((s, i) => renderTCard(s, i + 1)).join('');
+      _i18nEl(trendGrid);
     }
 
     // Content loaded — dismiss splash early if animation already done
@@ -4786,6 +4809,7 @@ function _renderHomeGrid(tab) {
   homeGrid.innerHTML = cards.length
     ? cards.map(s => renderCard(s)).join('')
     : '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No series published yet.</div>';
+  _i18nEl(homeGrid);
 }
 
 function _renderCategoriesGrid(container, all) {
@@ -4817,9 +4841,12 @@ async function filterByGenre(genre) {
   try {
     const res = await fetch(`/api/content/series?genre=${encodeURIComponent(genre)}&limit=48`);
     const { series = [] } = res.ok ? await res.json() : {};
-    if (homeGrid) homeGrid.innerHTML = series.length
-      ? series.map(s => renderCard(s)).join('')
-      : `<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No ${esc(genre)} series yet.</div>`;
+    if (homeGrid) {
+      homeGrid.innerHTML = series.length
+        ? series.map(s => renderCard(s)).join('')
+        : `<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No ${esc(genre)} series yet.</div>`;
+      _i18nEl(homeGrid);
+    }
   } catch {
     if (homeGrid) homeGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">Could not load.</div>';
   }
@@ -4869,9 +4896,10 @@ async function _loadContinueWatching() {
         <div class="rec-progress"><div class="rec-progress-fill" style="width:${item.progress_pct}%"></div></div>
         <div class="rec-card-info">
           <div class="rec-card-title">${esc(item.series_title)}</div>
-          <div class="rec-card-sub">E${item.episode_number} · ${item.progress_pct}% watched</div>
+          <div class="rec-card-sub">E${item.episode_number} · ${item.progress_pct}% <span data-i18n="history.watched">watched</span></div>
         </div>
       </div>`).join('');
+    _i18nEl(scroll);
 
     section.style.display = '';
     // Refresh similar row now that we know the genre
@@ -4906,6 +4934,7 @@ async function _loadSimilarRow() {
           <div class="rec-card-sub">${esc(s.genre || '')}</div>
         </div>
       </div>`).join('');
+    _i18nEl(scroll);
 
     section.style.display = '';
   } catch {
@@ -4939,6 +4968,7 @@ async function _loadLanguageRow() {
           <div class="rec-card-sub">${esc(s.genre || '')}</div>
         </div>
       </div>`).join('');
+    _i18nEl(scroll);
 
     section.style.display = '';
   } catch {
@@ -4968,7 +4998,7 @@ const _fallbackLangs = [
   { code:'pcm', name:'Nigerian Pidgin',  native_name:'Naijá' },
   { code:'fr',  name:'French',           native_name:'Français' },
   { code:'pt',  name:'Portuguese',       native_name:'Português' },
-  { code:'ar',  name:'Arabic',           native_name:'العربية' },
+  { code:'ar',  name:'Arabic',           native_name:'العربية', is_rtl: true },
 ];
 
 /* Cache original English text of every data-i18n element at page load.
@@ -5062,22 +5092,20 @@ async function setLanguage(code) {
   }
 
   _updateLangDisplay();
-
-  // Apply from cache instantly if available, then close + toast immediately.
-  // Don't await the fetch — translation updates in background.
-  if (_langCache[code]) {
-    _transCache = _langCache[code];
-    _applyTransToEl(document.body);
-    const lang = _availableLangs.find(l => l.code === code);
-    document.documentElement.dir = lang?.is_rtl ? 'rtl' : 'ltr';
-  }
-
   closeModal();
+
+  // If not cached yet, await the fetch so translations are ready before re-render
+  await applyTranslations(code);
+
   const langName = (_availableLangs.find(l => l.code === code) || {}).native_name || code.toUpperCase();
   toast(`${langName} ✓`, 'success');
 
-  // Fetch / refresh translations in background (no await)
-  applyTranslations(code);
+  // Re-render dynamic content now that _transCache is populated
+  if (window._allSeries) _renderHomeGrid(_activeHomeTab);
+  const fyStack = document.getElementById('fyStack');
+  if (fyStack) _i18nEl(fyStack);
+  const trendGrid = document.getElementById('trendingGrid');
+  if (trendGrid) _i18nEl(trendGrid);
   if (typeof _loadLanguageRow === 'function') _loadLanguageRow();
 }
 
@@ -5092,7 +5120,6 @@ async function applyTranslations(code) {
     return;
   }
 
-  // Return instantly from cache; fetch will update in background
   if (_langCache[code]) {
     _transCache = _langCache[code];
     _applyTransToEl(document.body);
@@ -5105,14 +5132,29 @@ async function applyTranslations(code) {
     const res = await fetch('/api/translations/' + code);
     if (!res.ok) return;
     const { translations } = await res.json();
-    // HTML already contains English defaults — no need for a second en fetch.
-    // Missing keys simply render their HTML default text.
-    _langCache[code] = translations || {};
+    const hasData = translations && Object.keys(translations).length > 0;
+    _langCache[code] = hasData ? translations : {};
     _transCache = _langCache[code];
     _applyTransToEl(document.body);
     const lang = _availableLangs.find(l => l.code === code);
-    document.documentElement.dir = lang?.is_rtl ? 'rtl' : 'ltr';
+    document.documentElement.dir = (lang?.is_rtl && hasData) ? 'rtl' : 'ltr';
   } catch {}
+}
+
+/* Pre-warm all language caches in background so switching is always instant. */
+async function _preloadTranslations() {
+  for (const lang of _availableLangs) {
+    if (lang.code === 'en' || _langCache[lang.code]) continue;
+    try {
+      const res = await fetch('/api/translations/' + lang.code);
+      if (!res.ok) continue;
+      const { translations } = await res.json();
+      if (translations && Object.keys(translations).length > 0) {
+        _langCache[lang.code] = translations;
+      }
+    } catch {}
+    await new Promise(r => setTimeout(r, 100));
+  }
 }
 
 /* ─── BOOT ───────────────────────────────────────────────────────────────── */
@@ -5140,6 +5182,9 @@ async function applyTranslations(code) {
     toast('Payment cancelled.');
     history.replaceState({}, '', location.pathname);
   }
+
+  // Pre-warm all language caches in background after boot so switching is instant
+  setTimeout(() => _preloadTranslations(), 2500);
 })();
 
 /* Admin actions moved to /admin/dashboard.html */
@@ -5200,7 +5245,9 @@ async function requestPushPermission() {
       credentials: 'include',
       body: JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh, auth }, platform: 'web' }),
     });
-  } catch {}
+  } catch (err) {
+    console.error('Push subscription failed:', err);
+  }
 }
 
 /* ─── PAYMENT FLOWS ──────────────────────────────────────────────────────── */
@@ -5237,7 +5284,7 @@ function _submitPayfastForm(data) {
 
 <!-- PWA Install Banner -->
 <div id="installBanner">
-  <img src="SPHYNY_MOTION_FAV.png" class="ib-icon" alt="">
+  <img src="SPHYNX_MOTION_FAV.png" class="ib-icon" alt="">
   <div class="ib-text">
     <div class="ib-title">Add to Home Screen</div>
     <div class="ib-sub">Install for the best SPHYNX MOTION experience</div>

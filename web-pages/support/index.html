@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Support — SPHYNX MOTION</title>
+  <meta name="description" content="Get help with the SPHYNX MOTION app. FAQs, contact support, and account help for Africa's vertical drama streaming platform.">
+  <link rel="icon" href="https://www.sphynxmotion.com/assets/images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:      #e8000d;
+      --bg:       #0a0a0a;
+      --surface:  #111111;
+      --surface2: #161616;
+      --border:   #2a2a2a;
+      --text:     #f0f0f0;
+      --muted:    #888888;
+      --dim:      #444444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 20px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(10,10,10,.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav img { height: 28px; }
+    nav a {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      font-family: 'DM Sans', sans-serif; transition: color .2s;
+    }
+    nav a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 160px 40px 80px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: radial-gradient(ellipse at top, rgba(232,0,13,.08) 0%, transparent 60%);
+    }
+    .hero h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(38px, 6vw, 64px);
+      font-weight: 800; letter-spacing: .02em;
+      text-transform: uppercase; line-height: 1;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: var(--red); }
+    .hero p { color: var(--muted); font-size: 16px; max-width: 500px; margin: 0 auto 36px; }
+    .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 13px 28px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; text-decoration: none;
+      font-family: 'DM Sans', sans-serif; transition: all .2s; cursor: pointer;
+    }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: #c5000b; }
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--muted); }
+
+    /* ── SECTIONS ── */
+    section { max-width: 800px; margin: 0 auto; padding: 80px 40px; }
+    section + section { border-top: 1px solid var(--border); }
+
+    .section-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--red);
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+      text-transform: uppercase; letter-spacing: .02em;
+      margin-bottom: 32px;
+    }
+
+    /* ── FAQ ── */
+    .faq-item {
+      border: 1px solid var(--border); border-radius: 10px;
+      margin-bottom: 10px; overflow: hidden;
+    }
+    .faq-q {
+      padding: 18px 20px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 500; font-size: 14px; color: var(--text);
+      background: var(--surface); transition: background .2s;
+      list-style: none; user-select: none;
+    }
+    .faq-q:hover { background: var(--surface2); }
+    .faq-q::after { content: '+'; color: var(--red); font-size: 20px; font-weight: 300; flex-shrink: 0; margin-left: 16px; }
+    details[open] .faq-q::after { content: '−'; }
+    .faq-a { padding: 0 20px 18px; color: var(--muted); font-size: 14px; line-height: 1.7; background: var(--surface); }
+    .faq-a a { color: var(--red); }
+
+    /* ── CONTACT CARDS ── */
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .contact-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px;
+    }
+    .contact-card .icon { font-size: 28px; margin-bottom: 12px; }
+    .contact-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .contact-card p, .contact-card a {
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      line-height: 1.5;
+    }
+    .contact-card a:hover { color: var(--red); }
+
+    /* ── STORE BADGES ── */
+    .store-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 28px; }
+    .store-badge {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 18px;
+      text-decoration: none; color: var(--text); transition: border-color .2s;
+    }
+    .store-badge:hover { border-color: var(--muted); }
+    .store-badge span { font-size: 11px; color: var(--muted); display: block; }
+    .store-badge strong { font-size: 14px; font-weight: 600; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+      color: var(--dim); font-size: 12px;
+    }
+    footer a { color: var(--dim); text-decoration: none; }
+    footer a:hover { color: var(--muted); }
+    footer .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      .hero { padding: 120px 20px 60px; }
+      section { padding: 60px 20px; }
+      footer { padding: 30px 20px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="https://www.sphynxmotion.com">
+      <img src="https://www.sphynxmotion.com/assets/images/logo.png" alt="SPHYNX MOTION">
+    </a>
+    <a href="https://www.sphynxmotion.com">← Back to site</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>App <span>Support</span></h1>
+    <p>Get help with the SPHYNX MOTION streaming app — account, playback, Soul Tokens, and more.</p>
+    <div class="btn-group">
+      <a href="mailto:support@sphynxmotion.com" class="btn btn-primary">Email Support</a>
+      <a href="#faq" class="btn btn-secondary">Browse FAQs</a>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD -->
+  <section>
+    <div class="section-label">Get the App</div>
+    <h2>Download SPHYNX MOTION</h2>
+    <p style="color:var(--muted);margin-bottom:0">Africa's vertical drama platform — watch original series, earn Soul Tokens, and vote on episode storylines.</p>
+    <div class="store-row">
+      <a href="https://apps.apple.com" class="store-badge">
+        <span style="font-size:22px"></span>
+        <div><span>Download on the</span><strong>App Store</strong></div>
+      </a>
+      <a href="https://play.google.com" class="store-badge">
+        <span style="font-size:22px">▶</span>
+        <div><span>Get it on</span><strong>Google Play</strong></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="section-label">Help Centre</div>
+    <h2>Frequently Asked <span style="color:var(--red)">Questions</span></h2>
+
+    <details class="faq-item">
+      <summary class="faq-q">How do I create an account?</summary>
+      <div class="faq-a">Open the app, tap <strong>Profile</strong> in the bottom nav, then tap <strong>Create Account</strong>. Enter your name, email, and a password. Your account is created instantly.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">I forgot my password. How do I reset it?</summary>
+      <div class="faq-a">On the login screen, tap <strong>Forgot password?</strong> Enter your email and we'll send a reset link. Check your spam folder if it doesn't arrive within a few minutes. For further help contact <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a>.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">What are Soul Tokens?</summary>
+      <div class="faq-a">Soul Tokens are the in-app currency of SPHYNX MOTION. Earn them by logging in daily, watching episodes, and sharing series. Use them to Echo Vote on episode storylines and unlock premium content. Soul Tokens have no monetary value and cannot be exchanged for cash.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">How do I earn Soul Tokens?</summary>
+      <div class="faq-a">Go to <strong>Profile → Earn Soul</strong>. You can earn tokens by: daily login (+10), watching your first episode of the day (+15), sharing a series (+25), and completing milestone episodes (+20). Tokens reset daily for recurring tasks.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">What is Echo Voting?</summary>
+      <div class="faq-a">At the end of each episode, Echo Voting lets you choose the direction of the story. Each vote costs Soul Tokens. The community's votes influence future episodes. You can only vote once per episode.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">What is Soul Pass?</summary>
+      <div class="faq-a">Soul Pass is the SPHYNX MOTION subscription. Subscribers get access to all series, all episodes, HD streaming, bonus Soul Tokens every month, and early access to new releases. Subscriptions are managed through the App Store or Google Play.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">How do I cancel my Soul Pass subscription?</summary>
+      <div class="faq-a">On iPhone: <strong>Settings → Apple ID → Subscriptions → SPHYNX MOTION → Cancel</strong>. On Android: <strong>Google Play → Subscriptions → SPHYNX MOTION → Cancel</strong>. Cancellation takes effect at the end of your current billing period.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">Video won't play — what do I do?</summary>
+      <div class="faq-a">Check your internet connection first. If the problem persists: close and reopen the app, check that your iOS/Android is up to date, and try switching between Wi-Fi and mobile data. If video still won't play, contact <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a> with your device model and iOS version.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">How do I change the app language?</summary>
+      <div class="faq-a">Go to <strong>Profile → Language</strong>. Select from English, Zulu, Xhosa, Afrikaans, Yoruba, Swahili, French, Arabic, and more. The change applies instantly.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">How do I delete my account?</summary>
+      <div class="faq-a">Go to <strong>Profile → Delete Account</strong>. You will be asked to confirm twice. Deletion is permanent — all your Soul Tokens, watch history, and profile data will be removed and cannot be recovered. If you need assistance, email <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a>.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">How do I report a content issue?</summary>
+      <div class="faq-a">Tap the <strong>⋯</strong> icon on any series card while browsing to report it. Our moderation team reviews all reports within 24 hours. You can also email <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a>.</div>
+    </details>
+
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-label">Get in Touch</div>
+    <h2>Contact <span style="color:var(--red)">Support</span></h2>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="icon">✉️</div>
+        <h3>Email Support</h3>
+        <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a>
+        <p style="margin-top:6px">Response within 24 hours</p>
+      </div>
+      <div class="contact-card">
+        <div class="icon">🌐</div>
+        <h3>Website</h3>
+        <a href="https://www.sphynxmotion.com">www.sphynxmotion.com</a>
+        <p style="margin-top:6px">News, series info & studio</p>
+      </div>
+      <div class="contact-card">
+        <div class="icon">📍</div>
+        <h3>Location</h3>
+        <p>Johannesburg, South Africa</p>
+        <p style="margin-top:6px">+27 72 183 0433</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>© 2025 SPHYNX MOTION (Pty) Ltd. All rights reserved.</div>
+    <div class="footer-links">
+      <a href="https://app.sphynxmotion.com/privacy">Privacy Policy</a>
+      <a href="https://app.sphynxmotion.com/terms">Terms of Use</a>
+      <a href="https://www.sphynxmotion.com">sphynxmotion.com</a>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -75,6 +75,15 @@ app.get(['/', '/index.html'], (req, res, next) => {
   res.set('Expires', '0');
   next();
 });
+// Never cache the app shell or service worker — Cloudflare must always revalidate
+app.get('/', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, must-revalidate');
+  next();
+});
+app.get('/index.html', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, must-revalidate');
+  next();
+});
 app.get('/sw.js', (req, res, next) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   next();
@@ -186,6 +195,11 @@ app.use('/api/admin/auth', authRouter);
 
 // ── /api/admin/me — convenience alias for the dashboard ──────────────────────
 app.get('/api/admin/me', requireAuth, (req, res) => res.json({ user: req.user }));
+
+// ── REVIEW PAGE (for App Store reviewers — noindex) ──────────────────────────
+app.get('/review', (req, res) => {
+  res.sendFile(path.join(ROOT, 'web-pages', 'review', 'index.html'));
+});
 
 // ── ADMIN PAGE ROUTES (server-side auth + role check) ────────────────────────
 // GET /admin/ → redirect to /admin/login

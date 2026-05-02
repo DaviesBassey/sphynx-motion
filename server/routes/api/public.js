@@ -105,9 +105,13 @@ router.get('/episodes/:id/play', async (req, res) => {
   const url   = isMux ? `https://stream.mux.com/${ep.mux_playback_id}.m3u8` : ep.video_url;
   if (!url) return res.status(503).json({ error: 'Video not available yet' });
 
-  // Increment view counter (fire and forget)
-  supabaseAdmin.from('episodes').select('views').eq('id', ep.id).single()
-    .then(({ data: r }) => r != null && supabaseAdmin.from('episodes').update({ views: (r.views || 0) + 1 }).eq('id', ep.id));
+  // Increment view counter atomically (fire and forget)
+  supabaseAdmin.rpc('increment_episode_views', { ep_id: ep.id }).catch(() => {
+    // Fallback to non-atomic read-then-write if RPC not yet deployed
+    supabaseAdmin.from('episodes').select('views').eq('id', ep.id).single()
+      .then(({ data: r }) => r != null && supabaseAdmin.from('episodes').update({ views: (r.views || 0) + 1 }).eq('id', ep.id))
+      .catch(() => {});
+  });
 
   res.json({ url, type: isMux ? 'hls' : 'mp4' });
 });
