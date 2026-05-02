@@ -1,7 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { supabaseAdmin } = require('../../lib/supabase');
-const { requireAuth } = require('../../middleware/auth');
+const { requireAuth, _invalidateRoleCache } = require('../../middleware/auth');
 
 const router = express.Router();
 
@@ -63,6 +63,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 // POST /api/admin/auth/logout
 router.post('/logout', requireAuth, async (req, res) => {
+  _invalidateRoleCache(req.user.id);
   supabaseAdmin.from('admin_audit_log').insert({
     admin_id:    req.user.id,
     action:      'logout',
