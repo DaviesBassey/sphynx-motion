@@ -1,6 +1,7 @@
 const express = require('express');
 const { supabaseAdmin } = require('../../lib/supabase');
 const { requireRole } = require('../../middleware/roles');
+const { _invalidateRoleCache } = require('../../middleware/auth');
 
 const router = express.Router();
 const audit = (adminId, action, targetId, details) =>
@@ -8,14 +9,16 @@ const audit = (adminId, action, targetId, details) =>
 
 // GET /api/admin/users
 router.get('/', async (req, res) => {
-  const { page = 1, limit = 50, search, role, status } = req.query;
-  const offset = (page - 1) * limit;
+  const { search, role, status } = req.query;
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+  const offset   = (pageNum - 1) * limitNum;
 
   let query = supabaseAdmin
     .from('profiles')
     .select('id, display_name, email, role, soul_balance, subscription_status, is_suspended, created_at, last_active', { count: 'exact' })
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + limitNum - 1);
 
   if (search) query = query.or(`display_name.ilike.%${search}%,email.ilike.%${search}%`);
   if (role)   query = query.eq('role', role);
@@ -24,7 +27,7 @@ router.get('/', async (req, res) => {
   const { data, error, count } = await query;
   if (error) return res.status(500).json({ error: error.message });
 
-  res.json({ users: data, total: count, page: Number(page), limit: Number(limit) });
+  res.json({ users: data, total: count, page: pageNum, limit: limitNum });
 });
 
 // GET /api/admin/users/:id
@@ -62,6 +65,7 @@ router.patch('/:id/role', requireRole('superadmin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
+  _invalidateRoleCache(req.params.id);
   await audit(req.user.id, `set_role_${role}`, req.params.id, { previous_role: data.role, new_role: role });
   res.json({ user: data });
 });

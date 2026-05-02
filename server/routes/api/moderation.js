@@ -8,15 +8,17 @@ const audit = (adminId, action, targetId, details) =>
 
 // GET /api/admin/moderation  — queue of pending items
 router.get('/', async (req, res) => {
-  const { status = 'pending', page = 1, limit = 50 } = req.query;
-  const offset = (page - 1) * limit;
+  const { status = 'pending' } = req.query;
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+  const offset   = (pageNum - 1) * limitNum;
 
   const { data, error, count } = await supabaseAdmin
     .from('moderation_queue')
     .select('*, profiles!submitter_id(display_name, email), reviewed_by_profile:profiles!reviewed_by(display_name)', { count: 'exact' })
     .eq('status', status)
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + limitNum - 1);
 
   if (error) return res.status(500).json({ error: error.message });
   res.json({ items: data, total: count });
@@ -24,15 +26,17 @@ router.get('/', async (req, res) => {
 
 // GET /api/admin/moderation/reports — user-submitted reports
 router.get('/reports', async (req, res) => {
-  const { status = 'pending', page = 1, limit = 50 } = req.query;
-  const offset = (page - 1) * limit;
+  const { status = 'pending' } = req.query;
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+  const offset   = (pageNum - 1) * limitNum;
 
   const { data, error, count } = await supabaseAdmin
     .from('content_reports')
     .select('*, reporter:profiles!reporter_id(display_name)', { count: 'exact' })
     .eq('status', status)
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + limitNum - 1);
 
   if (error) return res.status(500).json({ error: error.message });
   res.json({ reports: data, total: count });

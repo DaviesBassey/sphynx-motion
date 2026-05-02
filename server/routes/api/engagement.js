@@ -194,8 +194,10 @@ router.post('/votes/:episodeId', voteLimiter, async (req, res) => {
     return res.status(403).json({ error: 'Not enough Soul Tokens', cost: soul_cost });
   }
 
-  // Deduct soul and record vote atomically
-  await supabaseAdmin.rpc('deduct_soul_tokens', { p_user_id: user.id, p_amount: soul_cost, p_reason: `Echo vote ep:${req.params.episodeId}` });
+  // Deduct soul first — if this fails, no vote is recorded
+  const { error: deductErr } = await supabaseAdmin.rpc('deduct_soul_tokens', { p_user_id: user.id, p_amount: soul_cost, p_reason: `Echo vote ep:${req.params.episodeId}` });
+  if (deductErr) return res.status(500).json({ error: 'Token deduction failed. Please try again.' });
+
   const { error } = await supabaseAdmin.from('echo_votes').insert({ user_id: user.id, episode_id: req.params.episodeId, choice_idx, soul_spent: soul_cost });
   if (error) return res.status(500).json({ error: error.message });
 

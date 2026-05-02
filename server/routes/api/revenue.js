@@ -21,7 +21,8 @@ router.get('/summary', async (req, res) => {
     supabaseAdmin.from('soul_token_transactions')
       .select('amount')
       .eq('type', 'purchase')
-      .gte('created_at', from || new Date(Date.now() - 30 * 86400000).toISOString()),
+      .gte('created_at', from || new Date(Date.now() - 30 * 86400000).toISOString())
+      .lte('created_at', to || new Date().toISOString()),
 
     supabaseAdmin.from('creator_payouts')
       .select('amount')
@@ -44,14 +45,16 @@ router.get('/summary', async (req, res) => {
 
 // GET /api/admin/revenue/subscriptions
 router.get('/subscriptions', async (req, res) => {
-  const { page = 1, limit = 50, status } = req.query;
-  const offset = (page - 1) * limit;
+  const { status } = req.query;
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+  const offset   = (pageNum - 1) * limitNum;
 
   let query = supabaseAdmin
     .from('subscriptions')
     .select('*, profiles!user_id(display_name, email)', { count: 'exact' })
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + limitNum - 1);
 
   if (status) query = query.eq('status', status);
 

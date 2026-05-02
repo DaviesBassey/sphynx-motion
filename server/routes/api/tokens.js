@@ -23,14 +23,16 @@ router.get('/summary', async (req, res) => {
 
 // GET /api/admin/tokens/transactions
 router.get('/transactions', async (req, res) => {
-  const { user_id, type, page = 1, limit = 50 } = req.query;
-  const offset = (page - 1) * limit;
+  const { user_id, type } = req.query;
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+  const offset   = (pageNum - 1) * limitNum;
 
   let query = supabaseAdmin
     .from('soul_token_transactions')
     .select('*, profiles!user_id(display_name)', { count: 'exact' })
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + limitNum - 1);
 
   if (user_id) query = query.eq('user_id', user_id);
   if (type)    query = query.eq('type', type);

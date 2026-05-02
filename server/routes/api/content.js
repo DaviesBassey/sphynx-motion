@@ -10,14 +10,16 @@ const audit = (adminId, action, targetType, targetId, details) =>
 
 // GET /api/admin/content/series
 router.get('/series', async (req, res) => {
-  const { page = 1, limit = 20, status, search } = req.query;
-  const offset = (page - 1) * limit;
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+  const { status, search } = req.query;
+  const offset = (pageNum - 1) * limitNum;
 
   let query = supabaseAdmin
     .from('series')
     .select('id, title, slug, genre, age_rating, status, is_featured, is_trending, poster_url, created_at, profiles(display_name)', { count: 'exact' })
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + limitNum - 1);
 
   if (search && search.length > 100) return res.status(400).json({ error: 'Search term too long' });
   if (status) query = query.eq('status', status);
@@ -26,7 +28,7 @@ router.get('/series', async (req, res) => {
   const { data, error, count } = await query;
   if (error) return res.status(500).json({ error: error.message });
 
-  res.json({ series: data, total: count, page: Number(page), limit: Number(limit) });
+  res.json({ series: data, total: count, page: pageNum, limit: limitNum });
 });
 
 // POST /api/admin/content/series
@@ -80,14 +82,16 @@ router.delete('/series/:id', requireRole('superadmin'), async (req, res) => {
 
 // GET /api/admin/content/episodes?series_id=xxx
 router.get('/episodes', async (req, res) => {
-  const { series_id, page = 1, limit = 50 } = req.query;
-  const offset = (page - 1) * limit;
+  const { series_id } = req.query;
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+  const offset   = (pageNum - 1) * limitNum;
 
   let query = supabaseAdmin
     .from('episodes')
     .select('*, series(title)', { count: 'exact' })
     .order('episode_number')
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + limitNum - 1);
 
   if (series_id) query = query.eq('series_id', series_id);
 

@@ -35,20 +35,22 @@ router.post('/subscribe', requireAuth, async (req, res) => {
   if (!endpoint || !keys?.p256dh || !keys?.auth) {
     return res.status(400).json({ error: 'endpoint and keys required' });
   }
-  await supabaseAdmin.from('push_subscriptions').upsert({
+  const { error } = await supabaseAdmin.from('push_subscriptions').upsert({
     user_id: req.user.id,
     endpoint,
     p256dh: keys.p256dh,
     auth:   keys.auth,
     platform: platform || 'web',
   }, { onConflict: 'endpoint' });
+  if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
 
 // DELETE /api/push/subscribe
 router.delete('/subscribe', requireAuth, async (req, res) => {
   const { endpoint } = req.body;
-  await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('user_id', req.user.id);
+  const { error } = await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('user_id', req.user.id);
+  if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
 
