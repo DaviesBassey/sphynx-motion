@@ -117,6 +117,17 @@ router.get('/episodes/:id/play', async (req, res) => {
   res.json({ url, type: isMux ? 'hls' : 'mp4' });
 });
 
+// ── SOUL TOKEN PACKAGES ────────────────────────────────────────────────────────
+router.get('/soul-packages', async (req, res) => {
+  const { data, error } = await supabaseAdmin
+    .from('soul_token_packages')
+    .select('id, amount, price_zar, sort_order')
+    .eq('is_active', true)
+    .order('sort_order');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ packages: data || [] });
+});
+
 // ── CATEGORIES ────────────────────────────────────────────────────────────────
 router.get('/categories', async (req, res) => {
   const { data, error } = await supabaseAdmin.from('categories').select('id, name, slug').order('sort_order');

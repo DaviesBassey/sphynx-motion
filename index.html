@@ -428,7 +428,7 @@ body::after {
 .section-label {
   padding: 0 20px 10px;
   font-size: 11px; font-weight: 700;
-  color: var(--text-faint);
+  color: rgba(255,255,255,.45);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
@@ -1929,7 +1929,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   border: 1px solid rgba(255,255,255,.05);
 }
 .soul-topup-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.soul-topup-sub { font-size: 11px; color: var(--text-faint); margin-bottom: 12px; }
+.soul-topup-sub { font-size: 11px; color: rgba(255,255,255,.45); margin-bottom: 12px; }
 .soul-pkg-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
 .soul-pkg-row::-webkit-scrollbar { display: none; }
 .soul-pkg {
@@ -2232,7 +2232,7 @@ svg defs { position: absolute; width: 0; height: 0; }
       </div>
 
       <!-- Section title -->
-      <div id="homeSectionTitle" style="padding:10px 16px 2px;font-size:11px;font-weight:700;color:#777;letter-spacing:.1em;text-transform:uppercase">Most Popular</div>
+      <div id="homeSectionTitle" style="padding:10px 16px 2px;font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase">Most Popular</div>
 
       <!-- Card grid — filled by loadContent() from Supabase -->
       <div class="series-list" id="homeGrid">
@@ -2299,7 +2299,7 @@ svg defs { position: absolute; width: 0; height: 0; }
         <div class="benefit-item"><span class="benefit-icon">🗳️</span><span class="benefit-label" data-i18n="member.echo_voting">Echo Voting</span></div>
       </div>
 
-      <div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase" data-i18n="member.choose_plan">Choose Plan</div>
+      <div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase" data-i18n="member.choose_plan">Choose Plan</div>
 
       <!-- Plan Cards -->
       <div class="plan-row">
@@ -2319,7 +2319,7 @@ svg defs { position: absolute; width: 0; height: 0; }
         </div>
       </div>
 
-      <div style="padding:16px 16px 10px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Top Up Soul Tokens</div>
+      <div style="padding:16px 16px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase">Top Up Soul Tokens</div>
 
       <!-- Soul Token packages -->
       <div class="soul-topup">
@@ -2355,7 +2355,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 
       <!-- Get the App -->
       <div class="member-get-app" style="margin:16px 16px 0;padding:16px;background:var(--surface2);border-radius:16px;text-align:center">
-        <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Get the App</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Get the App</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button onclick="window.open('https://www.sphynxmotion.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
             <span style="font-size:14px">🌐</span> sphynxmotion.com
@@ -2755,6 +2755,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initVoting();
   initBtnGenerate();
   updateProfileUI();
+  loadSoulPackages();
 });
 
 window.addEventListener('offline', () => _setOfflineBanner(true, 'No internet connection'));
@@ -3135,7 +3136,39 @@ function _searchPopular() {
 }
 
 /* ─── SOUL TOKEN PACKAGES ────────────────────────────────────────────────── */
-let _selectedPkg = 'boost';
+const _PKG_FALLBACK = [
+  { id: 'starter', amount: 50,   price_zar: 15  },
+  { id: 'boost',   amount: 150,  price_zar: 39  },
+  { id: 'power',   amount: 400,  price_zar: 89  },
+  { id: 'mega',    amount: 1000, price_zar: 199 },
+];
+let _soulPackages = _PKG_FALLBACK.slice();
+let _selectedPkg  = _soulPackages[1].id; // boost as default
+
+async function loadSoulPackages() {
+  try {
+    const r = await fetch('/api/public/soul-packages');
+    if (!r.ok) return;
+    const { packages } = await r.json();
+    if (packages?.length) {
+      _soulPackages = packages;
+      _selectedPkg  = _soulPackages[1]?.id || _soulPackages[0]?.id;
+      renderSoulPkgRow();
+    }
+  } catch (e) {}
+}
+
+function renderSoulPkgRow() {
+  const row = document.querySelector('.soul-pkg-row');
+  if (!row) return;
+  row.innerHTML = _soulPackages.map((p, i) => `
+    <div class="soul-pkg${i === 1 ? ' active' : ''}" onclick="selectPkg(this)" data-pkg="${p.id}">
+      <span class="soul-pkg-n">${p.amount}</span>
+      <span class="soul-pkg-label">Soul</span>
+      <span class="soul-pkg-price ios-hide">R${Math.round(p.price_zar)}</span>
+    </div>`).join('');
+}
+
 function selectPkg(el) {
   document.querySelectorAll('.soul-pkg').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
@@ -3450,22 +3483,22 @@ const modalContent = {
       Already have an account? <a href="#" onclick="openModal('login');return false" style="color:var(--red);font-weight:600">Log in →</a>
     </div>
   `,
-  'wallet': `
+  'wallet': () => `
     <div class="modal-title">My Wallet</div>
     <div style="background:var(--surface2);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px;border:1px solid rgba(230,30,36,.15)">
       <div style="font-size:38px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1" id="walletBalance">—</div>
-      <div style="font-size:10px;color:var(--text-faint);letter-spacing:.12em;text-transform:uppercase;margin-top:4px">Soul Tokens</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.12em;text-transform:uppercase;margin-top:4px">Soul Tokens</div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text-dim);margin-bottom:10px">Top Up</div>
-    ${[['starter','150 Soul','R19'],['boost','500 Soul','R49'],['power','1 200 Soul','R99'],['mega','3 000 Soul','R199']].map(([id,label,price]) => `
+    ${_soulPackages.map(p => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">${label}</div>
-          <div style="font-size:10px;color:var(--text-faint);margin-top:1px">${price} · once-off</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${p.amount} Soul</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">R${Math.round(p.price_zar)} · once-off</div>
         </div>
-        <button onclick="buyTokens('${id}')" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">Buy →</button>
+        <button onclick="buyTokens('${p.id}')" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">Buy →</button>
       </div>`).join('')}
-    <div style="margin-top:12px;font-size:11px;color:var(--text-faint);text-align:center">Soul Pass members earn 2× tokens daily</div>
+    <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.4);text-align:center">Soul Pass members earn 2× tokens daily</div>
   `,
   'rewards': () => {
     const tasks = [
@@ -3689,7 +3722,7 @@ const modalContent = {
   'settings': () => `
     <div class="modal-title">Settings</div>
     <div style="margin-bottom:4px">
-      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Preferences</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Preferences</div>
       <div class="prof-menu-item" onclick="closeModal();openModal('language')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
         <span class="pmi-icon">🌍</span><span class="pmi-label">Language</span>
         <div class="pmi-right"><span class="pmi-value">${(_availableLangs||[]).find(l=>l.code===_currentLang)?.native_name||document.getElementById('langDisplayName')?.textContent||'English'}</span><span class="pmi-chevron">›</span></div>
@@ -3700,7 +3733,7 @@ const modalContent = {
       </div>
     </div>
     ${isLoggedIn ? `<div style="margin-bottom:4px;margin-top:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Membership</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Membership</div>
       <div class="prof-menu-item" onclick="closeModal();switchScreen('member',document.querySelectorAll('.nav-btn')[2])" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
         <span class="pmi-icon">💳</span><span class="pmi-label">Soul Pass</span>
         <div class="pmi-right"><span class="pmi-chevron">›</span></div>
@@ -3711,7 +3744,7 @@ const modalContent = {
       </div>
     </div>` : ''}
     <div style="margin-bottom:4px;margin-top:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Legal</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Legal</div>
       <div class="prof-menu-item" onclick="openModal('privacy')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
         <span class="pmi-icon">🔒</span><span class="pmi-label">Privacy Policy</span>
         <div class="pmi-right"><span class="pmi-chevron">›</span></div>
@@ -3730,7 +3763,7 @@ const modalContent = {
       </div>
     </div>
     <div style="margin-top:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Account</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Account</div>
       <div class="prof-menu-item" onclick="closeModal();openModal('support')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
         <span class="pmi-icon">💬</span><span class="pmi-label">Help &amp; Support</span>
         <div class="pmi-right"><span class="pmi-chevron">›</span></div>
@@ -5234,9 +5267,9 @@ function startSoulPassCheckout(plan) {
 function buyTokens(packageId) {
   if (!_currentUser) { openModal('login'); return; }
   if (window._isIOS) { openModal('ios-iap'); return; }
-  const pkgId = packageId || _selectedPkg || 'boost';
-  const pkgMeta = { starter:{soul:50,price:'R15'}, boost:{soul:150,price:'R39'}, power:{soul:400,price:'R89'}, mega:{soul:1000,price:'R199'} };
-  window._tokenPkg = { id: pkgId, ...(pkgMeta[pkgId] || pkgMeta.boost) };
+  const id  = packageId || _selectedPkg || _soulPackages[1]?.id;
+  const pkg = _soulPackages.find(p => p.id === id) || _soulPackages[1] || _soulPackages[0];
+  window._tokenPkg = { id: pkg.id, soul: pkg.amount, price: `R${Math.round(pkg.price_zar)}` };
   openModal('token-checkout');
 }
 
