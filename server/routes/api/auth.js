@@ -1,6 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { supabaseAdmin } = require('../../lib/supabase');
+const { supabaseAdmin, supabaseAnon } = require('../../lib/supabase');
 const { requireAuth, _invalidateRoleCache } = require('../../middleware/auth');
 
 const router = express.Router();
@@ -20,20 +20,31 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 
   try {
-    // Run auth + profile fetch in parallel — saves one sequential round-trip
-    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+    // Use anon client for signInWithPassword — service role key is for admin ops, not user auth
+    const { data, error } = await supabaseAnon.auth.signInWithPassword({ email, password });
 
-    if (error || !data?.session) {
+    if (error) {
+      console.error('[admin login] auth error:', error.message, error.status);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    if (!data?.session) {
+      console.error('[admin login] no session returned');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role, display_name')
       .eq('id', data.user.id)
       .single();
 
+    if (profileError) {
+      console.error('[admin login] profile fetch error:', profileError.message);
+      return res.status(500).json({ error: 'Could not load account profile.' });
+    }
+
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+      console.error('[admin login] role denied:', profile?.role);
       return res.status(403).json({ error: 'Access denied. Admin accounts only.' });
     }
 
@@ -56,7 +67,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       user: { id: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
     });
   } catch (e) {
-    console.error('[admin login error]', e.message);
+    console.error('[admin login] unexpected error:', e.message, e.stack);
     res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 });
