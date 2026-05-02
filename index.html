@@ -83,7 +83,7 @@ window._track = function(event, props) {
   --red-dark:   #B5121A;
   --text:       #F0EDE8;
   --text-dim:   #9A9096;
-  --text-faint: #504040;
+  --text-faint: rgba(255,255,255,.38);
   --danger:     #E61E24;
   --success:    #50C878;
 
@@ -226,11 +226,11 @@ body::after {
   transition: all .2s ease;
   background: none;
   border: none;
-  color: #777;
+  color: var(--text-faint);
   flex: 1;
   min-width: 0;
 }
-.nav-btn:hover { color: #999; background: rgba(255,255,255,.04); }
+.nav-btn:hover { color: var(--text-dim); background: rgba(255,255,255,.04); }
 .nav-btn.active { color: var(--red); }
 .nav-btn svg { width: 22px; height: 22px; }
 .nav-btn span { font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
@@ -1485,7 +1485,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 }
 .search-field:hover { border-color: rgba(255,36,48,.35); background: rgba(255,255,255,.04); }
 .search-field svg { flex-shrink: 0; }
-.search-placeholder { font-size: 12px; color: #777; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.search-placeholder { font-size: 12px; color: var(--text-faint); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .topbar-icon {
   width: 34px; height: 34px;
   border-radius: 10px;
@@ -1518,14 +1518,14 @@ svg defs { position: absolute; width: 0; height: 0; }
   flex-shrink: 0;
   padding: 6px 14px 10px;
   font-size: 13px; font-weight: 600;
-  color: #777;
+  color: var(--text-faint);
   cursor: pointer;
   background: none; border: none;
   position: relative;
   transition: color .2s;
   white-space: nowrap;
 }
-.tab-btn:hover { color: #aaa; }
+.tab-btn:hover { color: var(--text-dim); }
 .tab-btn.active { color: var(--text); }
 .tab-btn.active::after {
   content: '';
@@ -2381,18 +2381,18 @@ svg defs { position: absolute; width: 0; height: 0; }
         <button class="list-tab" onclick="switchListTab(this,'history')">History</button>
         <button class="list-tab" onclick="switchListTab(this,'reminder')">Reminders</button>
         <button onclick="openListFilter()" style="margin-left:auto;display:flex;align-items:center;padding:0 4px 12px;background:none;border:none;cursor:pointer" aria-label="Sort & filter">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
         </button>
       </div>
 
       <!-- Following tab content -->
       <div id="tab-following">
-        <div style="text-align:center;padding:30px;color:#777;font-size:12px">Loading…</div>
+        <div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Loading…</div>
       </div>
 
       <!-- History tab (hidden) -->
       <div id="tab-history" style="display:none">
-        <div style="text-align:center;padding:30px;color:#777;font-size:12px">Loading…</div>
+        <div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Loading…</div>
       </div>
 
       <!-- Reminder set (hidden) -->
@@ -2579,7 +2579,7 @@ svg defs { position: absolute; width: 0; height: 0; }
       </div>
 
       <!-- Version / secret admin access -->
-      <div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--text-faint)" id="versionTap" onclick="handleVersionTap()">
+      <div style="text-align:center;padding:20px 0 8px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.06em" id="versionTap" onclick="handleVersionTap()">
         SPHYNX MOTION v1.0.0
       </div>
 
@@ -2894,10 +2894,10 @@ async function loadWatchlist(sort) {
   const container = document.getElementById('tab-following');
   if (!container) return;
   if (!isLoggedIn) {
-    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#777;font-size:13px">Log in to save series to your watchlist.</div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Log in to save series to your watchlist.</div>';
     return;
   }
-  container.innerHTML = '<div style="text-align:center;padding:30px;color:#777;font-size:12px">Loading…</div>';
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-faint);font-size:12px">Loading…</div>';
   try {
     const res = await fetch('/api/engage/watchlist', { credentials: 'include' });
     if (!res.ok) throw new Error();
@@ -2905,7 +2905,7 @@ async function loadWatchlist(sort) {
     if (_listSort === 'az')    watchlist = watchlist.sort((a, b) => (a.title||'').localeCompare(b.title||''));
     if (_listSort === 'genre') watchlist = watchlist.sort((a, b) => (a.genre||'').localeCompare(b.genre||''));
     if (!watchlist.length) {
-      container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#777;font-size:13px">Your watchlist is empty.<br>Tap the bookmark icon on any series to add it here.</div>';
+      container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-faint);font-size:13px">Your watchlist is empty.<br>Tap the bookmark icon on any series to add it here.</div>';
       return;
     }
     container.innerHTML = watchlist.map(s => `
@@ -3126,7 +3126,7 @@ function _searchPopular() {
   const titles = all.slice(0, 4).map(s => s.title);
   const genres = [...new Set(all.map(s => s.genre).filter(Boolean))].slice(0, 3);
   const terms  = [...new Set([...titles, ...genres])].slice(0, 6);
-  if (!terms.length) return '<div style="text-align:center;padding:24px;color:#777;font-size:12px">Start typing to search…</div>';
+  if (!terms.length) return '<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:12px">Start typing to search…</div>';
   return `<div style="font-size:10px;font-weight:700;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Popular</div>` +
     terms.map(t => `
     <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:8px"
