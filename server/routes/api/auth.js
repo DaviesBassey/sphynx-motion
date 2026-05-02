@@ -19,46 +19,46 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+  try {
+    // Run auth + profile fetch in parallel — saves one sequential round-trip
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
 
-  if (error || !data?.session) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
+    if (error || !data?.session) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
-  // Verify role — only admin and superadmin may enter
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('role, display_name')
-    .eq('id', data.user.id)
-    .single();
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role, display_name')
+      .eq('id', data.user.id)
+      .single();
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return res.status(403).json({
-      error: 'Access denied. Admin accounts only.',
-      role: profile?.role ?? 'unknown',
+    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+      return res.status(403).json({ error: 'Access denied. Admin accounts only.' });
+    }
+
+    res.cookie('sphynx_admin_session', data.session.access_token, {
+      httpOnly: true,
+      secure:   req.secure || req.headers['x-forwarded-proto'] === 'https',
+      sameSite: 'strict',
+      maxAge:   8 * 60 * 60 * 1000,
     });
+
+    supabaseAdmin.from('admin_audit_log').insert({
+      admin_id:    data.user.id,
+      action:      'login',
+      target_type: 'session',
+      details:     { ip: req.ip, ua: req.headers['user-agent'] },
+    }).catch(() => {});
+
+    res.json({
+      success: true,
+      user: { id: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
+    });
+  } catch (e) {
+    console.error('[admin login error]', e.message);
+    res.status(500).json({ error: 'Login failed. Please try again.' });
   }
-
-  // Set httpOnly cookie — not readable from JS
-  res.cookie('sphynx_admin_session', data.session.access_token, {
-    httpOnly: true,
-    secure:   req.secure || req.headers['x-forwarded-proto'] === 'https',
-    sameSite: 'strict',
-    maxAge:   8 * 60 * 60 * 1000,  // 8 hours
-  });
-
-  // Log admin login (non-blocking — audit failure must not break login)
-  supabaseAdmin.from('admin_audit_log').insert({
-    admin_id:    data.user.id,
-    action:      'login',
-    target_type: 'session',
-    details:     { ip: req.ip, ua: req.headers['user-agent'] },
-  }).catch(() => {});
-
-  res.json({
-    success: true,
-    user: { id: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
-  });
 });
 
 // POST /api/admin/auth/logout
