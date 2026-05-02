@@ -33,7 +33,7 @@ router.get('/series', async (req, res) => {
 
   let query = supabaseAdmin
     .from('series')
-    .select('id, title, slug, genre, language, age_rating, poster_url, is_featured, is_trending, views', { count: 'exact' })
+    .select('id, title, slug, genre, language, age_rating, poster_url, is_featured, is_trending, views, description, episodes(count)', { count: 'exact' })
     .eq('status', 'live')
     .order(orderCol, { ascending: false })
     .range(offset, offset + Number(limit) - 1);

@@ -1518,14 +1518,14 @@ svg defs { position: absolute; width: 0; height: 0; }
   flex-shrink: 0;
   padding: 6px 14px 10px;
   font-size: 13px; font-weight: 600;
-  color: var(--text-faint);
+  color: #777;
   cursor: pointer;
   background: none; border: none;
   position: relative;
   transition: color .2s;
   white-space: nowrap;
 }
-.tab-btn:hover { color: var(--text-dim); }
+.tab-btn:hover { color: #aaa; }
 .tab-btn.active { color: var(--text); }
 .tab-btn.active::after {
   content: '';
@@ -1536,12 +1536,63 @@ svg defs { position: absolute; width: 0; height: 0; }
   border-radius: 2px 2px 0 0;
 }
 
-/* ─── CARD GRID ──────────────────────────────────────────────────────────── */
+/* ─── CARD GRID (categories tab only) ───────────────────────────────────── */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   padding: 12px 12px 0;
+}
+/* ─── SERIES LIST (Popular / New / Rankings / All) ───────────────────────── */
+.series-list { display: flex; flex-direction: column; padding: 0; }
+.series-row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  cursor: pointer; transition: background .15s;
+}
+.series-row:active { background: rgba(255,255,255,.03); }
+.series-row-thumb {
+  width: 88px; aspect-ratio: 2/3;
+  border-radius: 8px; overflow: hidden;
+  position: relative; flex-shrink: 0;
+  background: var(--surface2);
+}
+.series-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.series-row-views {
+  position: absolute; bottom: 4px; left: 4px;
+  font-size: 9px; font-weight: 700; color: #fff;
+  background: rgba(0,0,0,.65); padding: 2px 5px; border-radius: 4px;
+}
+.series-row-info { flex: 1; min-width: 0; padding-top: 2px; }
+.series-row-title {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  line-height: 1.25; margin-bottom: 5px;
+}
+.series-row-desc {
+  font-size: 12px; color: var(--text-dim); line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden; margin-bottom: 8px;
+}
+.series-row-meta {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 10px; color: #666;
+}
+.series-row-eps { margin-left: auto; }
+.series-row-skeleton {
+  display: flex; gap: 12px; padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.series-row-skeleton-thumb {
+  width: 88px; aspect-ratio: 2/3; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);
+  background-size: 200% 100%; animation: skel-shimmer 1.4s infinite;
+}
+.series-row-skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.series-row-skeleton-lines span {
+  height: 12px; border-radius: 6px;
+  background: linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);
+  background-size: 200% 100%; animation: skel-shimmer 1.4s infinite;
 }
 .g-card { cursor: pointer; transition: transform .18s ease, opacity .18s ease; }
 .g-card-skeleton { aspect-ratio:9/13; border-radius:12px; background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%); background-size:200% 100%; animation:skel-shimmer 1.4s infinite; }
@@ -2183,13 +2234,10 @@ svg defs { position: absolute; width: 0; height: 0; }
       <div id="homeSectionTitle" style="padding:10px 16px 2px;font-size:11px;font-weight:700;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase">Most Popular</div>
 
       <!-- Card grid — filled by loadContent() from Supabase -->
-      <div class="card-grid" id="homeGrid">
-        <div class="g-card-skeleton"></div>
-        <div class="g-card-skeleton"></div>
-        <div class="g-card-skeleton"></div>
-        <div class="g-card-skeleton"></div>
-        <div class="g-card-skeleton"></div>
-        <div class="g-card-skeleton"></div>
+      <div class="series-list" id="homeGrid">
+        <div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:70%"></span><span style="width:90%"></span><span style="width:85%"></span><span style="width:45%"></span></div></div>
+        <div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:55%"></span><span style="width:95%"></span><span style="width:80%"></span><span style="width:40%"></span></div></div>
+        <div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:65%"></span><span style="width:88%"></span><span style="width:75%"></span><span style="width:50%"></span></div></div>
 
       </div>
 
@@ -2791,8 +2839,7 @@ function switchHomeTab(btn, tab) {
   _activeHomeTab = tab;
   const titleEl = document.getElementById('homeSectionTitle');
   if (titleEl) titleEl.textContent = _tabTitles[tab] || tab;
-  // Re-render grid from cached data (no network round-trip)
-  if (window._allSeries) _renderHomeGrid(tab);
+  _renderHomeGrid(tab);
 }
 
 /* ─── MY LIST TABS ───────────────────────────────────────────────────────── */
@@ -4636,20 +4683,28 @@ function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function _i18nEl(el) { if (el && _currentLang !== 'en') _applyTransToEl(el); }
 
 function renderCard(s) {
-  const badge = s.is_featured ? 'g-badge--hot' : 'g-badge--new';
-  const i18nKey = s.is_featured ? 'card.hot' : 'card.new';
-  const label = s.is_featured ? 'Hot' : 'New';
-  const poster = s.poster_url || 'assets/posters/image-11.jpg';
+  const poster  = s.poster_url || 'assets/posters/image-11.jpg';
+  const views   = s.views ? (s.views > 999 ? (s.views/1000).toFixed(1)+'K' : s.views) : null;
+  const epCount = Array.isArray(s.episodes) ? (s.episodes[0]?.count ?? null) : null;
+  const badge   = s.is_featured ? 'Hot' : (s.is_trending ? 'Trending' : 'New');
+  const badgeCls= s.is_featured ? 'g-badge--hot' : (s.is_trending ? 'g-badge--hot' : 'g-badge--new');
+  const desc    = s.description || '';
   return `
-    <div class="g-card" onclick="playSeries('${esc(s.id)}')">
-      <div class="g-thumb">
-        <img src="${esc(poster)}" alt="${esc(s.title)}" style="width:100%;height:100%;object-fit:cover">
-        <div class="g-badge ${badge}" data-i18n="${i18nKey}">${label}</div>
-        <div class="g-views">▶ ${s.views ? (s.views > 999 ? (s.views/1000).toFixed(1)+'K' : s.views) : '—'}</div>
-        <button class="report-btn" onclick="event.stopPropagation();openModal('report')" title="Report">⋯</button>
+    <div class="series-row" onclick="playSeries('${esc(s.id)}')">
+      <div class="series-row-thumb">
+        <img src="${esc(poster)}" alt="${esc(s.title)}" loading="lazy">
+        <div class="g-badge ${badgeCls}" style="position:absolute;top:6px;left:6px;font-size:8px">${badge}</div>
+        ${views ? `<div class="series-row-views">▶ ${views}</div>` : ''}
       </div>
-      <div class="g-title">${esc(s.title)}</div>
-      <div class="g-genre">${esc(s.genre || '')}${s.age_rating ? `<span class="age-badge">${esc(s.age_rating)}</span>` : ''}</div>
+      <div class="series-row-info">
+        <div class="series-row-title">${esc(s.title)}</div>
+        ${desc ? `<div class="series-row-desc">${esc(desc)}</div>` : ''}
+        <div class="series-row-meta">
+          <span>${esc(s.genre || '')}</span>
+          ${s.age_rating ? `<span class="age-badge" style="font-size:9px">${esc(s.age_rating)}</span>` : ''}
+          ${epCount !== null ? `<span class="series-row-eps">${epCount} Episodes</span>` : ''}
+        </div>
+      </div>
     </div>`;
 }
 
@@ -4779,36 +4834,44 @@ function retryConnection() {
   loadContent();
 }
 
+const _listSkeleton = () => `<div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:70%"></span><span style="width:90%"></span><span style="width:80%"></span><span style="width:45%"></span></div></div>`.repeat(4);
+
 function _renderHomeGrid(tab) {
   const homeGrid = document.getElementById('homeGrid');
   if (!homeGrid) return;
+
+  if (tab === 'categories') {
+    homeGrid.className = 'card-grid';
+    const all = window._allSeries || [];
+    _renderCategoriesGrid(homeGrid, all);
+    return;
+  }
+
+  homeGrid.className = 'series-list';
+
+  if (!window._allSeries) {
+    homeGrid.innerHTML = _listSkeleton();
+    return;
+  }
+
   const all      = window._allSeries    || [];
   const trending = window._trendingList || [];
-  const featured = window._featuredList || [];
 
   let cards;
   if (tab === 'popular') {
-    // Trending-flagged first, then rest
     const trendIds = new Set(trending.map(s => s.id));
     cards = [...trending, ...all.filter(s => !trendIds.has(s.id))];
   } else if (tab === 'new') {
-    // Already ordered by created_at desc — just show all
     cards = all;
   } else if (tab === 'rankings') {
-    // Sort by views descending
     cards = [...all].sort((a, b) => (b.views || 0) - (a.views || 0));
-  } else if (tab === 'categories') {
-    // Group by genre — show a genre selector
-    _renderCategoriesGrid(homeGrid, all);
-    return;
   } else {
-    // 'all' tab
     cards = all;
   }
 
   homeGrid.innerHTML = cards.length
     ? cards.map(s => renderCard(s)).join('')
-    : '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No series published yet.</div>';
+    : '<div style="text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No series published yet.</div>';
   _i18nEl(homeGrid);
 }
 
@@ -4837,18 +4900,18 @@ async function filterByGenre(genre) {
   const titleEl = document.getElementById('homeSectionTitle');
   if (titleEl) titleEl.textContent = genre;
   const homeGrid = document.getElementById('homeGrid');
-  if (homeGrid) homeGrid.innerHTML = '<div class="g-card-skeleton"></div>'.repeat(6);
+  if (homeGrid) { homeGrid.className = 'series-list'; homeGrid.innerHTML = _listSkeleton(); }
   try {
     const res = await fetch(`/api/content/series?genre=${encodeURIComponent(genre)}&limit=48`);
     const { series = [] } = res.ok ? await res.json() : {};
     if (homeGrid) {
       homeGrid.innerHTML = series.length
         ? series.map(s => renderCard(s)).join('')
-        : `<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No ${esc(genre)} series yet.</div>`;
+        : `<div style="text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No ${esc(genre)} series yet.</div>`;
       _i18nEl(homeGrid);
     }
   } catch {
-    if (homeGrid) homeGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">Could not load.</div>';
+    if (homeGrid) homeGrid.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">Could not load.</div>';
   }
 }
 
