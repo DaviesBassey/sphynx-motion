@@ -255,7 +255,7 @@ router.post('/rewards/complete-ep3', async (req, res) => {
   const { data: existing } = await supabaseAdmin.from('daily_rewards').select('id').eq('user_id', user.id).eq('reward_type', 'complete_episode').maybeSingle();
   if (existing) return res.json({ already_claimed: true, amount: 0 });
   const { data: balance, error } = await supabaseAdmin.rpc('grant_soul_reward', {
-    p_user_id: user.id, p_type: 'complete_episode', p_amount: 20, p_metadata: { episode: 'gold-veins-e3' },
+    p_user_id: user.id, p_type: 'complete_episode', p_amount: 20, p_metadata: {},
   });
   if (error) return res.status(500).json({ error: error.message });
   res.json({ claimed: true, amount: 20, new_balance: balance });
