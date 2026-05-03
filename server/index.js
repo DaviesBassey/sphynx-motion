@@ -137,6 +137,31 @@ app.get('/api/admin/health', async (req, res) => {
 // ── PUBLIC HEALTH ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 
+// ── ENV DIAGNOSTICS (safe — never exposes key values, only presence/format) ──
+app.get('/api/admin/env-check', async (req, res) => {
+  const check = (v, label) => {
+    if (!v) return `${label}: MISSING`;
+    if (v.includes('placeholder') || v.includes('your-')) return `${label}: PLACEHOLDER`;
+    return `${label}: SET (${v.substring(0, 12)}...)`;
+  };
+  const results = {
+    node:        process.version,
+    supabase_url: check(process.env.SUPABASE_URL, 'SUPABASE_URL'),
+    anon_key:    check(process.env.SUPABASE_ANON_KEY, 'SUPABASE_ANON_KEY'),
+    service_key: check(process.env.SUPABASE_SERVICE_ROLE_KEY, 'SUPABASE_SERVICE_ROLE_KEY'),
+  };
+  try {
+    const { supabaseAdmin: sb } = require('./lib/supabase');
+    const { error } = await sb.from('profiles').select('id').limit(1);
+    results.db = error ? `ERROR: ${error.message}` : 'OK';
+    const { data, error: ae } = await sb.auth.signInWithPassword({ email: '__probe__', password: '__probe__' });
+    results.auth_endpoint = ae?.message?.includes('Invalid') ? 'REACHABLE' : (ae ? `ERROR: ${ae.message}` : 'OK');
+  } catch (e) {
+    results.db = `THROW: ${e.message}`;
+  }
+  res.json(results);
+});
+
 // ── PUBLIC CONFIG (anon key is safe to expose — controlled by RLS) ───────────
 app.get('/api/config', (req, res) => {
   res.json({

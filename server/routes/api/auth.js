@@ -1,4 +1,3 @@
-const https    = require('https');
 const express  = require('express');
 const rateLimit = require('express-rate-limit');
 const { supabaseAdmin } = require('../../lib/supabase');
@@ -12,35 +11,12 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many login attempts. Try again in 15 minutes.' },
 });
 
-// Calls Supabase /auth/v1/token using Node's built-in https — no fetch/axios needed.
-function supabaseSignIn(supabaseUrl, apiKey, email, password) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify({ email, password });
-    const parsed = new URL(`${supabaseUrl}/auth/v1/token?grant_type=password`);
-    const options = {
-      hostname: parsed.hostname,
-      path:     parsed.pathname + parsed.search,
-      method:   'POST',
-      headers: {
-        'Content-Type':   'application/json',
-        'Content-Length': Buffer.byteLength(body),
-        'apikey':         apiKey,
-        'Authorization':  `Bearer ${apiKey}`,
-      },
-    };
-    const req = https.request(options, res => {
-      let raw = '';
-      res.on('data', chunk => { raw += chunk; });
-      res.on('end', () => {
-        try { resolve({ status: res.statusCode, data: JSON.parse(raw) }); }
-        catch { resolve({ status: res.statusCode, data: {} }); }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
+const COOKIE_OPTS = {
+  httpOnly: true,
+  secure:   true,
+  sameSite: 'strict',
+  path:     '/',
+};
 
 // POST /api/admin/auth/login
 router.post('/login', loginLimiter, async (req, res) => {
@@ -49,32 +25,30 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const apiKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !apiKey || supabaseUrl.includes('placeholder')) {
-    console.error('[admin login] Supabase env vars not configured');
-    return res.status(503).json({ error: 'Server not configured. Contact support.' });
+  // Quick env check — return a clear 503 instead of a confusing 500
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || url.includes('placeholder') || !key || key.includes('placeholder')) {
+    console.error('[admin login] Supabase env vars missing on this server');
+    return res.status(503).json({ error: 'Server not configured — check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Render env vars.' });
   }
 
   try {
-    const { status, data: authData } = await supabaseSignIn(supabaseUrl, apiKey, email, password);
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
 
-    if (status !== 200 || !authData.access_token) {
-      console.error('[admin login] auth rejected:', status, authData.error_description || authData.error || authData.msg);
+    if (error) {
+      console.error('[admin login] auth error:', error.message);
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
-
-    const { data: { user }, error: userErr } = await supabaseAdmin.auth.getUser(authData.access_token);
-    if (userErr || !user) {
-      console.error('[admin login] getUser error:', userErr?.message);
+    if (!data?.session) {
+      console.error('[admin login] no session returned');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role, display_name')
-      .eq('id', user.id)
+      .eq('id', data.user.id)
       .single();
 
     if (profileError) {
@@ -87,15 +61,10 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Admin accounts only.' });
     }
 
-    res.cookie('sphynx_admin_session', authData.access_token, {
-      httpOnly: true,
-      secure:   req.secure || req.headers['x-forwarded-proto'] === 'https',
-      sameSite: 'strict',
-      maxAge:   8 * 60 * 60 * 1000,
-    });
+    res.cookie('sphynx_admin_session', data.session.access_token, COOKIE_OPTS);
 
     supabaseAdmin.from('admin_audit_log').insert({
-      admin_id:    user.id,
+      admin_id:    data.user.id,
       action:      'login',
       target_type: 'session',
       details:     { ip: req.ip, ua: req.headers['user-agent'] },
@@ -103,22 +72,15 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     res.json({
       success: true,
-      user: { id: user.id, email: user.email, role: profile.role, display_name: profile.display_name },
+      user: { id: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
     });
   } catch (e) {
-    console.error('[admin login] unexpected error:', e.message, e.stack);
+    console.error('[admin login] unexpected error:', e.message);
     res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 });
 
-const COOKIE_OPTS = {
-  httpOnly: true,
-  secure:   true,
-  sameSite: 'strict',
-  path:     '/',
-};
-
-// POST /api/admin/auth/logout  — no requireAuth so it always clears the cookie
+// POST /api/admin/auth/logout — no requireAuth so cookie is always cleared
 router.post('/logout', async (req, res) => {
   const token = req.cookies?.sphynx_admin_session;
   if (token) {
@@ -136,7 +98,7 @@ router.post('/logout', async (req, res) => {
   res.json({ success: true });
 });
 
-// GET /api/admin/logout  — browser-navigable logout (link / redirect)
+// GET /api/admin/auth/logout — browser-navigable sign-out link
 router.get('/logout', async (req, res) => {
   const token = req.cookies?.sphynx_admin_session;
   if (token) {
