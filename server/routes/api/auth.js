@@ -111,17 +111,47 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-// POST /api/admin/auth/logout
-router.post('/logout', requireAuth, async (req, res) => {
-  _invalidateRoleCache(req.user.id);
-  supabaseAdmin.from('admin_audit_log').insert({
-    admin_id:    req.user.id,
-    action:      'logout',
-    target_type: 'session',
-    details:     {},
-  }).catch(() => {});
-  res.clearCookie('sphynx_admin_session');
+const COOKIE_OPTS = {
+  httpOnly: true,
+  secure:   true,
+  sameSite: 'strict',
+  path:     '/',
+};
+
+// POST /api/admin/auth/logout  — no requireAuth so it always clears the cookie
+router.post('/logout', async (req, res) => {
+  const token = req.cookies?.sphynx_admin_session;
+  if (token) {
+    try {
+      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+      if (user) {
+        _invalidateRoleCache(user.id);
+        supabaseAdmin.from('admin_audit_log').insert({
+          admin_id: user.id, action: 'logout', target_type: 'session', details: {},
+        }).catch(() => {});
+      }
+    } catch {}
+  }
+  res.clearCookie('sphynx_admin_session', COOKIE_OPTS);
   res.json({ success: true });
+});
+
+// GET /api/admin/logout  — browser-navigable logout (link / redirect)
+router.get('/logout', async (req, res) => {
+  const token = req.cookies?.sphynx_admin_session;
+  if (token) {
+    try {
+      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+      if (user) {
+        _invalidateRoleCache(user.id);
+        supabaseAdmin.from('admin_audit_log').insert({
+          admin_id: user.id, action: 'logout', target_type: 'session', details: {},
+        }).catch(() => {});
+      }
+    } catch {}
+  }
+  res.clearCookie('sphynx_admin_session', COOKIE_OPTS);
+  res.redirect('/admin/login');
 });
 
 // GET /api/admin/auth/me
