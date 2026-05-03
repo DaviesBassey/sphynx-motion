@@ -1,12 +1,12 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { supabaseAdmin, supabaseAnon } = require('../../lib/supabase');
+const { supabaseAdmin } = require('../../lib/supabase');
 const { requireAuth, _invalidateRoleCache } = require('../../middleware/auth');
 
 const router = express.Router();
 
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Too many login attempts. Try again in 15 minutes.' },
 });
@@ -19,24 +19,52 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
+  const supabaseUrl = process.env.SUPABASE_URL;
+  // Prefer anon key; fall back to service role — both work for /auth/v1/token
+  const apiKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !apiKey || supabaseUrl.includes('placeholder')) {
+    console.error('[admin login] Supabase env vars not configured');
+    return res.status(503).json({ error: 'Server not configured. Contact support.' });
+  }
+
   try {
-    // Use admin client — service role key works for signInWithPassword and avoids
-    // the anon key placeholder path that causes 500s when SUPABASE_ANON_KEY is unset.
-    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+    // Hit Supabase Auth REST directly — avoids JS-client key-validation issues
+    const authRes = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': apiKey,
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-    if (error) {
-      console.error('[admin login] auth error:', error.message, error.status);
+    if (!authRes.ok) {
+      const errBody = await authRes.json().catch(() => ({}));
+      console.error('[admin login] auth rejected:', authRes.status, errBody.error_description || errBody.msg || errBody.error);
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    const authData = await authRes.json();
+    const accessToken = authData.access_token;
+    if (!accessToken) {
+      console.error('[admin login] no access_token in response');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    if (!data?.session) {
-      console.error('[admin login] no session returned');
+
+    // Resolve user from token using admin client
+    const { data: { user }, error: userErr } = await supabaseAdmin.auth.getUser(accessToken);
+    if (userErr || !user) {
+      console.error('[admin login] getUser error:', userErr?.message);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Verify admin role
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role, display_name')
-      .eq('id', data.user.id)
+      .eq('id', user.id)
       .single();
 
     if (profileError) {
@@ -49,7 +77,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Admin accounts only.' });
     }
 
-    res.cookie('sphynx_admin_session', data.session.access_token, {
+    res.cookie('sphynx_admin_session', accessToken, {
       httpOnly: true,
       secure:   req.secure || req.headers['x-forwarded-proto'] === 'https',
       sameSite: 'strict',
@@ -57,7 +85,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     });
 
     supabaseAdmin.from('admin_audit_log').insert({
-      admin_id:    data.user.id,
+      admin_id:    user.id,
       action:      'login',
       target_type: 'session',
       details:     { ip: req.ip, ua: req.headers['user-agent'] },
@@ -65,7 +93,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     res.json({
       success: true,
-      user: { id: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
+      user: { id: user.id, email: user.email, role: profile.role, display_name: profile.display_name },
     });
   } catch (e) {
     console.error('[admin login] unexpected error:', e.message, e.stack);
