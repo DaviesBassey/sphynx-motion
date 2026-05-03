@@ -107,11 +107,11 @@ router.get('/episodes/:id/play', async (req, res) => {
   if (!url) return res.status(503).json({ error: 'Video not available yet' });
 
   // Increment view counter atomically (fire and forget)
-  supabaseAdmin.rpc('increment_episode_views', { ep_id: ep.id }).catch(() => {
+  supabaseAdmin.rpc('increment_episode_views', { ep_id: ep.id }).then(null, () => {
     // Fallback to non-atomic read-then-write if RPC not yet deployed
     supabaseAdmin.from('episodes').select('views').eq('id', ep.id).single()
       .then(({ data: r }) => r != null && supabaseAdmin.from('episodes').update({ views: (r.views || 0) + 1 }).eq('id', ep.id))
-      .catch(() => {});
+      .then(null, () => {});
   });
 
   res.json({ url, type: isMux ? 'hls' : 'mp4', series_id: ep.series_id });

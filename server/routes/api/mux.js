@@ -81,7 +81,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           thumbnail_url: `https://image.mux.com/${playbackId}/thumbnail.jpg`,
         })
         .eq('mux_upload_id', uploadId)
-        .catch(err => console.error('Mux webhook DB update failed (asset.ready):', err));
+        .then(null, err => console.error('Mux webhook DB update failed (asset.ready):', err));
     }
   }
 
@@ -91,7 +91,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       await supabaseAdmin.from('episodes')
         .update({ mux_asset_id: null, mux_playback_id: null, video_status: 'error' })
         .eq('mux_upload_id', uploadId)
-        .catch(err => console.error('Mux webhook DB update failed (asset.errored):', err));
+        .then(null, err => console.error('Mux webhook DB update failed (asset.errored):', err));
     }
   }
 
@@ -101,7 +101,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       await supabaseAdmin.from('episodes')
         .update({ video_status: 'processing' })
         .eq('mux_upload_id', uploadId)
-        .catch(err => console.error('Mux webhook DB update failed (upload.asset_created):', err));
+        .then(null, err => console.error('Mux webhook DB update failed (upload.asset_created):', err));
     }
   }
 

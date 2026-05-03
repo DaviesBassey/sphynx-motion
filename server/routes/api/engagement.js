@@ -150,7 +150,7 @@ router.post('/progress/:episodeId', async (req, res) => {
     await supabaseAdmin.rpc('grant_soul_reward', {
       p_user_id: user.id, p_type: 'watch_episode', p_amount: 15,
       p_metadata: { episode_id: req.params.episodeId },
-    }).catch(() => {});
+    }).then(null, () => {});
   }
 
   res.json({ progress: data });

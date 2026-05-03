@@ -68,7 +68,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       action:      'login',
       target_type: 'session',
       details:     { ip: req.ip, ua: req.headers['user-agent'] },
-    }).catch(() => {});
+    }).then(null, () => {});
 
     res.json({
       success: true,
@@ -90,7 +90,7 @@ router.post('/logout', async (req, res) => {
         _invalidateRoleCache(user.id);
         supabaseAdmin.from('admin_audit_log').insert({
           admin_id: user.id, action: 'logout', target_type: 'session', details: {},
-        }).catch(() => {});
+        }).then(null, () => {});
       }
     } catch {}
   }
@@ -108,7 +108,7 @@ router.get('/logout', async (req, res) => {
         _invalidateRoleCache(user.id);
         supabaseAdmin.from('admin_audit_log').insert({
           admin_id: user.id, action: 'logout', target_type: 'session', details: {},
-        }).catch(() => {});
+        }).then(null, () => {});
       }
     } catch {}
   }
