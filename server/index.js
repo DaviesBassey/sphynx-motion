@@ -162,6 +162,26 @@ app.get('/api/admin/env-check', async (req, res) => {
   res.json(results);
 });
 
+// ── TEMP LOGIN TRACE (remove after debug) ────────────────────────────────────
+app.post('/api/admin/trace-login', async (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) return res.status(400).json({ error: 'email+password required' });
+  const { supabaseAdmin: sb } = require('./lib/supabase');
+  const steps = [];
+  try {
+    steps.push('1_start');
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    steps.push(error ? `2_auth_error:${error.message}` : `2_auth_ok:${data?.user?.id}`);
+    if (error || !data?.user) return res.json({ steps });
+    const { data: profile, error: pe } = await sb.from('profiles').select('role').eq('id', data.user.id).single();
+    steps.push(pe ? `3_profile_error:${pe.message}` : `3_profile_ok:role=${profile?.role}`);
+    res.json({ steps });
+  } catch (e) {
+    steps.push(`THROW:${e.message}`);
+    res.json({ steps });
+  }
+});
+
 // ── PUBLIC CONFIG (anon key is safe to expose — controlled by RLS) ───────────
 app.get('/api/config', (req, res) => {
   res.json({
