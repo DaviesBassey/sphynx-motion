@@ -2965,7 +2965,7 @@ async function loadWatchHistory() {
       const seriesTitle = series.title || epLabel;
       const done = pct >= 90;
       return `
-        <div class="follow-card" onclick="playEpisode('${esc(p.episode_id)}','${esc(ep.title||'')}','${esc(epLabel)}')">
+        <div class="follow-card" onclick="playSeries('${esc(ep.series_id)}')">
           <div class="follow-thumb" style="position:relative">
             ${poster ? `<img src="${esc(poster)}" alt="${esc(seriesTitle)}" style="width:100%;height:100%;object-fit:cover">` : ''}
             <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15)">
@@ -4403,7 +4403,11 @@ function _updateVpCounter() {
     el.style.display = 'none';
   }
   const nextBtn = document.getElementById('vpNextBtn');
-  if (nextBtn) nextBtn.style.opacity = (_epIndex >= _playlist.length - 1) ? '0.3' : '1';
+  if (nextBtn) {
+    const isLast = _playlist.length === 0 || _epIndex >= _playlist.length - 1;
+    nextBtn.style.opacity       = isLast ? '0.3' : '1';
+    nextBtn.style.pointerEvents = isLast ? 'none' : '';
+  }
 }
 
 async function _loadPlaylist(seriesId) {
@@ -4601,8 +4605,6 @@ async function playSeries(seriesId) {
 
 async function playEpisode(episodeId, seriesTitle, epLabel) {
   _currentEpisodeId = episodeId;
-  const idx = _playlist.findIndex(e => e.id === episodeId);
-  if (idx >= 0) { _epIndex = idx; _updateVpCounter(); }
 
   try {
     const token = _sb && _currentUser ? (await _sb.auth.getSession()).data.session?.access_token : null;
@@ -4614,6 +4616,17 @@ async function playEpisode(episodeId, seriesTitle, epLabel) {
     if (res.status === 401) { openModal('login'); return; }
     if (res.status === 403) { toast((data.cost || '?') + ' Soul required to watch'); return; }
     if (!res.ok) { toast(data.error || 'Playback error'); return; }
+
+    // If called without a series context (e.g. from a modal or deep link),
+    // load the full playlist so Next/Prev buttons and episode counter work.
+    if (_playlist.length === 0 && data.series_id) {
+      _currentSeriesId = data.series_id;
+      await _loadPlaylist(data.series_id);
+    }
+
+    const idx = _playlist.findIndex(e => e.id === episodeId);
+    if (idx >= 0) { _epIndex = idx; _updateVpCounter(); }
+
     openVideoPlayer(data.url, seriesTitle, epLabel, data.type);
   } catch { toast('Could not load video'); }
 }

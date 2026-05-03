@@ -114,7 +114,7 @@ router.get('/episodes/:id/play', async (req, res) => {
       .catch(() => {});
   });
 
-  res.json({ url, type: isMux ? 'hls' : 'mp4' });
+  res.json({ url, type: isMux ? 'hls' : 'mp4', series_id: ep.series_id });
 });
 
 // ── SOUL TOKEN PACKAGES ────────────────────────────────────────────────────────
