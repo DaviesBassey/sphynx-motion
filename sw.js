@@ -1,8 +1,8 @@
-const CACHE = 'sphynx-v7';
+const CACHE = 'sphynx-v8';
 const PRECACHE = [
   '/manifest.webmanifest',
   '/SPHYNX_LOGO_WHITE.png',
-  '/SPHYNY_MOTION_FAV.png',
+  '/SPHYNX_MOTION_FAV.png',
   '/App_Cvr_Art.png',
   '/assets/posters/image-11.jpg',
   '/assets/posters/image-13.jpg',
@@ -75,8 +75,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/SPHYNY_MOTION_FAV.png',
-      badge: '/SPHYNY_MOTION_FAV.png',
+      icon: '/SPHYNX_MOTION_FAV.png',
+      badge: '/SPHYNX_MOTION_FAV.png',
       data: { url: data.url },
       vibrate: [100, 50, 100],
     })
