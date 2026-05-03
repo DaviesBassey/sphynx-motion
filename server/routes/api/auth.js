@@ -75,8 +75,8 @@ router.post('/login', loginLimiter, async (req, res) => {
       user: { id: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
     });
   } catch (e) {
-    console.error('[admin login] unexpected error:', e.message);
-    res.status(500).json({ error: 'Login failed. Please try again.' });
+    console.error('[admin login] unexpected error:', e.message, e.stack);
+    res.status(500).json({ error: `DEBUG: ${e.message}` });
   }
 });
 
