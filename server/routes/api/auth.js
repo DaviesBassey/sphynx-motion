@@ -20,8 +20,9 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 
   try {
-    // Use anon client for signInWithPassword — service role key is for admin ops, not user auth
-    const { data, error } = await supabaseAnon.auth.signInWithPassword({ email, password });
+    // Use admin client — service role key works for signInWithPassword and avoids
+    // the anon key placeholder path that causes 500s when SUPABASE_ANON_KEY is unset.
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
 
     if (error) {
       console.error('[admin login] auth error:', error.message, error.status);
