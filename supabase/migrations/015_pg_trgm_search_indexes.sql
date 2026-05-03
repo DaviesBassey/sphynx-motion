@@ -19,20 +19,21 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions;
 -- ─── 2. GIN trigram index on series.title ─────────────────────────────────────
 -- Used by both the public series search and the admin content search.
 -- CONCURRENTLY: builds without locking the table for writes.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS series_title_trgm_idx
+-- CONCURRENTLY omitted: not allowed inside a transaction block (Supabase SQL
+-- Editor wraps statements in a transaction). Safe to use regular CREATE INDEX
+-- here since the tables are empty at initial deployment — no lock contention.
+CREATE INDEX IF NOT EXISTS series_title_trgm_idx
   ON public.series USING GIN (title extensions.gin_trgm_ops);
 
 -- ─── 3. GIN trigram index on series.description ───────────────────────────────
--- Allows future full-text ILIKE search on description without schema changes.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS series_desc_trgm_idx
+CREATE INDEX IF NOT EXISTS series_desc_trgm_idx
   ON public.series USING GIN (description extensions.gin_trgm_ops);
 
 -- ─── 4. GIN trigram indexes on profiles for admin user search ─────────────────
--- Admin user search ORs display_name and email with ILIKE.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS profiles_display_name_trgm_idx
+CREATE INDEX IF NOT EXISTS profiles_display_name_trgm_idx
   ON public.profiles USING GIN (display_name extensions.gin_trgm_ops);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS profiles_email_trgm_idx
+CREATE INDEX IF NOT EXISTS profiles_email_trgm_idx
   ON public.profiles USING GIN (email extensions.gin_trgm_ops);
 
 -- ─── 5. Fix cron schedule — unconditional now that pg_cron is confirmed on ─────
