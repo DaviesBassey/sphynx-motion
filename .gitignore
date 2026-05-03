@@ -29,3 +29,12 @@ android/
 .vscode/settings.json
 .idea/
 *.swp
+*.code-workspace
+
+# ── CLAUDE / AI WORKSPACE (never commit AI session files) ─────────────────────
+CLAUDE.md
+**/.claude/
+.claude/
+
+# ── APP STORE ASSETS (local design exports, not source) ───────────────────────
+appstore-screenshots/
