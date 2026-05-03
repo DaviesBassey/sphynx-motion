@@ -1,4 +1,5 @@
-const express = require('express');
+const https    = require('https');
+const express  = require('express');
 const rateLimit = require('express-rate-limit');
 const { supabaseAdmin } = require('../../lib/supabase');
 const { requireAuth, _invalidateRoleCache } = require('../../middleware/auth');
@@ -11,16 +12,44 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many login attempts. Try again in 15 minutes.' },
 });
 
+// Calls Supabase /auth/v1/token using Node's built-in https — no fetch/axios needed.
+function supabaseSignIn(supabaseUrl, apiKey, email, password) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({ email, password });
+    const parsed = new URL(`${supabaseUrl}/auth/v1/token?grant_type=password`);
+    const options = {
+      hostname: parsed.hostname,
+      path:     parsed.pathname + parsed.search,
+      method:   'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'apikey':         apiKey,
+        'Authorization':  `Bearer ${apiKey}`,
+      },
+    };
+    const req = https.request(options, res => {
+      let raw = '';
+      res.on('data', chunk => { raw += chunk; });
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, data: JSON.parse(raw) }); }
+        catch { resolve({ status: res.statusCode, data: {} }); }
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 // POST /api/admin/auth/login
 router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  // Prefer anon key; fall back to service role — both work for /auth/v1/token
   const apiKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !apiKey || supabaseUrl.includes('placeholder')) {
@@ -29,38 +58,19 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 
   try {
-    // Hit Supabase Auth REST directly — avoids JS-client key-validation issues
-    const authRes = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': apiKey,
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    const { status, data: authData } = await supabaseSignIn(supabaseUrl, apiKey, email, password);
 
-    if (!authRes.ok) {
-      const errBody = await authRes.json().catch(() => ({}));
-      console.error('[admin login] auth rejected:', authRes.status, errBody.error_description || errBody.msg || errBody.error);
+    if (status !== 200 || !authData.access_token) {
+      console.error('[admin login] auth rejected:', status, authData.error_description || authData.error || authData.msg);
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const authData = await authRes.json();
-    const accessToken = authData.access_token;
-    if (!accessToken) {
-      console.error('[admin login] no access_token in response');
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Resolve user from token using admin client
-    const { data: { user }, error: userErr } = await supabaseAdmin.auth.getUser(accessToken);
+    const { data: { user }, error: userErr } = await supabaseAdmin.auth.getUser(authData.access_token);
     if (userErr || !user) {
       console.error('[admin login] getUser error:', userErr?.message);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Verify admin role
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role, display_name')
@@ -77,7 +87,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Admin accounts only.' });
     }
 
-    res.cookie('sphynx_admin_session', accessToken, {
+    res.cookie('sphynx_admin_session', authData.access_token, {
       httpOnly: true,
       secure:   req.secure || req.headers['x-forwarded-proto'] === 'https',
       sameSite: 'strict',
@@ -110,7 +120,6 @@ router.post('/logout', requireAuth, async (req, res) => {
     target_type: 'session',
     details:     {},
   }).catch(() => {});
-
   res.clearCookie('sphynx_admin_session');
   res.json({ success: true });
 });
