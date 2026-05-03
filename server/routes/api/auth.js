@@ -1,3 +1,4 @@
+const jwt     = require('jsonwebtoken');
 const express  = require('express');
 const rateLimit = require('express-rate-limit');
 const { supabaseAdmin } = require('../../lib/supabase');
@@ -25,12 +26,10 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  // Quick env check — return a clear 503 instead of a confusing 500
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || url.includes('placeholder') || !key || key.includes('placeholder')) {
-    console.error('[admin login] Supabase env vars missing on this server');
-    return res.status(503).json({ error: 'Server not configured — check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Render env vars.' });
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || supabaseUrl.includes('placeholder') || !serviceKey || serviceKey.includes('placeholder')) {
+    return res.status(503).json({ error: 'Server not configured. Check Supabase env vars on Render.' });
   }
 
   try {
@@ -40,8 +39,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       console.error('[admin login] auth error:', error.message);
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
-    if (!data?.session) {
-      console.error('[admin login] no session returned');
+    if (!data?.user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -52,16 +50,24 @@ router.post('/login', loginLimiter, async (req, res) => {
       .single();
 
     if (profileError) {
-      console.error('[admin login] profile fetch error:', profileError.message);
+      console.error('[admin login] profile error:', profileError.message);
       return res.status(500).json({ error: 'Could not load account profile.' });
     }
 
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-      console.error('[admin login] role denied:', profile?.role);
       return res.status(403).json({ error: 'Access denied. Admin accounts only.' });
     }
 
-    res.cookie('sphynx_admin_session', data.session.access_token, COOKIE_OPTS);
+    // Sign our own session token with COOKIE_SECRET so requireAuth can verify
+    // locally without any Supabase network call on every request.
+    const cookieSecret = process.env.COOKIE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const sessionToken = jwt.sign(
+      { sub: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
+      cookieSecret,
+      { expiresIn: '8h' }
+    );
+
+    res.cookie('sphynx_admin_session', sessionToken, COOKIE_OPTS);
 
     supabaseAdmin.from('admin_audit_log').insert({
       admin_id:    data.user.id,
@@ -76,22 +82,18 @@ router.post('/login', loginLimiter, async (req, res) => {
     });
   } catch (e) {
     console.error('[admin login] unexpected error:', e.message, e.stack);
-    res.status(500).json({ error: `DEBUG: ${e.message}` });
+    res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 });
 
-// POST /api/admin/auth/logout — no requireAuth so cookie is always cleared
+// POST /api/admin/auth/logout
 router.post('/logout', async (req, res) => {
   const token = req.cookies?.sphynx_admin_session;
   if (token) {
     try {
-      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-      if (user) {
-        _invalidateRoleCache(user.id);
-        supabaseAdmin.from('admin_audit_log').insert({
-          admin_id: user.id, action: 'logout', target_type: 'session', details: {},
-        }).then(null, () => {});
-      }
+      const cookieSecret = process.env.COOKIE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const payload = jwt.verify(token, cookieSecret);
+      if (payload?.sub) _invalidateRoleCache(payload.sub);
     } catch {}
   }
   res.clearCookie('sphynx_admin_session', COOKIE_OPTS);
@@ -103,13 +105,9 @@ router.get('/logout', async (req, res) => {
   const token = req.cookies?.sphynx_admin_session;
   if (token) {
     try {
-      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-      if (user) {
-        _invalidateRoleCache(user.id);
-        supabaseAdmin.from('admin_audit_log').insert({
-          admin_id: user.id, action: 'logout', target_type: 'session', details: {},
-        }).then(null, () => {});
-      }
+      const cookieSecret = process.env.COOKIE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const payload = jwt.verify(token, cookieSecret);
+      if (payload?.sub) _invalidateRoleCache(payload.sub);
     } catch {}
   }
   res.clearCookie('sphynx_admin_session', COOKIE_OPTS);
