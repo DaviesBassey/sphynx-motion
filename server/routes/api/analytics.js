@@ -42,7 +42,7 @@ router.get('/viewership', async (req, res) => {
   const from = new Date(Date.now() - days * 86400000).toISOString();
 
   const { data, error } = await supabaseAdmin
-    .from('view_events')
+    .from('view_events_combined')
     .select('created_at')
     .gte('created_at', from)
     .order('created_at');
