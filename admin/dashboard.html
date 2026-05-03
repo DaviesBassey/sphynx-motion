@@ -143,7 +143,8 @@
     /* ── RESPONSIVE ── */
     @media (max-width:768px) {
       .sidebar { width:60px; }
-      .sb-logo-text, .sb-role, .sb-section, .nav-item span, .sb-user, .btn-logout { display:none; }
+      .sb-logo-text, .sb-role, .sb-section, .nav-item span, .sb-user, .btn-logout-label { display:none; }
+      .btn-logout { padding:10px; font-size:16px; }
       .nav-item { justify-content:center; padding:12px; }
       .nav-badge { display:none; }
       .page { padding:16px; }
@@ -190,7 +191,7 @@
     <div class="sb-footer">
       <div class="sb-user">Signed in as<br><strong id="sbUser">—</strong></div>
       <a href="/" style="display:block;text-align:center;font-size:11px;color:var(--text-dim);text-decoration:none;padding:6px;border-radius:6px;margin-bottom:6px;transition:color .15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-dim)'">← Public App</a>
-      <button class="btn-logout" onclick="logout()">Sign Out</button>
+      <button class="btn-logout" onclick="logout()"><span class="btn-logout-icon">⏻</span><span class="btn-logout-label"> Sign Out</span></button>
     </div>
   </nav>
 
