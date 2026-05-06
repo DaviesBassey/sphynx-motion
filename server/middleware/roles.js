@@ -12,7 +12,7 @@ function requireRole(minimumRole) {
     if (userLevel >= requiredLevel) return next();
 
     // User is logged in but doesn't have the right role
-    if (req.path.startsWith('/api/')) {
+    if (req.originalUrl.startsWith('/api/')) {
       return res.status(403).json({
         error: 'Insufficient permissions',
         required: minimumRole,

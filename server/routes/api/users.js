@@ -4,8 +4,11 @@ const { requireRole } = require('../../middleware/roles');
 const { _invalidateRoleCache } = require('../../middleware/auth');
 
 const router = express.Router();
-const audit = (adminId, action, targetId, details) =>
-  supabaseAdmin.from('admin_audit_log').insert({ admin_id: adminId, action, target_type: 'user', target_id: String(targetId), details });
+function audit(adminId, action, targetId, details) {
+  supabaseAdmin.from('admin_audit_log')
+    .insert({ admin_id: adminId, action, target_type: 'user', target_id: String(targetId), details })
+    .then(null, err => console.error('[audit]', err));
+}
 
 // GET /api/admin/users
 router.get('/', async (req, res) => {
@@ -66,7 +69,7 @@ router.patch('/:id/role', requireRole('superadmin'), async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
 
   _invalidateRoleCache(req.params.id);
-  await audit(req.user.id, `set_role_${role}`, req.params.id, { previous_role: data.role, new_role: role });
+  audit(req.user.id, `set_role_${role}`, req.params.id, { previous_role: data.role, new_role: role });
   res.json({ user: data });
 });
 
@@ -83,7 +86,7 @@ router.post('/:id/suspend', requireRole('admin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'suspend_user', req.params.id, { reason });
+  audit(req.user.id, 'suspend_user', req.params.id, { reason });
   res.json({ success: true, user: data });
 });
 
@@ -98,7 +101,7 @@ router.post('/:id/unsuspend', requireRole('admin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'unsuspend_user', req.params.id, {});
+  audit(req.user.id, 'unsuspend_user', req.params.id, {});
   res.json({ success: true, user: data });
 });
 
@@ -111,7 +114,7 @@ router.delete('/:id', requireRole('superadmin'), async (req, res) => {
   const { error } = await supabaseAdmin.auth.admin.deleteUser(req.params.id);
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'delete_user', req.params.id, {});
+  audit(req.user.id, 'delete_user', req.params.id, {});
   res.json({ success: true });
 });
 

@@ -1004,8 +1004,29 @@ async function loadAnalytics() {
 
 // ── AUDIT LOG ──────────────────────────────────────────────────────────────────
 async function loadAuditLog() {
-  toast('Audit log requires superadmin + Supabase RLS access', 'ok');
-  document.getElementById('auditTable').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">Connect Supabase to view audit log</td></tr>';
+  const tbody = document.getElementById('auditTable');
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">Loading…</td></tr>';
+  try {
+    const data = await api('GET', '/api/admin/analytics/audit-log?limit=50');
+    const entries = data.entries || [];
+    if (!entries.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">No audit entries yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = entries.map(e => {
+      const who    = e.profiles?.display_name || e.profiles?.email || (e.admin_id || '').slice(0,8);
+      const target = e.target_type ? `${e.target_type}${e.target_id ? ' · ' + e.target_id.slice(0,8) : ''}` : '—';
+      const when   = new Date(e.created_at).toLocaleString();
+      return `<tr>
+        <td>${who}</td>
+        <td><code style="font-size:11px;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px">${e.action}</code></td>
+        <td style="font-size:12px;color:var(--text-faint)">${target}</td>
+        <td style="font-size:12px;white-space:nowrap">${when}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">Error: ${e.message}</td></tr>`;
+  }
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────────

@@ -3,8 +3,11 @@ const { supabaseAdmin } = require('../../lib/supabase');
 const { requireRole } = require('../../middleware/roles');
 
 const router = express.Router();
-const audit = (adminId, action, targetId, details) =>
-  supabaseAdmin.from('admin_audit_log').insert({ admin_id: adminId, action, target_type: 'moderation', target_id: String(targetId), details });
+function audit(adminId, action, targetId, details) {
+  supabaseAdmin.from('admin_audit_log')
+    .insert({ admin_id: adminId, action, target_type: 'moderation', target_id: String(targetId), details })
+    .then(null, err => console.error('[audit]', err));
+}
 
 // GET /api/admin/moderation  — queue of pending items
 router.get('/', async (req, res) => {
@@ -80,7 +83,7 @@ router.post('/:id/action', requireRole('admin'), async (req, res) => {
     // TODO: send rejection notification via Supabase Edge Function or Resend/Postmark
   }
 
-  await audit(req.user.id, `moderation_${action}`, req.params.id, { submission_type: item.submission_type, reason });
+  audit(req.user.id, `moderation_${action}`, req.params.id, { submission_type: item.submission_type, reason });
   res.json({ item: data });
 });
 
@@ -109,7 +112,7 @@ router.post('/reports/:id/action', requireRole('admin'), async (req, res) => {
     await supabaseAdmin.from('profiles').update({ is_suspended: true, suspension_reason: `Content violation: ${report.reason}` }).eq('id', report.reported_user_id);
   }
 
-  await audit(req.user.id, `report_${action}`, req.params.id, { reason: report.reason });
+  audit(req.user.id, `report_${action}`, req.params.id, { reason: report.reason });
   res.json({ success: true });
 });
 

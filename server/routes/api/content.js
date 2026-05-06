@@ -3,8 +3,11 @@ const { supabaseAdmin } = require('../../lib/supabase');
 const { requireRole } = require('../../middleware/roles');
 
 const router = express.Router();
-const audit = (adminId, action, targetType, targetId, details) =>
-  supabaseAdmin.from('admin_audit_log').insert({ admin_id: adminId, action, target_type: targetType, target_id: String(targetId), details });
+function audit(adminId, action, targetType, targetId, details) {
+  supabaseAdmin.from('admin_audit_log')
+    .insert({ admin_id: adminId, action, target_type: targetType, target_id: String(targetId), details })
+    .then(null, err => console.error('[audit]', err));
+}
 
 // ── SERIES ────────────────────────────────────────────────────────────────────
 
@@ -47,7 +50,7 @@ router.post('/series', requireRole('admin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'create_series', 'series', data.id, { title });
+  audit(req.user.id, 'create_series', 'series', data.id, { title });
   res.status(201).json({ series: data });
 });
 
@@ -65,7 +68,7 @@ router.put('/series/:id', requireRole('admin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'update_series', 'series', req.params.id, updates);
+  audit(req.user.id, 'update_series', 'series', req.params.id, updates);
   res.json({ series: data });
 });
 
@@ -74,7 +77,7 @@ router.delete('/series/:id', requireRole('superadmin'), async (req, res) => {
   const { error } = await supabaseAdmin.from('series').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'delete_series', 'series', req.params.id, {});
+  audit(req.user.id, 'delete_series', 'series', req.params.id, {});
   res.json({ success: true });
 });
 
@@ -122,7 +125,7 @@ router.post('/episodes', requireRole('admin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'create_episode', 'episode', data.id, { series_id, episode_number, title });
+  audit(req.user.id, 'create_episode', 'episode', data.id, { series_id, episode_number, title });
   res.status(201).json({ episode: data });
 });
 
@@ -141,7 +144,7 @@ router.put('/episodes/:id', requireRole('admin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'update_episode', 'episode', req.params.id, updates);
+  audit(req.user.id, 'update_episode', 'episode', req.params.id, updates);
   res.json({ episode: data });
 });
 
@@ -150,7 +153,7 @@ router.delete('/episodes/:id', requireRole('admin'), async (req, res) => {
   const { error } = await supabaseAdmin.from('episodes').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
 
-  await audit(req.user.id, 'delete_episode', 'episode', req.params.id, {});
+  audit(req.user.id, 'delete_episode', 'episode', req.params.id, {});
   res.json({ success: true });
 });
 

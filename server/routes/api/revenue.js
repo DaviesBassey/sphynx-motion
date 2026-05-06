@@ -88,10 +88,10 @@ router.post('/payouts/:id/process', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await supabaseAdmin.from('admin_audit_log').insert({
+  supabaseAdmin.from('admin_audit_log').insert({
     admin_id: req.user.id, action: 'process_payout', target_type: 'payout',
     target_id: req.params.id, details: { reference, amount: data.amount },
-  });
+  }).then(null, err => console.error('[audit]', err));
 
   res.json({ payout: data });
 });

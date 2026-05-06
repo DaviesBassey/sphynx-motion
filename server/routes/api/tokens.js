@@ -61,10 +61,10 @@ router.post('/grant', requireRole('admin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await supabaseAdmin.from('admin_audit_log').insert({
+  supabaseAdmin.from('admin_audit_log').insert({
     admin_id: req.user.id, action: 'grant_tokens', target_type: 'user',
     target_id: user_id, details: { amount, reason },
-  });
+  }).then(null, err => console.error('[audit]', err));
 
   res.json({ success: true, new_balance: data });
 });
@@ -86,10 +86,10 @@ router.post('/deduct', requireRole('superadmin'), async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await supabaseAdmin.from('admin_audit_log').insert({
+  supabaseAdmin.from('admin_audit_log').insert({
     admin_id: req.user.id, action: 'deduct_tokens', target_type: 'user',
     target_id: user_id, details: { amount, reason },
-  });
+  }).then(null, err => console.error('[audit]', err));
 
   res.json({ success: true, new_balance: data });
 });

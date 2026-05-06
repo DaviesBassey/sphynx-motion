@@ -41,10 +41,10 @@ router.patch('/', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  await supabaseAdmin.from('admin_audit_log').insert({
+  supabaseAdmin.from('admin_audit_log').insert({
     admin_id: req.user.id, action: 'update_settings', target_type: 'platform',
     target_id: 'platform_settings', details: updates,
-  });
+  }).then(null, err => console.error('[audit]', err));
 
   res.json({ success: true });
 });

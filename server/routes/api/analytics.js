@@ -1,5 +1,6 @@
 const express = require('express');
 const { supabaseAdmin } = require('../../lib/supabase');
+const { requireRole } = require('../../middleware/roles');
 
 const router = express.Router();
 
@@ -74,6 +75,22 @@ router.get('/conversions', async (req, res) => {
     paidUsers:      paidUsers.count  || 0,
     conversionRate: Number(conversionRate),
   });
+});
+
+// GET /api/admin/analytics/audit-log  (superadmin only)
+router.get('/audit-log', requireRole('superadmin'), async (req, res) => {
+  const pageNum  = Math.max(1, Number(req.query.page)  || 1);
+  const limitNum = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+  const offset   = (pageNum - 1) * limitNum;
+
+  const { data, error, count } = await supabaseAdmin
+    .from('admin_audit_log')
+    .select('id, action, target_type, target_id, details, created_at, profiles!admin_id(display_name, email)', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limitNum - 1);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ entries: data || [], total: count || 0, page: pageNum, limit: limitNum });
 });
 
 module.exports = router;
