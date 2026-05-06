@@ -1146,8 +1146,46 @@ async function inlinePosterUpload(input, urlInputId, previewId, statusId) {
 }
 
 // ── CSV EXPORT (stub) ──────────────────────────────────────────────────────────
-function exportCSV(type) {
-  toast(`CSV export for ${type} — connect to backend export endpoint`, 'ok');
+async function exportCSV(type) {
+  if (type !== 'users') { toast('Export not available for this section', 'ok'); return; }
+
+  toast('Preparing export…', 'ok');
+  try {
+    // Fetch all users in batches (limit 200 per page)
+    let all = [], page = 1, total = Infinity;
+    while (all.length < total) {
+      const data = await api('GET', `/api/admin/users?page=${page}&limit=200`);
+      total = data.total || 0;
+      all   = all.concat(data.users || []);
+      if (!data.users?.length) break;
+      page++;
+    }
+
+    const headers = ['ID','Display Name','Email','Role','Soul Balance','Subscription','Status','Joined'];
+    const escape  = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows    = all.map(u => [
+      u.id,
+      u.display_name || '',
+      u.email        || '',
+      u.role         || '',
+      u.soul_balance ?? 0,
+      u.subscription_status || '',
+      u.is_suspended ? 'Suspended' : 'Active',
+      u.created_at ? new Date(u.created_at).toISOString().slice(0,10) : '',
+    ].map(escape).join(','));
+
+    const csv  = [headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `sphynx-users-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`Exported ${all.length} users ✓`, 'ok');
+  } catch (e) {
+    toast('Export failed: ' + e.message, 'error');
+  }
 }
 
 // ── MODAL TEMPLATES ───────────────────────────────────────────────────────────
