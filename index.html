@@ -6,15 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SPHYNX MOTION">
+<meta name="apple-mobile-web-app-title" content="SphynxPlay">
 <meta name="theme-color" content="#08080A">
-<meta name="description" content="SPHYNX MOTION — African vertical drama streaming. Stories That Watch Back.">
-<meta property="og:title" content="SPHYNX MOTION">
-<meta property="og:description" content="Stories That Watch Back. African vertical drama streaming on SPHYNX MOTION.">
+<meta name="description" content="SphynxPlay — African vertical drama streaming. Stories That Watch Back.">
+<meta property="og:title" content="SphynxPlay">
+<meta property="og:description" content="Stories That Watch Back. African vertical drama streaming on SphynxPlay.">
 <meta property="og:image" content="assets/posters/image-11.jpg">
 <meta property="og:type" content="website">
-<title>SPHYNX MOTION</title>
-<link rel="icon" type="image/png" href="SPHYNX_MOTION_FAV.png">
+<title>SphynxPlay</title>
+<link rel="icon" type="image/png" href="SPHYNXPLAY_FAV.png">
 <link rel="apple-touch-icon" href="App_Cvr_Art.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,8 +59,8 @@ window._track = function(event, props) {
   s.onload = function() {
     Sentry.init({
       dsn:         SENTRY_DSN,
-      release:     'sphynx-motion@1.0.0',
-      environment: location.hostname === 'app.sphynxmotion.com' ? 'production' : 'development',
+      release:     'sphynxplay@1.0.0',
+      environment: location.hostname === 'app.sphynxplay.com' ? 'production' : 'development',
       // Never send sensitive fields
       beforeSend: function(event) {
         if (event.request) delete event.request.cookies;
@@ -1164,7 +1164,7 @@ body::after {
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
-/* Exact SPHYNX MOTION white logo image */
+/* Exact SphynxPlay white logo image */
 .splash-logo-img {
   width: 220px;
   height: auto;
@@ -2168,7 +2168,7 @@ svg defs { position: absolute; width: 0; height: 0; }
     <div class="splash-sides"></div>
 
     <div class="splash-logo">
-      <img class="splash-logo-img" src="SPHYNX_LOGO_WHITE.png" alt="SPHYNX MOTION">
+      <img class="splash-logo-img" src="SPHYNXPLAY_LOGO_WHITE.png" alt="SphynxPlay">
       <div class="splash-tagline">Stories That Watch Back</div>
     </div>
 
@@ -2357,8 +2357,8 @@ svg defs { position: absolute; width: 0; height: 0; }
       <div class="member-get-app" style="margin:16px 16px 0;padding:16px;background:var(--surface2);border-radius:16px;text-align:center">
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Get the App</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button onclick="window.open('https://www.sphynxmotion.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <span style="font-size:14px">🌐</span> sphynxmotion.com
+          <button onclick="window.open('https://www.sphynxplay.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">🌐</span> sphynxplay.com
           </button>
           <button onclick="installPWA()" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
             <span style="font-size:14px">📲</span> Add to Home Screen
@@ -2580,7 +2580,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 
       <!-- Version / secret admin access -->
       <div style="text-align:center;padding:20px 0 8px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.06em" id="versionTap" onclick="handleVersionTap()">
-        SPHYNX MOTION v1.0.0
+        SphynxPlay v1.0.0
       </div>
 
       <div style="height:20px"></div>
@@ -2630,7 +2630,7 @@ svg defs { position: absolute; width: 0; height: 0; }
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       </button>
       <div class="vp-title-block">
-        <div class="vp-series-name" id="videoTitle">SPHYNX MOTION<span id="vpAgeRating" class="age-badge" style="display:none"></span></div>
+        <div class="vp-series-name" id="videoTitle">SphynxPlay<span id="vpAgeRating" class="age-badge" style="display:none"></span></div>
         <div class="vp-ep-label-top" id="videoEp"></div>
       </div>
       <div class="vp-ep-counter" id="vpEpCounter" style="display:none"></div>
@@ -3224,7 +3224,7 @@ function fyBookmark(el, seriesId) {
 function fyShare() {
   const url = window.location.href;
   if (navigator.share) {
-    navigator.share({ title: 'SPHYNX MOTION', url }).catch(() => {});
+    navigator.share({ title: 'SphynxPlay', url }).catch(() => {});
   } else {
     navigator.clipboard.writeText(url).then(() => toast('📋 Link copied!', 'success')).catch(() => toast('📋 Copied!', 'success'));
   }
@@ -3334,14 +3334,14 @@ const modalContent = {
     <div style="text-align:center;padding:10px 0">
       <div style="font-size:36px;margin-bottom:10px">🎬</div>
       <div class="modal-title">Coming Soon</div>
-      <div class="modal-sub">This feature is in production. Stay tuned for the next SPHYNX MOTION update.</div>
+      <div class="modal-sub">This feature is in production. Stay tuned for the next SphynxPlay update.</div>
     </div>
   `,
   'app-coming': `
     <div style="text-align:center;padding:10px 0">
       <div style="font-size:36px;margin-bottom:12px">📲</div>
       <div class="modal-title">Get the App</div>
-      <div class="modal-sub" style="margin-bottom:16px">Install SPHYNX MOTION on your home screen for the full experience — offline access, push notifications, and full-screen mode.</div>
+      <div class="modal-sub" style="margin-bottom:16px">Install SphynxPlay on your home screen for the full experience — offline access, push notifications, and full-screen mode.</div>
       <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.15);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-dim);line-height:1.8;text-align:left">
         ✓ Works offline<br>
         ✓ Push notifications<br>
@@ -3368,7 +3368,7 @@ const modalContent = {
       </div>
     </div>
     <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
-      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SPHYNX MOTION v1.1</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SphynxPlay v1.1</div>
       <div style="font-size:11px;color:var(--text-faint);line-height:1.6">Soul Pass subscriptions are processed securely<br>through Apple In-App Purchase.</div>
     </div>
     <button class="btn-generate" onclick="closeModal()">Got It</button>
@@ -3390,7 +3390,7 @@ const modalContent = {
         </div>
       </div>
       <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SPHYNX MOTION v1.1</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SphynxPlay v1.1</div>
         <div style="font-size:11px;color:var(--text-faint);line-height:1.6">Soul Token purchases are processed securely<br>through Apple In-App Purchase.</div>
       </div>
       <button class="btn-generate" onclick="closeModal()">Got It</button>
@@ -3419,7 +3419,7 @@ const modalContent = {
         </div>
       </div>
       <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SPHYNX MOTION v1.1</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Available on SphynxPlay v1.1</div>
         <div style="font-size:11px;color:var(--text-faint);line-height:1.6">Soul Pass subscriptions are processed securely<br>through Apple In-App Purchase.</div>
       </div>
       <button class="btn-generate" onclick="closeModal()">Got It</button>
@@ -3452,7 +3452,7 @@ const modalContent = {
     <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-faint)">Secure payment · Cancel anytime · All major cards accepted</div>
   `,
   'login': `
-    <div class="modal-title">Log in to SPHYNX MOTION</div>
+    <div class="modal-title">Log in to SphynxPlay</div>
     <div class="modal-sub">Sign in to sync your Soul Score, history, and memberships across devices.</div>
     <div id="loginError" style="display:none;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:10px;padding:10px 12px;font-size:12px;color:#FF453A;margin-bottom:12px"></div>
     <input id="loginEmail" type="email" placeholder="Email" autocomplete="email"
@@ -3470,7 +3470,7 @@ const modalContent = {
   `,
   'signup': `
     <div class="modal-title">Create Account</div>
-    <div class="modal-sub">Join SPHYNX MOTION — Africa's vertical drama platform.</div>
+    <div class="modal-sub">Join SphynxPlay — Africa's vertical drama platform.</div>
     <div id="signupError" style="display:none;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:10px;padding:10px 12px;font-size:12px;color:#FF453A;margin-bottom:12px"></div>
     <input id="signupName" type="text" placeholder="Display name" autocomplete="name"
       style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
@@ -3528,11 +3528,11 @@ const modalContent = {
   },
   'privacy': `
     <div class="modal-title">Privacy Policy</div>
-    <div class="modal-sub" style="margin-bottom:14px">Effective: 21 April 2026 · SPHYNX MOTION (Pty) Ltd · POPIA &amp; GDPR</div>
+    <div class="modal-sub" style="margin-bottom:14px">Effective: 21 April 2026 · SphynxPlay (Pty) Ltd · POPIA &amp; GDPR</div>
     <div style="font-size:12px;color:var(--text-dim);line-height:1.85;padding-right:6px">
 
       <strong style="color:var(--text)">1. Overview</strong><br>
-      SPHYNX MOTION (Pty) Ltd operates the SPHYNX MOTION streaming platform. This policy describes how we collect, use, and protect your personal information. By using the Service you agree to this policy.<br><br>
+      SphynxPlay (Pty) Ltd operates the SphynxPlay streaming platform. This policy describes how we collect, use, and protect your personal information. By using the Service you agree to this policy.<br><br>
 
       <strong style="color:var(--text)">2. Information We Collect</strong><br>
       <em style="color:var(--text-dim)">You provide:</em> name, email, password, profile photo, payment details (processed by Apple / Google — we never store card numbers).<br>
@@ -3557,11 +3557,11 @@ const modalContent = {
       Soul Tokens are a virtual in-app currency with no monetary value. Purchased via Apple IAP or Google Play Billing. Non-refundable except where required by applicable platform policy.<br><br>
 
       <strong style="color:var(--text)">9. Children's Privacy</strong><br>
-      Service is intended for users 16+. We do not knowingly collect data from under-16s. Contact privacy@sphynxmotion.com to request deletion of a child's data.<br><br>
+      Service is intended for users 16+. We do not knowingly collect data from under-16s. Contact privacy@sphynxplay.com to request deletion of a child's data.<br><br>
 
       <strong style="color:var(--text)">10. Your Rights</strong><br>
       Access · Correction · Deletion · Restriction · Portability · Object to processing · Opt out of marketing · Lodge a complaint with the Information Regulator of South Africa.<br>
-      To delete your account: Profile → Settings → Delete Account, or email privacy@sphynxmotion.com.<br><br>
+      To delete your account: Profile → Settings → Delete Account, or email privacy@sphynxplay.com.<br><br>
 
       <strong style="color:var(--text)">11. International Transfers</strong><br>
       Data may be processed by providers outside South Africa. Appropriate safeguards (standard contractual clauses) are in place.<br><br>
@@ -3570,21 +3570,21 @@ const modalContent = {
       Material changes are notified by email and in-app. Continued use constitutes acceptance.<br><br>
 
       <strong style="color:var(--text)">13. Contact</strong><br>
-      <span style="color:var(--red)">privacy@sphynxmotion.com</span> · info@sphynxmotion.com<br>
-      SPHYNX MOTION (Pty) Ltd · South Africa — we aim to respond within 5 business days.
+      <span style="color:var(--red)">privacy@sphynxplay.com</span> · info@sphynxplay.com<br>
+      SphynxPlay (Pty) Ltd · South Africa — we aim to respond within 5 business days.
     </div>
     <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">I Understand →</button>
   `,
 
   'terms': `
     <div class="modal-title">Terms of Use</div>
-    <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SPHYNX MOTION (Pty) Ltd</div>
+    <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SphynxPlay (Pty) Ltd</div>
     <div style="font-size:12px;color:var(--text-dim);line-height:1.8;padding-right:4px">
-      <strong style="color:var(--text)">1. Acceptance</strong><br>By accessing SPHYNX MOTION you agree to these Terms. If you do not agree, do not use the platform.<br><br>
+      <strong style="color:var(--text)">1. Acceptance</strong><br>By accessing SphynxPlay you agree to these Terms. If you do not agree, do not use the platform.<br><br>
       <strong style="color:var(--text)">2. Eligibility</strong><br>You must be 16 years or older to use this service. Users under 18 require parental consent.<br><br>
       <strong style="color:var(--text)">3. Account Responsibility</strong><br>You are responsible for all activity under your account. Do not share credentials. Notify us immediately of any unauthorised access.<br><br>
       <strong style="color:var(--text)">4. Soul Tokens</strong><br>Soul Tokens are a virtual in-app currency with no cash value. They are non-transferable, non-refundable, and expire if your account is closed.<br><br>
-      <strong style="color:var(--text)">5. Content</strong><br>All content on SPHYNX MOTION is protected by copyright. You may not reproduce, redistribute, or resell any content.<br><br>
+      <strong style="color:var(--text)">5. Content</strong><br>All content on SphynxPlay is protected by copyright. You may not reproduce, redistribute, or resell any content.<br><br>
       <strong style="color:var(--text)">6. User Conduct</strong><br>You agree not to upload harmful, illegal, or infringing content. We reserve the right to remove content and suspend accounts.<br><br>
       <strong style="color:var(--text)">7. Termination</strong><br>We may terminate or suspend your account at any time for violation of these Terms.<br><br>
       <strong style="color:var(--text)">8. Governing Law</strong><br>These Terms are governed by the laws of the Republic of South Africa.
@@ -3596,10 +3596,10 @@ const modalContent = {
     <div class="modal-sub">We're here to help. Reach us through any of the channels below.</div>
     <div style="margin-bottom:14px">
       ${[
-        ['📧','Email Support','support@sphynxmotion.com','mailto:support@sphynxmotion.com'],
-        ['🌐','Website','www.sphynxmotion.com','https://www.sphynxmotion.com'],
-        ['📱','Instagram','@sphynxmotion','https://www.sphynxmotion.com'],
-        ['❓','FAQ','Browse common questions','https://www.sphynxmotion.com'],
+        ['📧','Email Support','support@sphynxplay.com','mailto:support@sphynxplay.com'],
+        ['🌐','Website','www.sphynxplay.com','https://www.sphynxplay.com'],
+        ['📱','Instagram','@sphynxplay','https://www.sphynxplay.com'],
+        ['❓','FAQ','Browse common questions','https://www.sphynxplay.com'],
       ].map(([icon,label,value,href]) => `
         <div onclick="window.open('${href}','_system')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">
           <div style="font-size:20px;width:32px;text-align:center">${icon}</div>
@@ -3614,7 +3614,7 @@ const modalContent = {
   `,
   'content-policy': `
     <div class="modal-title">Content Policy</div>
-    <div class="modal-sub">SPHYNX MOTION is committed to a safe, inclusive viewing experience.</div>
+    <div class="modal-sub">SphynxPlay is committed to a safe, inclusive viewing experience.</div>
     <div style="font-size:12px;color:var(--text-dim);line-height:1.8">
       <strong style="color:var(--text)">Prohibited Content</strong><br>
       We do not permit content that includes hate speech, graphic violence, sexual exploitation, harassment, misinformation, or content that endangers minors.<br><br>
@@ -3625,7 +3625,7 @@ const modalContent = {
       <strong style="color:var(--text)">Reporting</strong><br>
       Use the Report button on any content card to flag violations. Our team responds within 24 hours.<br><br>
       <strong style="color:var(--text)">Appeals</strong><br>
-      Creators may appeal content removal decisions by emailing support@sphynxmotion.com.
+      Creators may appeal content removal decisions by emailing support@sphynxplay.com.
     </div>
     <button class="btn-generate" style="margin-top:14px" onclick="closeModal()">Got It →</button>
   `,
@@ -3647,7 +3647,7 @@ const modalContent = {
       </div>
       <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.2);border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--text-dim);line-height:1.6">
         Signed in as <strong style="color:var(--text)">${_currentUser?.email || 'your account'}</strong>.<br>
-        You may request a copy of your data first by emailing <span style="color:var(--text)">support@sphynxmotion.com</span>.<br>
+        You may request a copy of your data first by emailing <span style="color:var(--text)">support@sphynxplay.com</span>.<br>
         Deletion is processed within 30 days.
       </div>
       <button class="btn-generate" style="background:var(--surface2);color:var(--text-dim);margin-bottom:8px" onclick="closeModal()">Cancel — Keep My Account</button>
@@ -3676,10 +3676,10 @@ const modalContent = {
   `,
   'soul-terms': `
     <div class="modal-title">Soul Token Terms</div>
-    <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SPHYNX MOTION (Pty) Ltd</div>
+    <div class="modal-sub" style="margin-bottom:14px">Effective: 1 April 2025 · SphynxPlay (Pty) Ltd</div>
     <div style="font-size:12px;color:var(--text-dim);line-height:1.8;padding-right:4px">
       <strong style="color:var(--text)">1. What are Soul Tokens?</strong><br>
-      Soul Tokens are a virtual in-app currency used exclusively within the SPHYNX MOTION platform. They hold no monetary value and cannot be exchanged for cash or transferred between accounts.<br><br>
+      Soul Tokens are a virtual in-app currency used exclusively within the SphynxPlay platform. They hold no monetary value and cannot be exchanged for cash or transferred between accounts.<br><br>
       <strong style="color:var(--text)">2. Earning Soul Tokens</strong><br>
       Tokens are earned through daily logins, watching episodes, sharing series, and completing platform challenges. Bonus tokens are awarded to Soul Pass members.<br><br>
       <strong style="color:var(--text)">3. Spending Soul Tokens</strong><br>
@@ -4260,7 +4260,7 @@ async function signupUser() {
     if (needsConfirm) {
       toast('Account created! Check your email to confirm, then log in.', 'success');
     } else {
-      toast('Welcome to SPHYNX MOTION!', 'success');
+      toast('Welcome to SphynxPlay!', 'success');
     }
   } catch (e) {
     if (errEl) {
@@ -4473,11 +4473,11 @@ function vpToggleWatchlist() {
 }
 
 function vpShare() {
-  const title = document.getElementById('videoTitle')?.textContent || 'SPHYNX MOTION';
+  const title = document.getElementById('videoTitle')?.textContent || 'SphynxPlay';
   const ep    = document.getElementById('videoEp')?.textContent || '';
   const url   = window.location.origin;
   if (navigator.share) {
-    navigator.share({ title: title + (ep ? ' · ' + ep : ''), text: 'Watch on SPHYNX MOTION', url }).catch(() => {});
+    navigator.share({ title: title + (ep ? ' · ' + ep : ''), text: 'Watch on SphynxPlay', url }).catch(() => {});
   } else {
     navigator.clipboard?.writeText(url).then(() => toast('Link copied!')).catch(() => {});
   }
@@ -4577,7 +4577,7 @@ async function playSeries(seriesId) {
     if (series?.language) _lastWatchedLang  = series.language;
     _track('series_view', { series_id: seriesId, title: series?.title, genre: series?.genre });
 
-    document.getElementById('videoTitle').textContent = series?.title || 'SPHYNX MOTION';
+    document.getElementById('videoTitle').textContent = series?.title || 'SphynxPlay';
     const _ageEl = document.getElementById('vpAgeRating');
     if (_ageEl) { _ageEl.textContent = series?.age_rating || ''; _ageEl.style.display = series?.age_rating ? '' : 'none'; }
 
@@ -5302,10 +5302,10 @@ function _submitPayfastForm(data) {
 
 <!-- PWA Install Banner -->
 <div id="installBanner">
-  <img src="SPHYNX_MOTION_FAV.png" class="ib-icon" alt="">
+  <img src="SPHYNXPLAY_FAV.png" class="ib-icon" alt="">
   <div class="ib-text">
     <div class="ib-title">Add to Home Screen</div>
-    <div class="ib-sub">Install for the best SPHYNX MOTION experience</div>
+    <div class="ib-sub">Install for the best SphynxPlay experience</div>
   </div>
   <button class="ib-btn" onclick="installPWA()">Install</button>
   <button class="ib-dismiss" onclick="dismissInstallBanner()">✕</button>

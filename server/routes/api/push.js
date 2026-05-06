@@ -1,5 +1,5 @@
 /**
- * SPHYNX MOTION · Push Notifications
+ * SphynxPlay · Push Notifications
  *
  * POST /api/push/subscribe    — save a Web Push subscription (authenticated)
  * DELETE /api/push/subscribe  — remove subscription
@@ -16,7 +16,7 @@ const router = express.Router();
 function initWebpush() {
   if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     webpush.setVapidDetails(
-      `mailto:${process.env.VAPID_EMAIL || 'admin@sphynxmotion.com'}`,
+      `mailto:${process.env.VAPID_EMAIL || 'admin@sphynxplay.com'}`,
       process.env.VAPID_PUBLIC_KEY,
       process.env.VAPID_PRIVATE_KEY,
     );

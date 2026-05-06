@@ -1,4 +1,4 @@
-# SPHYNX MOTION — Production Setup Guide
+# SphynxPlay — Production Setup Guide
 
 ## Prerequisites
 - [Supabase](https://supabase.com) account (free)
@@ -11,7 +11,7 @@
 ## Step 1 — Create your Supabase project
 
 1. Go to https://supabase.com → **New project**
-2. Name: `sphynx-motion`, region: **Europe West (Frankfurt)**
+2. Name: `sphynxplay`, region: **Europe West (Frankfurt)**
 3. Wait ~2 minutes for spin-up
 4. **Project Settings → API** — copy these three values into `server/.env`:
    - `SUPABASE_URL`
@@ -93,7 +93,7 @@ npm start
 
 | URL | What it serves |
 |-----|----------------|
-| `http://localhost:3000/` | Public SPHYNX MOTION app |
+| `http://localhost:3000/` | Public SphynxPlay app |
 | `http://localhost:3000/admin/login` | Admin login |
 | `http://localhost:3000/admin/dashboard` | Admin dashboard |
 
@@ -105,7 +105,7 @@ npm start
 2. Go to https://railway.app → **New Project → Deploy from GitHub**
 3. Select your repo — Railway auto-detects `railway.toml`
 4. Add environment variables in Railway dashboard (same as `server/.env`)
-5. Set `PUBLIC_ORIGIN` to your Railway domain (e.g. `https://sphynx-motion.up.railway.app`)
+5. Set `PUBLIC_ORIGIN` to your Railway domain (e.g. `https://sphynxplay.up.railway.app`)
 6. Update `MUX_WEBHOOK_SECRET` webhook URL to your Railway domain
 
 ## Deploy to Render
@@ -119,8 +119,8 @@ npm start
 ## Deploy with Docker
 
 ```bash
-docker build -t sphynx-motion .
-docker run -p 3000:3000 --env-file server/.env sphynx-motion
+docker build -t sphynxplay .
+docker run -p 3000:3000 --env-file server/.env sphynxplay
 ```
 
 ---
@@ -157,7 +157,7 @@ SELECT id, 1, 'The Third Name', true, 'live' FROM public.series WHERE slug = 'go
 npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
 
 # Initialise (run from project root)
-npx cap init "SPHYNX MOTION" com.sphynxmotion.app --web-dir .
+npx cap init "SphynxPlay" com.sphynxplay.app --web-dir .
 
 # Add platforms
 npx cap add ios

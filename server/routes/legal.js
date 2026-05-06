@@ -7,7 +7,7 @@ function page(title, subtitle, body, opts = {}) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${title} — SPHYNX MOTION</title>
+<title>${title} — SphynxPlay</title>
 <meta name="description" content="${subtitle}">
 <meta name="robots" content="index, follow">
 <link rel="icon" type="image/png" href="/SPHYNY_MOTION_FAV.png">
@@ -109,8 +109,8 @@ function page(title, subtitle, body, opts = {}) {
 
 <nav class="nav">
   <a class="nav-logo" href="/">
-    <img src="/SPHYNX_LOGO_WHITE.png" alt="SPHYNX MOTION" onerror="this.style.display='none'">
-    SPHYNX MOTION
+    <img src="/SPHYNXPLAY_LOGO_WHITE.png" alt="SphynxPlay" onerror="this.style.display='none'">
+    SphynxPlay
   </a>
   <div class="nav-links">
     <a href="/privacy">Privacy</a>
@@ -121,7 +121,7 @@ function page(title, subtitle, body, opts = {}) {
 </nav>
 
 <div class="hero">
-  <div class="hero-eyebrow">SPHYNX MOTION (Pty) Ltd</div>
+  <div class="hero-eyebrow">SphynxPlay (Pty) Ltd</div>
   <h1 class="hero-title">${title}</h1>
   <p class="hero-sub">${subtitle}</p>
 </div>
@@ -143,8 +143,8 @@ function page(title, subtitle, body, opts = {}) {
 </div>
 
 <footer class="footer">
-  &copy; 2026 SPHYNX MOTION (Pty) Ltd · South Africa ·
-  <a href="mailto:info@sphynxmotion.com">info@sphynxmotion.com</a>
+  &copy; 2026 SphynxPlay (Pty) Ltd · South Africa ·
+  <a href="mailto:info@sphynxplay.com">info@sphynxplay.com</a>
 </footer>
 
 </body>
@@ -154,12 +154,12 @@ function page(title, subtitle, body, opts = {}) {
 // ── /privacy ──────────────────────────────────────────────────────────────────
 router.get('/privacy', (req, res) => res.send(page(
   'Privacy Policy',
-  'How SPHYNX MOTION collects, uses, and protects your personal information — POPIA & GDPR compliant.',
+  'How SphynxPlay collects, uses, and protects your personal information — POPIA & GDPR compliant.',
   `
-  <p class="effective">Effective: 21 April 2026 &nbsp;·&nbsp; SPHYNX MOTION (Pty) Ltd &nbsp;·&nbsp; Governed by POPIA &amp; GDPR</p>
+  <p class="effective">Effective: 21 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd &nbsp;·&nbsp; Governed by POPIA &amp; GDPR</p>
 
   <h2>1. Who We Are</h2>
-  <p>SPHYNX MOTION (Pty) Ltd operates the SPHYNX MOTION streaming platform — a vertical African drama service available on iOS, Android, and the web. By using the Service you agree to this policy.</p>
+  <p>SphynxPlay (Pty) Ltd operates the SphynxPlay streaming platform — a vertical African drama service available on iOS, Android, and the web. By using the Service you agree to this policy.</p>
 
   <h2>2. Information We Collect</h2>
   <p><strong>You provide:</strong> name, email address, password, profile display name, and payment details. We never store card numbers — payments are processed entirely by Apple (App Store) or Google (Play Store).</p>
@@ -205,10 +205,10 @@ router.get('/privacy', (req, res) => res.send(page(
   <p>You can clear cookies and localStorage in your browser or device settings at any time.</p>
 
   <h2>8. Soul Tokens</h2>
-  <p>Soul Tokens are a virtual in-app currency with no monetary value. Purchases are processed exclusively via Apple IAP or Google Play Billing — not by SPHYNX MOTION directly. Token balances are stored in your account and are non-refundable except as required by applicable platform policy.</p>
+  <p>Soul Tokens are a virtual in-app currency with no monetary value. Purchases are processed exclusively via Apple IAP or Google Play Billing — not by SphynxPlay directly. Token balances are stored in your account and are non-refundable except as required by applicable platform policy.</p>
 
   <h2>9. Children's Privacy</h2>
-  <p>The Service is intended for users aged 16 and older. We do not knowingly collect personal data from children under 16. If you believe a child has registered, contact <a href="mailto:privacy@sphynxmotion.com">privacy@sphynxmotion.com</a> for immediate deletion.</p>
+  <p>The Service is intended for users aged 16 and older. We do not knowingly collect personal data from children under 16. If you believe a child has registered, contact <a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a> for immediate deletion.</p>
 
   <h2>10. Your Rights</h2>
   <p>Under POPIA (South Africa) and GDPR (where applicable) you have the right to:</p>
@@ -221,7 +221,7 @@ router.get('/privacy', (req, res) => res.send(page(
     <li>Opt out of marketing communications</li>
     <li>Lodge a complaint with the Information Regulator of South Africa</li>
   </ul>
-  <p>To delete your account: open the app → Profile → Delete Account. Or email <a href="mailto:privacy@sphynxmotion.com">privacy@sphynxmotion.com</a>.</p>
+  <p>To delete your account: open the app → Profile → Delete Account. Or email <a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a>.</p>
 
   <h2>11. International Data Transfers</h2>
   <p>Your data may be processed by providers outside South Africa. We ensure appropriate safeguards are in place (standard contractual clauses or equivalent) for all such transfers.</p>
@@ -231,9 +231,9 @@ router.get('/privacy', (req, res) => res.send(page(
 
   <h2>13. Contact</h2>
   <div class="contact-grid">
-    <div class="contact-card"><div class="icon">🔒</div><div class="label">Privacy Officer</div><div class="value"><a href="mailto:privacy@sphynxmotion.com">privacy@sphynxmotion.com</a></div></div>
-    <div class="contact-card"><div class="icon">📧</div><div class="label">General</div><div class="value"><a href="mailto:info@sphynxmotion.com">info@sphynxmotion.com</a></div></div>
-    <div class="contact-card"><div class="icon">🏢</div><div class="label">Registered</div><div class="value">SPHYNX MOTION (Pty) Ltd · South Africa</div></div>
+    <div class="contact-card"><div class="icon">🔒</div><div class="label">Privacy Officer</div><div class="value"><a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a></div></div>
+    <div class="contact-card"><div class="icon">📧</div><div class="label">General</div><div class="value"><a href="mailto:info@sphynxplay.com">info@sphynxplay.com</a></div></div>
+    <div class="contact-card"><div class="icon">🏢</div><div class="label">Registered</div><div class="value">SphynxPlay (Pty) Ltd · South Africa</div></div>
   </div>
   <p>We aim to respond to all privacy requests within 5 business days.</p>
   `,
@@ -243,12 +243,12 @@ router.get('/privacy', (req, res) => res.send(page(
 // ── /terms ────────────────────────────────────────────────────────────────────
 router.get('/terms', (req, res) => res.send(page(
   'Terms of Use',
-  'The rules and conditions governing your use of the SPHYNX MOTION platform.',
+  'The rules and conditions governing your use of the SphynxPlay platform.',
   `
-  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SPHYNX MOTION (Pty) Ltd &nbsp;·&nbsp; Republic of South Africa</p>
+  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd &nbsp;·&nbsp; Republic of South Africa</p>
 
   <h2>1. Acceptance</h2>
-  <p>By accessing or using SPHYNX MOTION — on the web, iOS app, or Android app — you agree to be bound by these Terms of Use and our <a href="/privacy">Privacy Policy</a>. If you do not agree, do not use the Service.</p>
+  <p>By accessing or using SphynxPlay — on the web, iOS app, or Android app — you agree to be bound by these Terms of Use and our <a href="/privacy">Privacy Policy</a>. If you do not agree, do not use the Service.</p>
 
   <h2>2. Eligibility</h2>
   <p>You must be at least 16 years old to create an account. Users under 18 must have verifiable parental or guardian consent. By registering, you confirm you meet these requirements.</p>
@@ -257,7 +257,7 @@ router.get('/terms', (req, res) => res.send(page(
   <ul>
     <li>You are solely responsible for all activity under your account</li>
     <li>Keep your password confidential and do not share access</li>
-    <li>Notify us immediately at <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a> if you suspect unauthorised access</li>
+    <li>Notify us immediately at <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> if you suspect unauthorised access</li>
     <li>One account per person — operating multiple accounts may result in suspension</li>
   </ul>
 
@@ -268,7 +268,7 @@ router.get('/terms', (req, res) => res.send(page(
   <p>Soul Tokens are a virtual in-app currency with no monetary value. They are non-transferable, cannot be exchanged for cash, and are forfeited upon account closure or termination. See the full <a href="/soul-token-terms">Soul Token Terms</a>.</p>
 
   <h2>6. Intellectual Property</h2>
-  <p>All content on SPHYNX MOTION — series, episodes, artwork, logos, software, and UI — is the property of SPHYNX MOTION (Pty) Ltd or its licensors and is protected by copyright and intellectual property law. You may not reproduce, redistribute, scrape, or resell any content without express written permission.</p>
+  <p>All content on SphynxPlay — series, episodes, artwork, logos, software, and UI — is the property of SphynxPlay (Pty) Ltd or its licensors and is protected by copyright and intellectual property law. You may not reproduce, redistribute, scrape, or resell any content without express written permission.</p>
 
   <h2>7. Acceptable Use</h2>
   <p>You agree not to:</p>
@@ -282,10 +282,10 @@ router.get('/terms', (req, res) => res.send(page(
   </ul>
 
   <h2>8. Creator Content</h2>
-  <p>If you apply as a creator and submit content, you grant SPHYNX MOTION a worldwide, royalty-free licence to display, distribute, and promote your content within the platform. You retain ownership but warrant that you hold all necessary rights to the submitted material.</p>
+  <p>If you apply as a creator and submit content, you grant SphynxPlay a worldwide, royalty-free licence to display, distribute, and promote your content within the platform. You retain ownership but warrant that you hold all necessary rights to the submitted material.</p>
 
   <h2>9. Termination</h2>
-  <p>We reserve the right to suspend or permanently terminate your account at any time for violation of these Terms, without prior notice. You may delete your account at any time via Profile → Delete Account or by emailing <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a>.</p>
+  <p>We reserve the right to suspend or permanently terminate your account at any time for violation of these Terms, without prior notice. You may delete your account at any time via Profile → Delete Account or by emailing <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a>.</p>
 
   <h2>10. Disclaimer of Warranties</h2>
   <p>The Service is provided "as is" without warranties of any kind. We do not guarantee uninterrupted or error-free access. We are not liable for any indirect, incidental, or consequential damages arising from your use of the Service.</p>
@@ -297,7 +297,7 @@ router.get('/terms', (req, res) => res.send(page(
   <p>We may update these Terms from time to time. Material changes will be notified in-app and by email at least 14 days before taking effect. Continued use after changes constitutes acceptance.</p>
 
   <h2>13. Contact</h2>
-  <p>Questions about these Terms? Email <a href="mailto:legal@sphynxmotion.com">legal@sphynxmotion.com</a> or <a href="mailto:info@sphynxmotion.com">info@sphynxmotion.com</a>.</p>
+  <p>Questions about these Terms? Email <a href="mailto:legal@sphynxplay.com">legal@sphynxplay.com</a> or <a href="mailto:info@sphynxplay.com">info@sphynxplay.com</a>.</p>
   `,
   { active: '/terms' }
 )));
@@ -305,15 +305,15 @@ router.get('/terms', (req, res) => res.send(page(
 // ── /content-policy ───────────────────────────────────────────────────────────
 router.get('/content-policy', (req, res) => res.send(page(
   'Content Policy',
-  'SPHYNX MOTION\'s standards for the content we publish and the behaviour we expect from creators and viewers.',
+  'SphynxPlay\'s standards for the content we publish and the behaviour we expect from creators and viewers.',
   `
-  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SPHYNX MOTION (Pty) Ltd</p>
+  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd</p>
 
   <h2>Our Commitment</h2>
-  <p>SPHYNX MOTION is dedicated to authentic African storytelling. We are committed to maintaining a platform that is safe, inclusive, and respectful for all viewers and creators. This policy describes what content we allow, what we prohibit, and how violations are handled.</p>
+  <p>SphynxPlay is dedicated to authentic African storytelling. We are committed to maintaining a platform that is safe, inclusive, and respectful for all viewers and creators. This policy describes what content we allow, what we prohibit, and how violations are handled.</p>
 
   <h2>Age Ratings</h2>
-  <p>All series on SPHYNX MOTION carry an age rating based on the Film and Publication Board (FPB) classification system:</p>
+  <p>All series on SphynxPlay carry an age rating based on the Film and Publication Board (FPB) classification system:</p>
   <ul>
     <li><strong>All Ages</strong> — Suitable for all viewers</li>
     <li><strong>PG</strong> — Parental guidance recommended</li>
@@ -324,7 +324,7 @@ router.get('/content-policy', (req, res) => res.send(page(
   <p>Content rated 16+ or 18+ is clearly labelled and may be restricted based on account age verification settings.</p>
 
   <h2>Prohibited Content</h2>
-  <p>SPHYNX MOTION will never publish, and will immediately remove, content that:</p>
+  <p>SphynxPlay will never publish, and will immediately remove, content that:</p>
   <ul>
     <li>Contains hate speech targeting race, ethnicity, religion, gender, sexual orientation, disability, or nationality</li>
     <li>Depicts or promotes sexual exploitation or non-consensual acts</li>
@@ -337,20 +337,20 @@ router.get('/content-policy', (req, res) => res.send(page(
   </ul>
 
   <h2>Creator Standards</h2>
-  <p>All creators who submit content to SPHYNX MOTION agree to the following:</p>
+  <p>All creators who submit content to SphynxPlay agree to the following:</p>
   <ul>
     <li>You hold all necessary rights to submitted content (script, performance, music, footage)</li>
     <li>Content has been reviewed against this policy before submission</li>
     <li>Cast and crew were treated lawfully and paid fairly</li>
     <li>Content does not misrepresent real people or events in harmful ways</li>
   </ul>
-  <p>All submissions are reviewed by the SPHYNX MOTION moderation team before going live. We may request edits, apply age ratings, or decline submissions that do not meet our standards.</p>
+  <p>All submissions are reviewed by the SphynxPlay moderation team before going live. We may request edits, apply age ratings, or decline submissions that do not meet our standards.</p>
 
   <h2>Reporting a Violation</h2>
   <p>If you encounter content that you believe violates this policy:</p>
   <ul>
     <li>Tap the <strong>⋯ menu</strong> on any content card and select <strong>Report</strong></li>
-    <li>Or email <a href="mailto:moderation@sphynxmotion.com">moderation@sphynxmotion.com</a> with details</li>
+    <li>Or email <a href="mailto:moderation@sphynxplay.com">moderation@sphynxplay.com</a> with details</li>
   </ul>
   <p>Our moderation team reviews all reports within 24 hours on business days.</p>
 
@@ -365,10 +365,10 @@ router.get('/content-policy', (req, res) => res.send(page(
   </ul>
 
   <h2>Appeals</h2>
-  <p>Creators whose content has been removed may appeal the decision by emailing <a href="mailto:moderation@sphynxmotion.com">moderation@sphynxmotion.com</a> within 14 days of the removal. Include your account email and the name of the affected content. We aim to respond to appeals within 5 business days.</p>
+  <p>Creators whose content has been removed may appeal the decision by emailing <a href="mailto:moderation@sphynxplay.com">moderation@sphynxplay.com</a> within 14 days of the removal. Include your account email and the name of the affected content. We aim to respond to appeals within 5 business days.</p>
 
   <h2>Contact</h2>
-  <p>Content policy questions: <a href="mailto:moderation@sphynxmotion.com">moderation@sphynxmotion.com</a></p>
+  <p>Content policy questions: <a href="mailto:moderation@sphynxplay.com">moderation@sphynxplay.com</a></p>
   `,
   { active: '/content-policy' }
 )));
@@ -376,16 +376,16 @@ router.get('/content-policy', (req, res) => res.send(page(
 // ── /soul-token-terms ─────────────────────────────────────────────────────────
 router.get('/soul-token-terms', (req, res) => res.send(page(
   'Soul Token Terms',
-  'The rules governing Soul Tokens — SPHYNX MOTION\'s in-app virtual currency.',
+  'The rules governing Soul Tokens — SphynxPlay\'s in-app virtual currency.',
   `
-  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SPHYNX MOTION (Pty) Ltd</p>
+  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd</p>
 
   <div class="highlight-box">
-    <strong>Important:</strong> Soul Tokens are a virtual in-app currency only. They have no monetary value, cannot be exchanged for cash, and are not redeemable outside of SPHYNX MOTION. All Soul Token purchases are processed by Apple App Store or Google Play — not directly by SPHYNX MOTION.
+    <strong>Important:</strong> Soul Tokens are a virtual in-app currency only. They have no monetary value, cannot be exchanged for cash, and are not redeemable outside of SphynxPlay. All Soul Token purchases are processed by Apple App Store or Google Play — not directly by SphynxPlay.
   </div>
 
   <h2>1. What are Soul Tokens?</h2>
-  <p>Soul Tokens (styled "Soul ⚡" in the app) are a virtual currency used exclusively within the SPHYNX MOTION platform. They function as an engagement and rewards system, allowing viewers to unlock content and participate in platform features.</p>
+  <p>Soul Tokens (styled "Soul ⚡" in the app) are a virtual currency used exclusively within the SphynxPlay platform. They function as an engagement and rewards system, allowing viewers to unlock content and participate in platform features.</p>
 
   <h2>2. Earning Soul Tokens</h2>
   <p>Soul Tokens can be earned free of charge through the following activities:</p>
@@ -403,7 +403,7 @@ router.get('/soul-token-terms', (req, res) => res.send(page(
     <li><strong>Apple App Store</strong> — purchases are subject to Apple's Media Services Terms and Conditions</li>
     <li><strong>Google Play</strong> — purchases are subject to Google Play's Terms of Service</li>
   </ul>
-  <p>SPHYNX MOTION does not process card payments directly for Soul Token purchases. All billing, receipts, and refund requests for purchases must be directed to the relevant platform store.</p>
+  <p>SphynxPlay does not process card payments directly for Soul Token purchases. All billing, receipts, and refund requests for purchases must be directed to the relevant platform store.</p>
 
   <h2>4. Using Soul Tokens</h2>
   <p>Soul Tokens may be spent within the app on:</p>
@@ -423,10 +423,10 @@ router.get('/soul-token-terms', (req, res) => res.send(page(
   </ul>
 
   <h2>6. No Cash Value</h2>
-  <p>Soul Tokens have no monetary value at any time. They cannot be redeemed for cash, credit, or any form of monetary compensation by SPHYNX MOTION or any third party.</p>
+  <p>Soul Tokens have no monetary value at any time. They cannot be redeemed for cash, credit, or any form of monetary compensation by SphynxPlay or any third party.</p>
 
   <h2>7. Refunds</h2>
-  <p>Earned Soul Tokens (from daily logins, watching, etc.) are not refundable. Purchased Soul Tokens are non-refundable by SPHYNX MOTION except where required by applicable law or mandated by the platform store through which they were purchased. For purchased token refund requests, contact Apple Support or Google Play Support directly.</p>
+  <p>Earned Soul Tokens (from daily logins, watching, etc.) are not refundable. Purchased Soul Tokens are non-refundable by SphynxPlay except where required by applicable law or mandated by the platform store through which they were purchased. For purchased token refund requests, contact Apple Support or Google Play Support directly.</p>
 
   <h2>8. Expiry</h2>
   <p>Soul Tokens expire if your account remains inactive (no logins) for 12 consecutive months. You will receive an in-app notification before expiry. Tokens do not expire while your account is active.</p>
@@ -440,10 +440,10 @@ router.get('/soul-token-terms', (req, res) => res.send(page(
   <p>No compensation is provided for forfeited tokens except where required by applicable law.</p>
 
   <h2>10. Changes to the Soul Token System</h2>
-  <p>SPHYNX MOTION reserves the right to modify earning rates, spend costs, available rewards, or any other aspect of the Soul Token system at any time. Material changes will be communicated in-app with at least 14 days notice. Continued use of Soul Tokens after the change takes effect constitutes acceptance.</p>
+  <p>SphynxPlay reserves the right to modify earning rates, spend costs, available rewards, or any other aspect of the Soul Token system at any time. Material changes will be communicated in-app with at least 14 days notice. Continued use of Soul Tokens after the change takes effect constitutes acceptance.</p>
 
   <h2>11. Contact</h2>
-  <p>Questions about Soul Tokens: <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a></p>
+  <p>Questions about Soul Tokens: <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a></p>
   `,
   { active: '/soul-token-terms' }
 )));
@@ -451,63 +451,63 @@ router.get('/soul-token-terms', (req, res) => res.send(page(
 // ── /support ──────────────────────────────────────────────────────────────────
 router.get('/support', (req, res) => res.send(page(
   'Help & Support',
-  'Get help with your SPHYNX MOTION account, subscriptions, Soul Tokens, and technical issues.',
+  'Get help with your SphynxPlay account, subscriptions, Soul Tokens, and technical issues.',
   `
   <div class="contact-grid" style="margin-bottom:32px">
     <div class="contact-card">
       <div class="icon">📧</div>
       <div class="label">Email Support</div>
-      <div class="value"><a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a><br><em style="font-size:10px">Reply within 48 hours</em></div>
+      <div class="value"><a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a><br><em style="font-size:10px">Reply within 48 hours</em></div>
     </div>
     <div class="contact-card">
       <div class="icon">🛡️</div>
       <div class="label">Content Moderation</div>
-      <div class="value"><a href="mailto:moderation@sphynxmotion.com">moderation@sphynxmotion.com</a><br><em style="font-size:10px">Reply within 24 hours</em></div>
+      <div class="value"><a href="mailto:moderation@sphynxplay.com">moderation@sphynxplay.com</a><br><em style="font-size:10px">Reply within 24 hours</em></div>
     </div>
     <div class="contact-card">
       <div class="icon">🔒</div>
       <div class="label">Privacy Requests</div>
-      <div class="value"><a href="mailto:privacy@sphynxmotion.com">privacy@sphynxmotion.com</a><br><em style="font-size:10px">Reply within 5 business days</em></div>
+      <div class="value"><a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a><br><em style="font-size:10px">Reply within 5 business days</em></div>
     </div>
     <div class="contact-card">
       <div class="icon">⚖️</div>
       <div class="label">Legal</div>
-      <div class="value"><a href="mailto:legal@sphynxmotion.com">legal@sphynxmotion.com</a></div>
+      <div class="value"><a href="mailto:legal@sphynxplay.com">legal@sphynxplay.com</a></div>
     </div>
   </div>
 
   <h2>Account & Login</h2>
   <p><strong>I forgot my password.</strong><br>Open the app → Profile → Log In → tap <em>Forgot password?</em> → enter your email → check your inbox for a reset link.</p>
   <p><strong>My login is failing.</strong><br>Ensure you're using the correct email and password. If your account is new, check that you've confirmed your email address. Use "Forgot password?" to reset if unsure.</p>
-  <p><strong>I want to change my email or display name.</strong><br>Email <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a> — account detail changes require identity verification.</p>
+  <p><strong>I want to change my email or display name.</strong><br>Email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> — account detail changes require identity verification.</p>
 
   <h2>Subscriptions (Soul Pass)</h2>
   <p><strong>How do I cancel my Soul Pass subscription?</strong><br>
-  Subscriptions are managed by the App Store or Google Play — not by SPHYNX MOTION directly.</p>
+  Subscriptions are managed by the App Store or Google Play — not by SphynxPlay directly.</p>
   <ul>
-    <li><strong>iOS:</strong> Settings → [Your Name] → Subscriptions → SPHYNX MOTION → Cancel</li>
-    <li><strong>Android:</strong> Google Play → Profile → Payments & subscriptions → Subscriptions → SPHYNX MOTION → Cancel</li>
+    <li><strong>iOS:</strong> Settings → [Your Name] → Subscriptions → SphynxPlay → Cancel</li>
+    <li><strong>Android:</strong> Google Play → Profile → Payments & subscriptions → Subscriptions → SphynxPlay → Cancel</li>
   </ul>
   <p>Cancellation takes effect at the end of the current billing period. You retain access until then.</p>
 
-  <p><strong>I was charged but my subscription isn't active.</strong><br>Email <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a> with your account email and a screenshot of the charge. We'll resolve it within 2 business days.</p>
+  <p><strong>I was charged but my subscription isn't active.</strong><br>Email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> with your account email and a screenshot of the charge. We'll resolve it within 2 business days.</p>
 
   <h2>Soul Tokens</h2>
-  <p><strong>My Soul Tokens are missing.</strong><br>Soul Tokens are tied to your account. If you're logged in to the correct account and your balance looks wrong, email <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a> with your account email.</p>
-  <p><strong>Can I get a refund on purchased Soul Tokens?</strong><br>Soul Token purchases are processed by Apple or Google. Refund requests must be made directly through the store you purchased from. SPHYNX MOTION cannot issue refunds for store purchases.</p>
+  <p><strong>My Soul Tokens are missing.</strong><br>Soul Tokens are tied to your account. If you're logged in to the correct account and your balance looks wrong, email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> with your account email.</p>
+  <p><strong>Can I get a refund on purchased Soul Tokens?</strong><br>Soul Token purchases are processed by Apple or Google. Refund requests must be made directly through the store you purchased from. SphynxPlay cannot issue refunds for store purchases.</p>
 
   <h2>Video Playback</h2>
-  <p><strong>Video won't play / buffering constantly.</strong><br>Check your internet connection. On mobile, switch from cellular to Wi-Fi. Close and reopen the app. If the problem persists, email <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a> with your device model and OS version.</p>
+  <p><strong>Video won't play / buffering constantly.</strong><br>Check your internet connection. On mobile, switch from cellular to Wi-Fi. Close and reopen the app. If the problem persists, email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> with your device model and OS version.</p>
   <p><strong>Audio out of sync.</strong><br>Close and reopen the player. If the issue continues, report it with the episode name and your device details.</p>
 
   <h2>Reporting Content</h2>
-  <p>To report a content violation: tap <strong>⋯</strong> on any content card → <strong>Report</strong>. Or email <a href="mailto:moderation@sphynxmotion.com">moderation@sphynxmotion.com</a>. All reports are reviewed within 24 hours on business days.</p>
+  <p>To report a content violation: tap <strong>⋯</strong> on any content card → <strong>Report</strong>. Or email <a href="mailto:moderation@sphynxplay.com">moderation@sphynxplay.com</a>. All reports are reviewed within 24 hours on business days.</p>
 
   <h2>Delete My Account</h2>
   <p>You can delete your account at any time. See the <a href="/delete-account">Account Deletion page</a> for full details and instructions.</p>
 
   <h2>Creator Support</h2>
-  <p>Creator applications, content submissions, and partnership enquiries: <a href="mailto:creators@sphynxmotion.com">creators@sphynxmotion.com</a></p>
+  <p>Creator applications, content submissions, and partnership enquiries: <a href="mailto:creators@sphynxplay.com">creators@sphynxplay.com</a></p>
   `,
   { active: '/support' }
 )));
@@ -515,7 +515,7 @@ router.get('/support', (req, res) => res.send(page(
 // ── /delete-account ───────────────────────────────────────────────────────────
 router.get('/delete-account', (req, res) => res.send(page(
   'Delete Your Account',
-  'How to permanently delete your SPHYNX MOTION account and all associated data.',
+  'How to permanently delete your SphynxPlay account and all associated data.',
   `
   <div class="highlight-box">
     <strong>Account deletion is permanent.</strong> Once deleted, your Soul Tokens, watch history, Echo Votes, Soul Pass membership, and all profile data are permanently removed and cannot be recovered.
@@ -524,7 +524,7 @@ router.get('/delete-account', (req, res) => res.send(page(
   <h2>How to Delete Your Account</h2>
   <p>You can delete your account directly from the app at any time — no email required.</p>
   <ol>
-    <li>Open the <strong>SPHYNX MOTION</strong> app</li>
+    <li>Open the <strong>SphynxPlay</strong> app</li>
     <li>Tap <strong>Profile</strong> (bottom nav)</li>
     <li>Scroll down and tap <strong>Delete Account</strong></li>
     <li>Read the confirmation details</li>
@@ -533,7 +533,7 @@ router.get('/delete-account', (req, res) => res.send(page(
   <p>Your account will be deleted immediately. You will be signed out of all devices.</p>
 
   <h2>Delete by Email</h2>
-  <p>If you cannot access the app, email <a href="mailto:privacy@sphynxmotion.com">privacy@sphynxmotion.com</a> with:</p>
+  <p>If you cannot access the app, email <a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a> with:</p>
   <ul>
     <li>Subject: <strong>Account Deletion Request</strong></li>
     <li>Your registered email address</li>
@@ -561,15 +561,15 @@ router.get('/delete-account', (req, res) => res.send(page(
   </ul>
 
   <h2>Cancel Your Subscription First</h2>
-  <p>Deleting your SPHYNX MOTION account does <strong>not</strong> automatically cancel your App Store or Google Play subscription. To avoid future charges, cancel your subscription before deleting your account:</p>
+  <p>Deleting your SphynxPlay account does <strong>not</strong> automatically cancel your App Store or Google Play subscription. To avoid future charges, cancel your subscription before deleting your account:</p>
   <ul>
-    <li><strong>iOS:</strong> Settings → [Your Name] → Subscriptions → SPHYNX MOTION → Cancel Subscription</li>
-    <li><strong>Android:</strong> Google Play → Profile → Payments & subscriptions → Subscriptions → SPHYNX MOTION → Cancel</li>
+    <li><strong>iOS:</strong> Settings → [Your Name] → Subscriptions → SphynxPlay → Cancel Subscription</li>
+    <li><strong>Android:</strong> Google Play → Profile → Payments & subscriptions → Subscriptions → SphynxPlay → Cancel</li>
   </ul>
 
   <h2>Before You Go</h2>
-  <p>If you're having a problem with the app, we'd love a chance to fix it. Email <a href="mailto:support@sphynxmotion.com">support@sphynxmotion.com</a> — our team responds within 48 hours.</p>
-  <p>You can also request a copy of your data before deletion by emailing <a href="mailto:privacy@sphynxmotion.com">privacy@sphynxmotion.com</a>.</p>
+  <p>If you're having a problem with the app, we'd love a chance to fix it. Email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> — our team responds within 48 hours.</p>
+  <p>You can also request a copy of your data before deletion by emailing <a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a>.</p>
   `,
   { active: '/delete-account' }
 )));

@@ -1,16 +1,16 @@
 {
-  "appId": "com.sphynxmotion.app",
-  "appName": "SPHYNX MOTION",
+  "appId": "com.sphynxplay.app",
+  "appName": "SphynxPlay",
   "webDir": "www",
   "server": {
-    "url": "https://app.sphynxmotion.com",
+    "url": "https://app.sphynxplay.com",
     "cleartext": false,
     "androidScheme": "https",
     "allowNavigation": [
       "*.supabase.co",
       "stream.mux.com",
       "*.mux.com",
-      "app.sphynxmotion.com"
+      "app.sphynxplay.com"
     ]
   },
   "ios": {

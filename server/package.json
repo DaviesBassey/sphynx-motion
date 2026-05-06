@@ -1,7 +1,7 @@
 {
-  "name": "sphynx-motion-server",
+  "name": "sphynxplay-server",
   "version": "1.0.0",
-  "description": "SPHYNX MOTION backend — auth, admin, API, uploads",
+  "description": "SphynxPlay backend — auth, admin, API, uploads",
   "main": "index.js",
   "engines": {
     "node": "18.x"

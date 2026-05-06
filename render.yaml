@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sphynx-motion
+    name: sphynxplay
     env: node
     region: frankfurt
     plan: free

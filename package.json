@@ -1,8 +1,8 @@
 {
-  "name": "sphynx-motion",
+  "name": "sphynxplay",
   "version": "1.0.0",
   "private": true,
-  "description": "SPHYNX MOTION — African vertical drama streaming PWA + native app",
+  "description": "SphynxPlay — African vertical drama streaming PWA + native app",
   "scripts": {
     "start": "cd server && npm start",
     "dev": "cd server && npm run dev",

@@ -308,7 +308,7 @@ app.use((err, req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════╗
-  ║  SPHYNX MOTION server running             ║
+  ║  SphynxPlay server running             ║
   ║  Public app : http://localhost:${PORT}       ║
   ║  Admin login: http://localhost:${PORT}/admin/login ║
   ╚═══════════════════════════════════════════╝

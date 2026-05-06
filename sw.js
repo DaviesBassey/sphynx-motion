@@ -1,8 +1,8 @@
 const CACHE = 'sphynx-v8';
 const PRECACHE = [
   '/manifest.webmanifest',
-  '/SPHYNX_LOGO_WHITE.png',
-  '/SPHYNX_MOTION_FAV.png',
+  '/SPHYNXPLAY_LOGO_WHITE.png',
+  '/SPHYNXPLAY_FAV.png',
   '/App_Cvr_Art.png',
   '/assets/posters/image-11.jpg',
   '/assets/posters/image-13.jpg',
@@ -70,13 +70,13 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('push', e => {
-  let data = { title: 'SPHYNX MOTION', body: 'You have a new notification', url: '/' };
+  let data = { title: 'SphynxPlay', body: 'You have a new notification', url: '/' };
   try { data = Object.assign(data, e.data.json()); } catch {}
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/SPHYNX_MOTION_FAV.png',
-      badge: '/SPHYNX_MOTION_FAV.png',
+      icon: '/SPHYNXPLAY_FAV.png',
+      badge: '/SPHYNXPLAY_FAV.png',
       data: { url: data.url },
       vibrate: [100, 50, 100],
     })

@@ -1,5 +1,5 @@
 /**
- * SPHYNX MOTION · Payments
+ * SphynxPlay · Payments
  *
  * Web:    Stripe Checkout (subscription + token purchase)
  * SA:     PayFast ITN (alternative web checkout for South Africa)
@@ -90,7 +90,7 @@ router.post('/stripe/checkout', async (req, res) => {
           price_data: {
             currency:     'zar',
             unit_amount:  Math.round(pkg.price_zar * 100),
-            product_data: { name: `${pkg.amount} Soul Tokens`, description: 'SPHYNX MOTION Soul Tokens' },
+            product_data: { name: `${pkg.amount} Soul Tokens`, description: 'SphynxPlay Soul Tokens' },
           },
           quantity: 1,
         }],
@@ -234,11 +234,11 @@ router.post('/payfast/initiate', async (req, res) => {
     if (!pkg) return res.status(404).json({ error: 'Package not found' });
     amount = pkg.price_zar.toFixed(2);
     itemName = `${pkg.amount} Soul Tokens`;
-    itemDescription = 'SPHYNX MOTION Soul Tokens';
+    itemDescription = 'SphynxPlay Soul Tokens';
   } else if (type === 'soul_pass') {
     amount = plan === 'yearly' ? '699.00' : '79.00';
     itemName = `Soul Pass ${plan === 'yearly' ? 'Yearly' : 'Monthly'}`;
-    itemDescription = 'SPHYNX MOTION Soul Pass subscription';
+    itemDescription = 'SphynxPlay Soul Pass subscription';
   } else {
     return res.status(400).json({ error: 'Invalid type' });
   }
