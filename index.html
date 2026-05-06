@@ -4595,7 +4595,7 @@ async function playSeries(seriesId) {
       const { data } = await progressP;
       if (data) {
         const idx = _playlist.findIndex(e => e.id === data.episode_id);
-        if (idx >= 0) startIdx = data.progress_pct >= 95 ? Math.min(idx + 1, _playlist.length - 1) : idx;
+        if (idx >= 0) startIdx = data.progress_pct >= 95 ? (idx + 1 < _playlist.length ? idx + 1 : 0) : idx;
       }
     } catch {}
 
