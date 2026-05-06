@@ -232,8 +232,8 @@
       <div class="card">
         <div class="card-hdr">
           <div style="display:flex;gap:8px">
-            <input class="form-input" id="seriesSearch" placeholder="Search series…" style="width:180px;padding:8px 12px" oninput="loadSeries()">
-            <select class="form-select" id="seriesStatus" style="width:120px;padding:8px 12px" onchange="loadSeries()">
+            <input class="form-input" id="seriesSearch" placeholder="Search series…" style="width:180px;padding:8px 12px" oninput="loadSeries(true)">
+            <select class="form-select" id="seriesStatus" style="width:120px;padding:8px 12px" onchange="loadSeries(true)">
               <option value="">All status</option><option value="live">Live</option><option value="draft">Draft</option><option value="archived">Archived</option>
             </select>
           </div>
@@ -378,8 +378,8 @@
       <div class="card">
         <div class="card-hdr">
           <div style="display:flex;gap:8px">
-            <input class="form-input" id="userSearch" placeholder="Search name or email…" style="width:200px;padding:8px 12px" oninput="loadUsers()">
-            <select class="form-select" id="userRoleFilter" style="width:130px;padding:8px 12px" onchange="loadUsers()">
+            <input class="form-input" id="userSearch" placeholder="Search name or email…" style="width:200px;padding:8px 12px" oninput="loadUsers(true)">
+            <select class="form-select" id="userRoleFilter" style="width:130px;padding:8px 12px" onchange="loadUsers(true)">
               <option value="">All roles</option><option value="user">User</option><option value="creator">Creator</option>
               <option value="admin">Admin</option><option value="superadmin">Superadmin</option>
             </select>
@@ -647,6 +647,7 @@ function openModal(type, data) {
   const content = document.getElementById('modalContent');
   content.innerHTML = (MODALS[type]?.(data)) || '<p>Unknown modal</p>';
   overlay.classList.add('open');
+  if (type === 'addEpisode') loadSeriesIntoEpisodeForm();
 }
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 
@@ -720,7 +721,8 @@ async function loadModBadge() {
 }
 
 // ── SERIES ─────────────────────────────────────────────────────────────────────
-async function loadSeries() {
+async function loadSeries(resetPage) {
+  if (resetPage) seriesPage = 1;
   const search = document.getElementById('seriesSearch')?.value || '';
   const status = document.getElementById('seriesStatus')?.value || '';
   try {
@@ -739,7 +741,13 @@ async function loadSeries() {
         </td>
       </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No series found</td></tr>`;
     document.getElementById('seriesTable').innerHTML = rows;
-    document.getElementById('seriesPagination').textContent = `${data.total || 0} total · Page ${seriesPage}`;
+    const total = data.total || 0;
+    const limit = 20;
+    const pages = Math.ceil(total / limit);
+    document.getElementById('seriesPagination').innerHTML = `
+      <span style="margin-right:8px">${total} total · Page ${seriesPage} of ${pages || 1}</span>
+      ${seriesPage > 1 ? `<button class="btn btn-secondary btn-sm" onclick="seriesPage--;loadSeries()">← Prev</button>` : ''}
+      ${seriesPage < pages ? `<button class="btn btn-secondary btn-sm" style="margin-left:4px" onclick="seriesPage++;loadSeries()">Next →</button>` : ''}`;
   } catch {
     document.getElementById('seriesTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No series found</td></tr>`;
     document.getElementById('seriesPagination').textContent = '0 total';
@@ -798,20 +806,27 @@ async function loadModeration(status) {
   try {
     const data = await api('GET', `/api/admin/moderation?status=${status}`);
     const icons = { episode:'🎬', series:'📺', comment_flag:'⚠️', user_report:'💳' };
-    document.getElementById('modList').innerHTML = (data.items || []).map(item => `
+    const typeLabel = { episode: 'Episode', series: 'Series', comment_flag: 'Flagged comment', user_report: 'User report' };
+    document.getElementById('modList').innerHTML = (data.items || []).map(item => {
+      const creator = item.profiles?.display_name || item.profiles?.email || 'Unknown creator';
+      const label   = typeLabel[item.submission_type] || item.submission_type || 'Item';
+      const desc    = item.submission_type === 'episode' || item.submission_type === 'series'
+        ? `<strong>${creator}</strong> submitted a <strong>${label}</strong> for review.`
+        : `<strong>${label}</strong> flagged by <strong>${creator}</strong> — requires review.`;
+      return `
       <div class="mod-item" id="mod-${item.id}">
         <div class="mod-icon">${icons[item.submission_type] || '⚠️'}</div>
         <div>
-          <div class="mod-text">${item.submission_type === 'episode' ? `Creator submission: "${item.content_id}" awaiting review.` : 'Flagged item requiring review.'}</div>
-          <div class="mod-meta">${fmtDate(item.created_at)} · by ${item.profiles?.display_name || 'unknown'}</div>
+          <div class="mod-text">${desc}</div>
+          <div class="mod-meta">${fmtDate(item.created_at)}${item.review_reason ? ' · ' + item.review_reason : ''}</div>
           <div class="mod-btns">
             <button class="btn btn-primary btn-sm" onclick="moderationAction('${item.id}','approve')">Approve</button>
             <button class="btn btn-danger btn-sm" onclick="moderationAction('${item.id}','reject')">Reject</button>
             <button class="btn btn-secondary btn-sm" onclick="moderationAction('${item.id}','dismiss')">Dismiss</button>
           </div>
         </div>
-      </div>
-    `).join('') || '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div>';
+      </div>`;
+    }).join('') || '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div>';
     loadModBadge();
   } catch {
     document.getElementById('modList').innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div>';
@@ -828,7 +843,8 @@ async function moderationAction(id, action) {
 }
 
 // ── USERS ──────────────────────────────────────────────────────────────────────
-async function loadUsers() {
+async function loadUsers(resetPage) {
+  if (resetPage) usersPage = 1;
   const search = document.getElementById('userSearch')?.value || '';
   const role   = document.getElementById('userRoleFilter')?.value || '';
   try {
@@ -849,7 +865,13 @@ async function loadUsers() {
         </td>
       </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No users found</td></tr>`;
     document.getElementById('usersTable').innerHTML = rows;
-    document.getElementById('usersPagination').textContent = `${data.total||0} total · Page ${usersPage}`;
+    const total = data.total || 0;
+    const limit = 50;
+    const pages = Math.ceil(total / limit);
+    document.getElementById('usersPagination').innerHTML = `
+      <span style="margin-right:8px">${total} total · Page ${usersPage} of ${pages || 1}</span>
+      ${usersPage > 1 ? `<button class="btn btn-secondary btn-sm" onclick="usersPage--;loadUsers()">← Prev</button>` : ''}
+      ${usersPage < pages ? `<button class="btn btn-secondary btn-sm" style="margin-left:4px" onclick="usersPage++;loadUsers()">Next →</button>` : ''}`;
   } catch {
     document.getElementById('usersTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">No users found</td></tr>`;
     document.getElementById('usersPagination').textContent = '0 total';
@@ -1410,15 +1432,15 @@ const MODALS = {
   },
 };
 
-// Load series into episode form select
-document.addEventListener('click', async e => {
-  if (document.getElementById('epSeriesSelect')) {
-    try {
-      const data = await api('GET', '/api/admin/content/series?limit=200');
-      document.getElementById('epSeriesSelect').innerHTML = (data.series||[]).map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-    } catch {}
-  }
-});
+// Load series into episode form select — called once when the Add Episode modal opens
+async function loadSeriesIntoEpisodeForm() {
+  const sel = document.getElementById('epSeriesSelect');
+  if (!sel) return;
+  try {
+    const data = await api('GET', '/api/admin/content/series?limit=200');
+    sel.innerHTML = (data.series || []).map(s => `<option value="${s.id}">${s.title}</option>`).join('') || '<option value="">No series yet</option>';
+  } catch {}
+}
 
 async function saveEpisode(form) {
   const body = Object.fromEntries(new FormData(form));

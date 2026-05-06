@@ -51,9 +51,17 @@ router.post('/grant', requireRole('admin'), async (req, res) => {
     return res.status(400).json({ error: `user_id and amount (1–${MAX_GRANT}) are required` });
   }
 
+  // Resolve email to UUID if needed
+  let resolvedId = user_id;
+  if (user_id.includes('@')) {
+    const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('email', user_id).single();
+    if (!profile) return res.status(404).json({ error: 'No user found with that email address' });
+    resolvedId = profile.id;
+  }
+
   // Insert transaction and update balance atomically via RPC
   const { data, error } = await supabaseAdmin.rpc('grant_soul_tokens', {
-    p_user_id: user_id,
+    p_user_id: resolvedId,
     p_amount:  amount,
     p_reason:  reason || 'Admin grant',
     p_admin_id: req.user.id,
@@ -63,7 +71,7 @@ router.post('/grant', requireRole('admin'), async (req, res) => {
 
   supabaseAdmin.from('admin_audit_log').insert({
     admin_id: req.user.id, action: 'grant_tokens', target_type: 'user',
-    target_id: user_id, details: { amount, reason },
+    target_id: resolvedId, details: { amount, reason, requested_id: user_id },
   }).then(null, err => console.error('[audit]', err));
 
   res.json({ success: true, new_balance: data });
