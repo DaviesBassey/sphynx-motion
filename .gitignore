@@ -21,6 +21,9 @@ Thumbs.db
 server/uploads/
 *.tmp
 
+# ── LOCAL VIDEO ASSETS (serve from Supabase/Mux storage, not git) ────────────
+assets/videos/
+
 # ── CAPACITOR NATIVE (generated, not source) ──────────────────────────────────
 ios/
 android/

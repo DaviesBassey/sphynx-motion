@@ -3,14 +3,14 @@ const rateLimit  = require('express-rate-limit');
 const { supabaseAdmin } = require('../../lib/supabase');
 
 const router  = express.Router();
-const limiter = rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false });
+const limiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: true, legacyHeaders: false });
 router.use(limiter);
 
 // ── FEATURED / TRENDING (Discover feed) ───────────────────────────────────────
 router.get('/featured', async (req, res) => {
   const [featuredRes, trendingRes] = await Promise.all([
     supabaseAdmin.from('series')
-      .select('id, title, slug, genre, age_rating, poster_url, trailer_url, description')
+      .select('id, title, slug, genre, age_rating, poster_url, trailer_url, description, episodes(count)')
       .eq('status', 'live').eq('is_featured', true)
       .order('created_at', { ascending: false }).limit(10),
     supabaseAdmin.from('series')
@@ -89,7 +89,8 @@ router.get('/episodes/:id/play', async (req, res) => {
     const token = (req.headers.authorization || '').replace('Bearer ', '') || req.cookies?.sphynx_session;
     if (!token) return res.status(401).json({ error: 'Sign in to watch', code: 'auth_required' });
 
-    const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
+    const { data: authData, error: authErr } = await supabaseAdmin.auth.getUser(token);
+    const user = authData?.user;
     if (authErr || !user) return res.status(401).json({ error: 'Invalid session', code: 'auth_required' });
 
     const { data: profile } = await supabaseAdmin.from('profiles').select('soul_balance').eq('id', user.id).single();

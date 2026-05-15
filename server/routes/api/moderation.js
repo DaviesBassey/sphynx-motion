@@ -104,12 +104,14 @@ router.post('/reports/:id/action', requireRole('admin'), async (req, res) => {
 
   if (fetchError) return res.status(404).json({ error: 'Report not found' });
 
-  await supabaseAdmin.from('content_reports')
+  const { error: resolveErr } = await supabaseAdmin.from('content_reports')
     .update({ status: 'resolved', resolved_by: req.user.id, resolved_at: new Date().toISOString(), resolution: action })
     .eq('id', req.params.id);
+  if (resolveErr) return res.status(500).json({ error: resolveErr.message });
 
   if (action === 'suspend_user' && report.reported_user_id) {
-    await supabaseAdmin.from('profiles').update({ is_suspended: true, suspension_reason: `Content violation: ${report.reason}` }).eq('id', report.reported_user_id);
+    const { error: suspendErr } = await supabaseAdmin.from('profiles').update({ is_suspended: true, suspension_reason: `Content violation: ${report.reason}` }).eq('id', report.reported_user_id);
+    if (suspendErr) console.error('[moderation] suspend error:', suspendErr.message);
   }
 
   audit(req.user.id, `report_${action}`, req.params.id, { reason: report.reason });

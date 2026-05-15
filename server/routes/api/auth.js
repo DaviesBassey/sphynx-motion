@@ -10,12 +10,13 @@ const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Too many login attempts. Try again in 15 minutes.' },
+  skip: (req) => process.env.NODE_ENV !== 'production' && (req.ip === '::1' || req.ip === '127.0.0.1'),
 });
 
 const COOKIE_OPTS = {
   httpOnly: true,
-  secure:   true,
-  sameSite: 'strict',
+  secure:   process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
   path:     '/',
 };
 

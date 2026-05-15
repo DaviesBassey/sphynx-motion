@@ -9,8 +9,7 @@
     "allowNavigation": [
       "*.supabase.co",
       "stream.mux.com",
-      "*.mux.com",
-      "app.sphynxplay.com"
+      "*.mux.com"
     ]
   },
   "ios": {

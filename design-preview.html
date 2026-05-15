@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SphynxPlay — Design System Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:              #08080A;
+    --surface:         #111114;
+    --surface-el:      #1A1A1F;
+    --surface-hover:   #22222A;
+    --text:            #F0EDE8;
+    --muted:           #6B6872;
+    --accent:          #E61E24;
+    --accent-dim:      rgba(230,30,36,.15);
+    --token-gold:      #C9A84C;
+    --token-dim:       rgba(201,168,76,.12);
+    --live:            #1DB87E;
+    --error:           #FF4D4D;
+    --border:          rgba(255,255,255,.06);
+  }
+
+  html { background: var(--bg); color: var(--text); scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Geist Sans', 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    background: var(--bg);
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT ─────────────────────────────── */
+  .page { max-width: 1180px; margin: 0 auto; padding: 0 32px 120px; }
+
+  section { padding-top: 96px; }
+
+  h2.section-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 40px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── SITE HEADER ─────────────────────────── */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,8,10,.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: -.01em;
+    color: var(--text);
+  }
+  .wordmark span { color: var(--accent); }
+
+  .header-meta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .04em;
+  }
+
+  /* ── HERO ───────────────────────────────── */
+  .design-hero {
+    padding: 80px 0 64px;
+    text-align: center;
+  }
+  .design-hero-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .design-hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(44px, 7vw, 88px);
+    font-weight: 800;
+    line-height: .96;
+    letter-spacing: -.03em;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  .design-hero h1 em {
+    font-style: italic;
+    color: var(--muted);
+  }
+  .design-hero p {
+    font-family: 'Geist Sans', sans-serif;
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  .memorable-thing {
+    display: inline-block;
+    margin-top: 32px;
+    padding: 14px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--token-gold);
+    letter-spacing: .02em;
+  }
+
+  /* ── TYPOGRAPHY SPECIMEN ────────────────── */
+  .type-specimens { display: grid; gap: 2px; }
+  .type-row {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 32px 36px;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 2px;
+  }
+  .type-meta { padding-top: 6px; }
+  .type-role {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .type-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .specimen-display {
+    font-family: 'Fraunces', serif;
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -.02em;
+    color: var(--text);
+  }
+  .specimen-display-sub {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .specimen-body {
+    font-family: 'Geist Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.72;
+    color: var(--text);
+  }
+  .specimen-body .muted { color: var(--muted); }
+  .specimen-ui {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .specimen-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--token-gold);
+    letter-spacing: -.01em;
+  }
+  .specimen-mono-sm {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── COLOR PALETTE ──────────────────────── */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .color-swatch {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .swatch-block {
+    height: 80px;
+    position: relative;
+  }
+  .swatch-block.has-border { border-bottom: 1px solid var(--border); }
+  .swatch-info {
+    padding: 12px 14px;
+    background: var(--surface);
+  }
+  .swatch-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .swatch-hex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .swatch-usage {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ── COMPONENTS ─────────────────────────── */
+  .component-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .component-block {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .component-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .component-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: .01em;
+    transition: opacity .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: .88; }
+  .btn-secondary { background: var(--surface-el); color: var(--text); }
+  .btn-secondary:hover { background: var(--surface-hover); }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface-el); }
+  .btn-sm { font-size: 12px; padding: 8px 14px; border-radius: 6px; }
+
+  /* Badges */
+  .badge {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    display: inline-block;
+    letter-spacing: .04em;
+  }
+  .badge-live { background: var(--live); color: #fff; }
+  .badge-new { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(230,30,36,.25); }
+  .badge-rank { background: var(--token-dim); color: var(--token-gold); border: 1px solid rgba(201,168,76,.2); font-family: 'JetBrains Mono', monospace; }
+
+  /* Input */
+  .input-field {
+    font-family: 'Geist Sans', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color .15s;
+  }
+  .input-field:focus { border-color: rgba(230,30,36,.5); }
+  .input-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  /* Token display */
+  .token-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: var(--token-dim);
+    border: 1px solid rgba(201,168,76,.2);
+    border-radius: 10px;
+  }
+  .token-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--token-gold);
+    letter-spacing: -.02em;
+  }
+  .token-label-sm {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Rank badge */
+  .rank-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--surface-el);
+    border-radius: 100px;
+    border: 1px solid var(--border);
+  }
+  .rank-icon { color: var(--token-gold); font-size: 15px; }
+  .rank-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Progress bar */
+  .progress-track {
+    background: var(--surface-el);
+    border-radius: 100px;
+    height: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width .4s ease;
+  }
+
+  /* ── PHONE MOCKUPS ──────────────────────── */
+  .mockups-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 40px;
+    justify-items: center;
+  }
+
+  .phone-frame {
+    width: 360px;
+    background: var(--bg);
+    border-radius: 40px;
+    border: 2px solid rgba(255,255,255,.1);
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,.8),
+      0 40px 80px rgba(0,0,0,.7),
+      inset 0 0 0 1px rgba(255,255,255,.04);
+    position: relative;
+  }
+
+  .phone-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px 8px;
+    background: transparent;
+    position: relative;
+    z-index: 10;
+  }
+  .status-time {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .status-icons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .status-dot {
+    width: 14px;
+    height: 7px;
+    border-radius: 2px;
+    border: 1px solid var(--text);
+    position: relative;
+  }
+  .status-dot::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 4px;
+    background: var(--text);
+    border-radius: 1px;
+  }
+  .status-bar-token {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--token-gold);
+    letter-spacing: .01em;
+  }
+
+  /* App header */
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 20px 14px;
+  }
+  .app-wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--text);
+    letter-spacing: -.01em;
+  }
+  .app-wordmark span { color: var(--accent); }
+  .app-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2a1a1a, #3d1010);
+    border: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Hero still frame */
+  .hero-still {
+    width: 100%;
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg,
+        rgba(8,8,10,0) 0%,
+        rgba(8,8,10,0) 40%,
+        rgba(8,8,10,.7) 72%,
+        rgba(8,8,10,.97) 100%
+      ),
+      linear-gradient(135deg, #1a0d0d 0%, #0d0d14 30%, #0a0a0a 60%, #14100a 100%);
+    /* Simulates a dark drama still */
+  }
+  .hero-still-texture {
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 30% 40%, rgba(80,20,10,.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 60%, rgba(20,10,40,.4) 0%, transparent 60%);
+  }
+  .hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px 20px;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .hero-title {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -.02em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .hero-meta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .hero-play-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: var(--accent);
+    border-radius: 6px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  .hero-play-icon { font-size: 12px; }
+  .hero-more-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* Browse rows */
+  .browse-section { padding: 0 0 8px; }
+  .browse-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 10px;
+  }
+  .row-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .row-see-all {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .card-scroll {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .card-scroll::-webkit-scrollbar { display: none; }
+
+  .poster-card {
+    flex-shrink: 0;
+    width: 90px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .poster-img {
+    width: 90px;
+    aspect-ratio: 9/14;
+    border-radius: 8px;
+    position: relative;
+  }
+  .poster-img::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(to top, rgba(8,8,10,.9), transparent);
+    border-radius: 0 0 8px 8px;
+  }
+  .poster-progress {
+    position: absolute;
+    bottom: 4px;
+    left: 5px;
+    right: 5px;
+    height: 2px;
+    background: rgba(255,255,255,.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .poster-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* Poster colors — simulating varied show art */
+  .p1 { background: linear-gradient(160deg, #2d1010 0%, #1a0505 60%, #0d0808 100%); }
+  .p2 { background: linear-gradient(160deg, #0d1a2d 0%, #050d1a 60%, #08080A 100%); }
+  .p3 { background: linear-gradient(160deg, #1a1a0d 0%, #0d0d05 60%, #0a0a08 100%); }
+  .p4 { background: linear-gradient(160deg, #1a0d1a 0%, #0d050d 60%, #0a0808 100%); }
+  .p5 { background: linear-gradient(160deg, #0d1a1a 0%, #050d0d 60%, #080a0a 100%); }
+  .p6 { background: linear-gradient(160deg, #2a1205 0%, #1a0a03 60%, #0d0805 100%); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 0 20px;
+    border-top: 1px solid var(--border);
+    background: rgba(8,8,10,.95);
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    cursor: pointer;
+  }
+  .nav-icon { font-size: 20px; }
+  .nav-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    color: var(--muted);
+  }
+  .nav-item.active .nav-icon { color: var(--accent); }
+  .nav-item.active .nav-label { color: var(--accent); }
+
+  /* ── DETAIL SCREEN ──────────────────────── */
+  .detail-hero {
+    width: 100%;
+    aspect-ratio: 3/4;
+    position: relative;
+    background:
+      linear-gradient(180deg,
+        rgba(8,8,10,0) 0%,
+        rgba(8,8,10,.3) 50%,
+        rgba(8,8,10,.95) 85%,
+        rgba(8,8,10,1) 100%
+      ),
+      linear-gradient(135deg, #2d0808 0%, #0a0a14 50%, #14100a 100%);
+  }
+  .detail-back {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(8,8,10,.6);
+    border: 1px solid rgba(255,255,255,.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--text);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+  }
+  .detail-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px 20px;
+  }
+  .detail-genres {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .genre-tag {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .detail-title {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -.025em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .detail-stats {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .detail-stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .detail-stat-sep { color: var(--border); }
+  .detail-desc {
+    font-family: 'Geist Sans', sans-serif;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .detail-play {
+    flex: 1;
+    padding: 12px;
+    background: var(--accent);
+    border-radius: 8px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    cursor: pointer;
+  }
+  .detail-watchlist {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--surface-el);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .detail-episode-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ep-thumb {
+    width: 64px;
+    height: 38px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .ep-thumb-bg {
+    width: 100%;
+    height: 100%;
+  }
+  .ep-play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .ep-info { flex: 1; min-width: 0; }
+  .ep-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ep-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .ep-duration {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* ── SPACING SCALE ──────────────────────── */
+  .spacing-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .spacing-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .spacing-block {
+    background: var(--accent);
+    border-radius: 3px;
+    opacity: .7;
+    width: 24px;
+  }
+  .spacing-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ── MOTION ─────────────────────────────── */
+  .motion-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .motion-item {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .motion-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .motion-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .motion-desc {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── DECISIONS LOG ──────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+  }
+  th {
+    text-align: left;
+    padding: 10px 16px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 14px 16px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  td:first-child { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; }
+  td:nth-child(2) { font-weight: 500; }
+  td:nth-child(3) { color: var(--muted); font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  .risk-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .risk-safe { background: rgba(29,184,126,.12); color: var(--live); }
+  .risk-risk { background: var(--accent-dim); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="wordmark">Sphynx<span>Play</span></span>
+  <span class="header-meta">Design System v1 &nbsp;·&nbsp; claude-app-test</span>
+</header>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="design-hero">
+    <div class="design-hero-label">Design System Preview</div>
+    <h1>Obsidian<br><em>Cinema</em></h1>
+    <p>A complete visual language for SphynxPlay. Dark depth, Fraunces gravity, warm surfaces. World-class streaming feel — African stories, global polish.</p>
+    <div class="memorable-thing">◈ "Sleek and modern — on par with Netflix/Disney+"</div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <section>
+    <h2 class="section-label">01 &nbsp; Typography</h2>
+    <div class="type-specimens">
+
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-role">Display / Hero</div>
+          <div class="type-name">Fraunces</div>
+        </div>
+        <div>
+          <div class="specimen-display">The Lagos<br>Affair</div>
+          <div class="specimen-display-sub">Season 2 · Episode 7 · "The Choice"</div>
+        </div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-role">Body / Descriptions</div>
+          <div class="type-name">Geist Sans</div>
+        </div>
+        <div>
+          <p class="specimen-body">
+            Amara discovers the truth about her father's disappearance — a secret that threads through three generations of Lagos's most powerful families. A story about loyalty, silence, and what it costs to belong.
+          </p>
+          <p class="specimen-body muted" style="margin-top: 8px; font-size: 13px;">Episode metadata · Category labels · Navigation items · Settings text</p>
+        </div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-role">UI / Labels</div>
+          <div class="type-name">Plus Jakarta Sans</div>
+        </div>
+        <div class="specimen-ui">
+          <button class="btn btn-primary">Watch Now</button>
+          <button class="btn btn-secondary">+ Watchlist</button>
+          <button class="btn btn-ghost btn-sm">Share</button>
+          <span class="badge badge-live">● Live</span>
+          <span class="badge badge-new">New Episode</span>
+          <span class="badge badge-rank">✦ Deep Watcher</span>
+        </div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-role">Data / Soul Tokens</div>
+          <div class="type-name">JetBrains Mono</div>
+        </div>
+        <div>
+          <div class="token-display">
+            <div>
+              <div class="token-number">◈ 2,840</div>
+              <div class="token-label-sm">Soul Tokens</div>
+            </div>
+          </div>
+          &nbsp;&nbsp;
+          <span class="specimen-mono-sm">Ep 01 · 42min &nbsp;·&nbsp; S02E07 &nbsp;·&nbsp; 97% match</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- COLOR PALETTE -->
+  <section>
+    <h2 class="section-label">02 &nbsp; Color System</h2>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#08080A;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Background</div>
+          <div class="swatch-hex">#08080A</div>
+          <div class="swatch-usage">App shell, page bg. Near-black with warm blue undertone.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#111114;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Surface</div>
+          <div class="swatch-hex">#111114</div>
+          <div class="swatch-usage">Cards, modals, bottom sheets.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#1A1A1F;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Surface Elevated</div>
+          <div class="swatch-hex">#1A1A1F</div>
+          <div class="swatch-usage">Dropdowns, tooltips, hover states.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#F0EDE8;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Primary</div>
+          <div class="swatch-hex">#F0EDE8</div>
+          <div class="swatch-usage">All primary text. Warm white — softer on OLED.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#6B6872;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Muted</div>
+          <div class="swatch-hex">#6B6872</div>
+          <div class="swatch-usage">Metadata, timestamps, secondary labels.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#E61E24;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Accent / Brand</div>
+          <div class="swatch-hex">#E61E24</div>
+          <div class="swatch-usage">Primary CTA, active tab, brand mark. Use sparingly.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#C9A84C;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Soul Token Gold</div>
+          <div class="swatch-hex">#C9A84C</div>
+          <div class="swatch-usage">◈ token counter only. Old coin, not Vegas.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#1DB87E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Live / Progress</div>
+          <div class="swatch-hex">#1DB87E</div>
+          <div class="swatch-usage">Episode progress, live indicator, success states.</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block has-border" style="background:#FF4D4D;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Error</div>
+          <div class="swatch-hex">#FF4D4D</div>
+          <div class="swatch-usage">Errors, destructive actions.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section>
+    <h2 class="section-label">03 &nbsp; Components</h2>
+    <div class="component-grid">
+      <div class="component-block">
+        <div class="component-title">Buttons</div>
+        <div class="component-row">
+          <button class="btn btn-primary">▶ Watch Now</button>
+          <button class="btn btn-secondary">+ Watchlist</button>
+          <button class="btn btn-ghost">Share</button>
+        </div>
+        <div class="component-row">
+          <button class="btn btn-primary btn-sm">Subscribe</button>
+          <button class="btn btn-secondary btn-sm">Follow Creator</button>
+          <button class="btn btn-ghost btn-sm">Report</button>
+        </div>
+        <div class="component-title" style="margin-top: 24px;">Badges</div>
+        <div class="component-row">
+          <span class="badge badge-live">● Live</span>
+          <span class="badge badge-new">New Episode</span>
+          <span class="badge badge-rank">✦ Echo Seeker</span>
+          <span class="badge badge-rank">✦ Soul Master</span>
+        </div>
+      </div>
+
+      <div class="component-block">
+        <div class="component-title">Soul Token & Rank</div>
+        <div class="component-row">
+          <div class="token-display">
+            <div>
+              <div class="token-number">◈ 2,840</div>
+              <div class="token-label-sm">Soul Tokens</div>
+            </div>
+          </div>
+        </div>
+        <div class="component-row" style="margin-top: 12px; gap: 8px;">
+          <div class="rank-pill">
+            <span class="rank-icon">✦</span>
+            <span class="rank-name">Deep Watcher</span>
+          </div>
+        </div>
+        <div style="margin-top: 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--muted);">Progress to Soul Master</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--token-gold);">2,840 / 5,000</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:57%;background:var(--token-gold);"></div>
+          </div>
+        </div>
+        <div class="component-title" style="margin-top: 24px;">Form Input</div>
+        <label class="input-label">Search dramas</label>
+        <input class="input-field" type="text" placeholder="The Lagos Affair…">
+      </div>
+    </div>
+  </section>
+
+  <!-- PHONE MOCKUPS -->
+  <section>
+    <h2 class="section-label">04 &nbsp; App Screens</h2>
+    <div class="mockups-row">
+
+      <!-- HOME FEED -->
+      <div>
+        <div class="phone-label">Home Feed</div>
+        <div class="phone-frame">
+          <div class="status-bar">
+            <span class="status-time">9:41</span>
+            <span class="status-bar-token">◈ 2,840</span>
+            <div class="status-icons">
+              <span style="font-size:12px;color:var(--text);">▲▼</span>
+              <div class="status-dot"></div>
+            </div>
+          </div>
+
+          <div class="app-header">
+            <span class="app-wordmark">Sphynx<span>Play</span></span>
+            <div class="app-avatar">AM</div>
+          </div>
+
+          <!-- Hero still — single frame, no carousel -->
+          <div class="hero-still">
+            <div class="hero-still-texture"></div>
+            <div class="hero-content">
+              <div class="hero-badge">▶ Featured Series</div>
+              <div class="hero-title">The Lagos<br>Affair</div>
+              <div class="hero-meta">Season 2 &nbsp;·&nbsp; 8 Episodes &nbsp;·&nbsp; Drama</div>
+              <div class="hero-actions">
+                <button class="hero-play-btn"><span class="hero-play-icon">▶</span> Watch Now</button>
+                <button class="hero-more-btn">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Browse rows -->
+          <div class="browse-section">
+            <div class="browse-row-header">
+              <span class="row-title">Continue Watching</span>
+              <span class="row-see-all">See all →</span>
+            </div>
+            <div class="card-scroll">
+              <div class="poster-card">
+                <div class="poster-img p1">
+                  <div class="poster-progress"><div class="poster-progress-fill" style="width:68%;"></div></div>
+                </div>
+              </div>
+              <div class="poster-card">
+                <div class="poster-img p2">
+                  <div class="poster-progress"><div class="poster-progress-fill" style="width:22%;"></div></div>
+                </div>
+              </div>
+              <div class="poster-card">
+                <div class="poster-img p3"></div>
+              </div>
+              <div class="poster-card">
+                <div class="poster-img p4"></div>
+              </div>
+            </div>
+
+            <div class="browse-row-header" style="padding-top:18px;">
+              <span class="row-title">Trending in Drama</span>
+              <span class="row-see-all">See all →</span>
+            </div>
+            <div class="card-scroll">
+              <div class="poster-card">
+                <div class="poster-img p5"></div>
+              </div>
+              <div class="poster-card">
+                <div class="poster-img p6"></div>
+              </div>
+              <div class="poster-card">
+                <div class="poster-img p1"></div>
+              </div>
+              <div class="poster-card">
+                <div class="poster-img p3"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-nav">
+            <div class="nav-item active">
+              <span class="nav-icon">⌂</span>
+              <span class="nav-label">Home</span>
+            </div>
+            <div class="nav-item">
+              <span class="nav-icon">◎</span>
+              <span class="nav-label">Discover</span>
+            </div>
+            <div class="nav-item">
+              <span class="nav-icon">◈</span>
+              <span class="nav-label">Soul</span>
+            </div>
+            <div class="nav-item">
+              <span class="nav-icon">◫</span>
+              <span class="nav-label">Library</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRAMA DETAIL -->
+      <div>
+        <div class="phone-label">Drama Detail</div>
+        <div class="phone-frame">
+          <div class="detail-hero">
+            <div class="detail-back">←</div>
+            <div class="detail-content">
+              <div class="detail-genres">
+                <span class="genre-tag">Drama</span>
+                <span class="genre-tag">Thriller</span>
+                <span class="genre-tag">Lagos</span>
+              </div>
+              <div class="detail-title">Blood &amp;<br>Silk</div>
+              <div class="detail-stats">
+                <span class="detail-stat">2024</span>
+                <span class="detail-stat-sep">·</span>
+                <span class="detail-stat">10 eps</span>
+                <span class="detail-stat-sep">·</span>
+                <span class="detail-stat">45min</span>
+                <span class="detail-stat-sep">·</span>
+                <span class="badge badge-live" style="font-size:9px;padding:2px 7px;">● Live</span>
+              </div>
+              <div class="detail-desc">
+                A fashion mogul's empire unravels when her business partner surfaces after seven years missing — with secrets that could destroy everything she built.
+              </div>
+              <div class="detail-actions">
+                <div class="detail-play">▶ &nbsp;Play Episode 1</div>
+                <div class="detail-watchlist">＋</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Episodes -->
+          <div style="background:var(--bg);">
+            <div style="padding:14px 20px 10px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--text);">Episodes</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);">Season 1</span>
+            </div>
+
+            <div class="detail-episode-row">
+              <div class="ep-thumb">
+                <div class="ep-thumb-bg p1" style="border-radius:6px;"></div>
+                <div class="ep-play-overlay" style="color:var(--accent);">▶</div>
+              </div>
+              <div class="ep-info">
+                <div class="ep-title">Ep 1 — The Return</div>
+                <div>
+                  <div class="progress-track" style="width:80px;margin-top:4px;">
+                    <div class="progress-fill" style="width:100%;background:var(--live);"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="ep-duration">43m</div>
+            </div>
+
+            <div class="detail-episode-row">
+              <div class="ep-thumb">
+                <div class="ep-thumb-bg p2" style="border-radius:6px;"></div>
+                <div class="ep-play-overlay" style="color:var(--text);opacity:.6;">▶</div>
+              </div>
+              <div class="ep-info">
+                <div class="ep-title">Ep 2 — Old Money</div>
+                <div class="ep-meta">Watching now</div>
+              </div>
+              <div class="ep-duration">47m</div>
+            </div>
+
+            <div class="detail-episode-row">
+              <div class="ep-thumb">
+                <div class="ep-thumb-bg p3" style="border-radius:6px;"></div>
+                <div class="ep-play-overlay" style="color:var(--text);opacity:.3;">▶</div>
+              </div>
+              <div class="ep-info">
+                <div class="ep-title">Ep 3 — Silk Road</div>
+                <div class="ep-meta">41 min</div>
+              </div>
+              <div class="ep-duration">41m</div>
+            </div>
+          </div>
+
+          <div class="bottom-nav">
+            <div class="nav-item">
+              <span class="nav-icon">⌂</span>
+              <span class="nav-label">Home</span>
+            </div>
+            <div class="nav-item">
+              <span class="nav-icon">◎</span>
+              <span class="nav-label">Discover</span>
+            </div>
+            <div class="nav-item">
+              <span class="nav-icon">◈</span>
+              <span class="nav-label">Soul</span>
+            </div>
+            <div class="nav-item">
+              <span class="nav-icon">◫</span>
+              <span class="nav-label">Library</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SPACING -->
+  <section>
+    <h2 class="section-label">05 &nbsp; Spacing Scale</h2>
+    <div style="background:var(--surface);border-radius:12px;padding:32px 36px;">
+      <div class="spacing-row">
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:4px;"></div>
+          <div class="spacing-label">2xs<br>4px</div>
+        </div>
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:8px;"></div>
+          <div class="spacing-label">xs<br>8px</div>
+        </div>
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:12px;"></div>
+          <div class="spacing-label">sm<br>12px</div>
+        </div>
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:16px;"></div>
+          <div class="spacing-label">md<br>16px</div>
+        </div>
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:24px;"></div>
+          <div class="spacing-label">lg<br>24px</div>
+        </div>
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:32px;"></div>
+          <div class="spacing-label">xl<br>32px</div>
+        </div>
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:48px;"></div>
+          <div class="spacing-label">2xl<br>48px</div>
+        </div>
+        <div class="spacing-item">
+          <div class="spacing-block" style="height:64px;"></div>
+          <div class="spacing-label">3xl<br>64px</div>
+        </div>
+      </div>
+      <p style="font-family:'Geist Sans',sans-serif;font-size:13px;color:var(--muted);margin-top:24px;">
+        Base unit: 4px. Card gutter: 12px. Section padding: 24px. Content max-width: 430px mobile · 1200px web.
+        Border radius scale: sm 6px · md 8px · lg 12px · card 10px · pill 100px.
+      </p>
+    </div>
+  </section>
+
+  <!-- MOTION -->
+  <section>
+    <h2 class="section-label">06 &nbsp; Motion</h2>
+    <div class="motion-grid">
+      <div class="motion-item">
+        <div class="motion-name">Micro</div>
+        <div class="motion-val">50–100ms</div>
+        <div class="motion-desc">Tap states, toggle switches</div>
+      </div>
+      <div class="motion-item">
+        <div class="motion-name">Short</div>
+        <div class="motion-val">150ms</div>
+        <div class="motion-desc">Card fade-up enter, button response</div>
+      </div>
+      <div class="motion-item">
+        <div class="motion-name">Medium</div>
+        <div class="motion-val">250–400ms</div>
+        <div class="motion-desc">Screen transitions, modal open</div>
+      </div>
+      <div class="motion-item">
+        <div class="motion-name">Token Pulse</div>
+        <div class="motion-val">600ms</div>
+        <div class="motion-desc">Soul Token reward — gold glow on counter</div>
+      </div>
+    </div>
+    <p style="font-family:'Geist Sans',sans-serif;font-size:13px;color:var(--muted);margin-top:16px;">
+      Easing: enter <code style="font-family:'JetBrains Mono',monospace;color:var(--accent);">ease-out</code> &nbsp;·&nbsp; exit <code style="font-family:'JetBrains Mono',monospace;color:var(--accent);">ease-in</code> &nbsp;·&nbsp; move <code style="font-family:'JetBrains Mono',monospace;color:var(--accent);">ease-in-out</code>. Nothing auto-plays without user intent.
+    </p>
+  </section>
+
+  <!-- DECISIONS LOG -->
+  <section>
+    <h2 class="section-label">07 &nbsp; Decisions Log</h2>
+    <div style="background:var(--surface);border-radius:12px;overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Decision</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2026-05-12</td>
+            <td>Aesthetic: Obsidian Cinema <span class="risk-tag risk-safe">safe</span></td>
+            <td>Dark is table stakes for streaming. Content pops on OLED. Matches "Netflix/Disney+ level" north star.</td>
+          </tr>
+          <tr>
+            <td>2026-05-12</td>
+            <td>Display: Fraunces (editorial serif) <span class="risk-tag risk-safe">safe</span></td>
+            <td>Drama titles need literary gravity. Free on Google Fonts. Achieves Canela feel without license cost.</td>
+          </tr>
+          <tr>
+            <td>2026-05-12</td>
+            <td>Body: Geist Sans <span class="risk-tag risk-safe">safe</span></td>
+            <td>Neutral, clean, modern. Zero cultural baggage. Reads long descriptions without fatigue.</td>
+          </tr>
+          <tr>
+            <td>2026-05-12</td>
+            <td>Text: #F0EDE8 warm white (not #FFF) <span class="risk-tag risk-safe">safe</span></td>
+            <td>Pure white on near-black causes eye strain on OLED. Warm off-white is softer and more cinematic.</td>
+          </tr>
+          <tr>
+            <td>2026-05-12</td>
+            <td>Soul Tokens: ◈ 2,840 in JetBrains Mono <span class="risk-tag risk-risk">risk</span></td>
+            <td>No badge, no icon. A number and a symbol — quiet status, not gamification. Feels like a real economy. New users may need tooltip to understand ◈.</td>
+          </tr>
+          <tr>
+            <td>2026-05-12</td>
+            <td>Hero: single still frame (no carousel) <span class="risk-tag risk-safe">safe</span></td>
+            <td>One show, full attention. Cinematheque over buffet. Removed carousel risk in favour of typographic tokens as the sole bold departure.</td>
+          </tr>
+          <tr>
+            <td>2026-05-12</td>
+            <td>Token gold: #C9A84C (old coin, not Vegas) <span class="risk-tag risk-safe">safe</span></td>
+            <td>Warmer, more earned than bright gold. Carries gravity. Doesn't cheapen the dark aesthetic.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
