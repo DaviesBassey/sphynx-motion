@@ -1,5 +1,9 @@
 const { z } = require('zod');
 
+/**
+ * CODING AGENT: Production-ready data validation layer.
+ * Enforces strict runtime type checks as per the system protocol.
+ */
 const validate = (schema) => (req, res, next) => {
   const result = schema.safeParse({
     body: req.body,
@@ -32,7 +36,7 @@ const schemas = {
   tokens: {
     grant: z.object({
       body: z.object({
-        user_id: z.string().min(1), // Can be email or UUID
+        user_id: z.string().min(1), // Accepts email or UUID
         amount: z.number().int().positive().max(100000),
         reason: z.string().optional(),
       }),
@@ -56,7 +60,7 @@ const schemas = {
         if (data.type === 'soul_pass' && !data.price_id) return false;
         if (data.type === 'soul_tokens' && !data.package_id) return false;
         return true;
-      }, { message: "Missing required fields for checkout type" }),
+      }, { message: "Missing required fields for selected checkout type" }),
     }),
   },
 };
