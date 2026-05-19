@@ -1,36 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic_settings import BaseSettings
 import sentry_sdk
 import time
 from typing import Optional, Dict, List, Callable, Awaitable
+from .config import settings
 from .routers import underwriting, payments
-
-class Settings(BaseSettings):
-    """
-    Converged System Settings.
-    Strictly enforced via Pydantic v2.
-    """
-    SENTRY_DSN: Optional[str] = None
-    GROQ_API_KEY: str
-    OPIK_API_KEY: Optional[str] = None
-    DATABASE_URL: str
-    STRIPE_SECRET_KEY: str
-    PUBLIC_ORIGIN: str = "http://localhost:3000"
-
-    class Config:
-        env_file = ".env"
-
-try:
-    settings = Settings()
-except Exception:
-    # Fallback for initialization environment where env vars aren't set yet
-    # In production, this will fail fast as intended.
-    settings = Settings(
-        GROQ_API_KEY="unconfigured",
-        DATABASE_URL="unconfigured",
-        STRIPE_SECRET_KEY="unconfigured"
-    )
+from .api.v1 import portfolio
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=1.0)
@@ -107,6 +82,7 @@ app.add_middleware(
 
 app.include_router(underwriting.router, prefix="/api/v1/underwriting", tags=["underwriting"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
+app.include_router(portfolio.router, prefix="/api/v1/portfolio", tags=["portfolio"])
 
 @app.get("/health")
 async def health() -> Dict[str, str]:
