@@ -54,9 +54,22 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 const ROOT = path.join(__dirname, '..');
 
+const rateLimit = require('express-rate-limit');
+
 // Trust the first hop (Cloudflare / any reverse proxy) so that
 // X-Forwarded-For is used for real-IP detection and rate-limiting.
 app.set('trust proxy', 1);
+
+// ── INFRASTRUCTURE RATE LIMITING ──────────────────────────────────────────────
+// Global App Router Boundary: Max 100 requests per sliding minute per unique IP footprint.
+const globalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', globalLimiter);
 
 // ── MIDDLEWARE ────────────────────────────────────────────────────────────────
 // Security headers — disable frameguard for the embedded player iframe
@@ -85,8 +98,9 @@ app.use(cors(corsOptions));
 // Mux webhook needs raw bytes for HMAC verification — register BEFORE express.json()
 app.use('/api/mux/webhook', express.raw({ type: 'application/json' }));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Ingestion Hardening: Drop payloads exceeding 500KB on standard metadata endpoints
+app.use(express.json({ limit: '500kb' }));
+app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 app.use(cookieParser());
 
 // ── PUBLIC APP ────────────────────────────────────────────────────────────────

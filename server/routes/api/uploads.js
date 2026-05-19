@@ -5,9 +5,9 @@ const { requireRole } = require('../../middleware/roles');
 
 const router = express.Router();
 
-// Keep files in memory for small uploads (posters/trailers preview).
-// For large videos, disk storage is safer — prevents OOM.
-const memStorage  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+// Ingestion & Payload Hardening:
+// Drop payloads exceeding 5MB on raw multipart image uploads.
+const memStorage  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const diskStorage = multer({ dest: '/tmp/sphynx-uploads/', limits: { fileSize: 2 * 1024 * 1024 * 1024 } });
 
 const ALLOWED_IMAGE = ['image/jpeg', 'image/png', 'image/webp'];

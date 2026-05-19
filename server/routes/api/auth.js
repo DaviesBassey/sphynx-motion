@@ -9,8 +9,10 @@ const router = express.Router();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Too many login attempts. Try again in 15 minutes.' },
+  max: 5,
+  message: { error: 'Too many authorization attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 const COOKIE_OPTS = {
