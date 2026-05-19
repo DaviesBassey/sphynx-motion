@@ -64,10 +64,23 @@ app.use(helmet({
   contentSecurityPolicy: false, // CSP is set per-route via meta tag in HTML
   frameguard: false,            // allow video embeds
   crossOriginEmbedderPolicy: false,
+  xPoweredBy: false,
 }));
 
-const _allowedOrigin = process.env.PUBLIC_ORIGIN || `http://localhost:${PORT}`;
-app.use(cors({ origin: _allowedOrigin, credentials: true }));
+// Strict CORS: only allow configured PUBLIC_ORIGIN
+const _allowedOrigin = process.env.PUBLIC_ORIGIN;
+if (!_allowedOrigin && process.env.NODE_ENV === 'production') {
+  console.warn('[SECURITY] PUBLIC_ORIGIN not set. Defaulting to strict same-origin.');
+}
+
+const corsOptions = {
+  origin: _allowedOrigin || (process.env.NODE_ENV === 'production' ? false : true),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+};
+
+app.use(cors(corsOptions));
 
 // Mux webhook needs raw bytes for HMAC verification — register BEFORE express.json()
 app.use('/api/mux/webhook', express.raw({ type: 'application/json' }));
@@ -77,30 +90,34 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ── PUBLIC APP ────────────────────────────────────────────────────────────────
-// index.html and sw.js must never be served stale — always revalidate
-app.get(['/', '/index.html'], (req, res, next) => {
+// Cache-control headers for critical PWA files
+const nocache = (req, res, next) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
   next();
+};
+
+app.get(['/', '/index.html', '/sw.js', '/manifest.webmanifest'], nocache);
+
+// Strictly serve only designated public assets.
+// Prevents directory traversal and exposure of server-side source/configs.
+const PUBLIC_DIRS = ['admin', 'assets', 'web-pages', 'www'];
+PUBLIC_DIRS.forEach(dir => {
+  app.use(`/${dir}`, express.static(path.join(ROOT, dir), { dotfiles: 'ignore', index: false }));
 });
-// Never cache the app shell or service worker — Cloudflare must always revalidate
-app.get('/', (req, res, next) => {
-  res.set('Cache-Control', 'no-store, must-revalidate');
-  next();
+
+// Root-level public files
+app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/index.html', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/sw.js', (req, res) => res.sendFile(path.join(ROOT, 'sw.js')));
+app.get('/manifest.webmanifest', (req, res) => res.sendFile(path.join(ROOT, 'manifest.webmanifest')));
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(ROOT, 'favicon.ico')));
+
+// Block access to internal directories explicitly
+app.use(['/server', '/supabase', '/scripts', '/.git'], (req, res) => {
+  res.status(404).json({ error: 'Not found' });
 });
-app.get('/index.html', (req, res, next) => {
-  res.set('Cache-Control', 'no-store, must-revalidate');
-  next();
-});
-app.get('/sw.js', (req, res, next) => {
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  next();
-});
-app.use(express.static(ROOT, {
-  index: 'index.html',
-  dotfiles: 'ignore',
-}));
 
 // ── HEALTH CHECK (public — used by dashboard to show connection status) ──────
 app.get('/api/admin/health', async (req, res) => {
@@ -292,8 +309,14 @@ app.use('/', legalRouter);
 
 // ── SPA FALLBACK ──────────────────────────────────────────────────────────────
 // Any unmatched route → serve the public app
-app.get('*', (req, res) => {
+// Note: This must only handle non-API routes.
+app.get(/^(?!\/api\/)/, (req, res) => {
   res.sendFile(path.join(ROOT, 'index.html'));
+});
+
+// Explicit 404 for unmatched API routes
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
 // ── GLOBAL EXPRESS ERROR HANDLER ──────────────────────────────────────────────
