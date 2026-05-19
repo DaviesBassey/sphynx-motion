@@ -15,6 +15,12 @@ class RiskLevel(str, Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
+class TransactionStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    REVERSED = "reversed"
+
 # --- LangGraph State Records ---
 class AgentState(TypedDict):
     """Deterministic LangGraph state record."""
@@ -31,12 +37,23 @@ class GroqResponse(BaseModel):
     content: str
     usage: Dict[str, int]
 
-# --- Fintech Domain Models ---
+# --- Fintech Domain Models (Synchronized with DB 017) ---
 class Profile(BaseModel):
     id: str  # UUID
+    full_name: str
     email: EmailStr
-    role: Role = Role.USER
-    is_mfa_enabled: bool = False
+    updated_at: datetime
+    stripe_customer_id: Optional[str] = None
+    financial_profile_text: Optional[str] = None
+    # Represent vector as list of floats
+    portfolio_embedding: Optional[List[float]] = Field(None, min_length=1536, max_length=1536)
+
+class Transaction(BaseModel):
+    id: str  # UUID
+    user_id: str  # UUID
+    amount: float = Field(..., decimal_places=4)
+    currency: str = Field(..., min_length=3, max_length=3) # CHAR(3)
+    status: TransactionStatus
     created_at: datetime
 
 class UnderwritingRecord(BaseModel):

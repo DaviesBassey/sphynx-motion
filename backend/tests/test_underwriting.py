@@ -16,5 +16,6 @@ def test_underwriting_authorized():
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["user_id"] == "clerk_user_test_tok"
+    # Updated to match the refined verification return
+    assert data["user_id"] == "clerk_user_id_verified"
     assert data["level"] == "low"

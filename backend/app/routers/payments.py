@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from core.protocol import PaymentIntent
 from ..lib.auth import verify_clerk_session
+from ..main import settings
 import stripe
-import os
 
 router = APIRouter()
 
@@ -14,17 +14,16 @@ async def create_payment_intent(
     """
     Isolated Server-Side Stripe Interaction.
     Enforces server-side proxying to prevent secret exposure.
-    Strictly uses the STRIPE_SECRET_KEY from environment.
+    Strictly uses the settings configuration.
     """
-    stripe_key: str = os.getenv("STRIPE_SECRET_KEY", "")
-    if not stripe_key:
+    if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY == "placeholder":
          raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment gateway unconfigured"
         )
 
     try:
-        stripe.api_key = stripe_key
+        stripe.api_key = settings.STRIPE_SECRET_KEY
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency="zar",

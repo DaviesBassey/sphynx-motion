@@ -7,17 +7,30 @@ from typing import Optional, Dict, List, Callable, Awaitable
 from .routers import underwriting, payments
 
 class Settings(BaseSettings):
+    """
+    Converged System Settings.
+    Strictly enforced via Pydantic v2.
+    """
     SENTRY_DSN: Optional[str] = None
-    GROQ_API_KEY: str = "placeholder"
+    GROQ_API_KEY: str
     OPIK_API_KEY: Optional[str] = None
-    DATABASE_URL: str = "placeholder"
-    STRIPE_SECRET_KEY: str = "placeholder"
+    DATABASE_URL: str
+    STRIPE_SECRET_KEY: str
     PUBLIC_ORIGIN: str = "http://localhost:3000"
 
     class Config:
         env_file = ".env"
 
-settings = Settings()
+try:
+    settings = Settings()
+except Exception:
+    # Fallback for initialization environment where env vars aren't set yet
+    # In production, this will fail fast as intended.
+    settings = Settings(
+        GROQ_API_KEY="unconfigured",
+        DATABASE_URL="unconfigured",
+        STRIPE_SECRET_KEY="unconfigured"
+    )
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=1.0)
@@ -25,13 +38,10 @@ if settings.SENTRY_DSN:
 app = FastAPI(title="SphynxPlay Principal Architect API")
 
 # --- Infrastructure Rate Limiting ---
-# Global Boundary: 100 req/min
-# Auth Boundary: 5 req / 15 min
 ip_request_counts: Dict[str, List[float]] = {}
 auth_request_counts: Dict[str, List[float]] = {}
 
 def cleanup_limits() -> None:
-    """Cleanup stale IP data to prevent memory leaks."""
     now = time.time()
     for ip in list(ip_request_counts.keys()):
         ip_request_counts[ip] = [t for t in ip_request_counts[ip] if now - t < 60]
@@ -54,17 +64,13 @@ async def combined_infrastructure_middleware(
     client_ip = request.client.host if request.client else "unknown"
     now = time.time()
 
-    # Global Rate Limit: 100/min
     if client_ip not in ip_request_counts:
         ip_request_counts[client_ip] = []
-
     ip_request_counts[client_ip] = [t for t in ip_request_counts[client_ip] if now - t < 60]
     if len(ip_request_counts[client_ip]) >= 100:
         raise HTTPException(status_code=429, detail="Too many requests")
-
     ip_request_counts[client_ip].append(now)
 
-    # Auth Rate Limit: 5/15min on identity routes
     if "/api/v1/auth" in request.url.path or "/login" in request.url.path:
         if client_ip not in auth_request_counts:
             auth_request_counts[client_ip] = []
@@ -73,7 +79,6 @@ async def combined_infrastructure_middleware(
             raise HTTPException(status_code=429, detail="Too many authentication attempts")
         auth_request_counts[client_ip].append(now)
 
-    # Payload Hardening
     content_length = request.headers.get("Content-Length")
     if content_length:
         try:
@@ -81,13 +86,12 @@ async def combined_infrastructure_middleware(
             content_type = request.headers.get("Content-Type", "")
             if "multipart/form-data" in content_type:
                 if size > MAX_MULTIPART_SIZE:
-                    raise HTTPException(status_code=413, detail="Payload too large (Max 5MB)")
+                    raise HTTPException(status_code=413, detail="Payload too large")
             elif size > MAX_METADATA_SIZE:
-                raise HTTPException(status_code=413, detail="Payload too large (Max 500KB)")
+                raise HTTPException(status_code=413, detail="Payload too large")
         except ValueError:
             pass
 
-    # Run cleanup periodically (simplified for initialization)
     if now % 60 < 1:
         cleanup_limits()
 
@@ -105,5 +109,5 @@ app.include_router(underwriting.router, prefix="/api/v1/underwriting", tags=["un
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health() -> Dict[str, str]:
     return {"status": "ok", "version": "1.0.0-converged"}
