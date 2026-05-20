@@ -3,13 +3,16 @@ const express  = require('express');
 const rateLimit = require('express-rate-limit');
 const { supabaseAdmin } = require('../../lib/supabase');
 const { requireAuth, _invalidateRoleCache } = require('../../middleware/auth');
+const { validate, schemas } = require('../../lib/validation');
 
 const router = express.Router();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Too many login attempts. Try again in 15 minutes.' },
+  max: 5,
+  message: { error: 'Too many authorization attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 const COOKIE_OPTS = {
@@ -20,7 +23,7 @@ const COOKIE_OPTS = {
 };
 
 // POST /api/admin/auth/login
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', loginLimiter, validate(schemas.auth.login), async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
@@ -60,7 +63,14 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     // Sign our own session token with COOKIE_SECRET so requireAuth can verify
     // locally without any Supabase network call on every request.
-    const cookieSecret = process.env.COOKIE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const cookieSecret = process.env.COOKIE_SECRET;
+    const isPlaceholder = !cookieSecret || cookieSecret === 'CHANGE_THIS' || cookieSecret.includes('your-');
+
+    if (isPlaceholder) {
+      console.error('[CRITICAL] COOKIE_SECRET not configured.');
+      return res.status(503).json({ error: 'Server configuration error. Contact administrator.' });
+    }
+
     const sessionToken = jwt.sign(
       { sub: data.user.id, email: data.user.email, role: profile.role, display_name: profile.display_name },
       cookieSecret,
@@ -91,7 +101,7 @@ router.post('/logout', async (req, res) => {
   const token = req.cookies?.sphynx_admin_session;
   if (token) {
     try {
-      const cookieSecret = process.env.COOKIE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const cookieSecret = process.env.COOKIE_SECRET;
       const payload = jwt.verify(token, cookieSecret);
       if (payload?.sub) _invalidateRoleCache(payload.sub);
     } catch {}
@@ -105,7 +115,7 @@ router.get('/logout', async (req, res) => {
   const token = req.cookies?.sphynx_admin_session;
   if (token) {
     try {
-      const cookieSecret = process.env.COOKIE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const cookieSecret = process.env.COOKIE_SECRET;
       const payload = jwt.verify(token, cookieSecret);
       if (payload?.sub) _invalidateRoleCache(payload.sub);
     } catch {}

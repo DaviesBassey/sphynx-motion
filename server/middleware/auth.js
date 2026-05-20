@@ -17,8 +17,15 @@ async function requireAuth(req, res, next) {
   }
 
   // Primary: verify with COOKIE_SECRET (our own signed JWT — no network call)
-  const cookieSecret = process.env.COOKIE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (cookieSecret) {
+  const cookieSecret = process.env.COOKIE_SECRET;
+  const isPlaceholder = !cookieSecret || cookieSecret === 'CHANGE_THIS' || cookieSecret.includes('your-');
+
+  if (isPlaceholder && process.env.NODE_ENV === 'production') {
+    console.error('[CRITICAL] COOKIE_SECRET not set in production. Access denied.');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  if (cookieSecret && !isPlaceholder) {
     try {
       const payload = jwt.verify(token, cookieSecret);
       req.user = {

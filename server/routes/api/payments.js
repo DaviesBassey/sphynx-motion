@@ -17,6 +17,7 @@
 const express  = require('express');
 const crypto   = require('crypto');
 const { supabaseAdmin } = require('../../lib/supabase');
+const { validate, schemas } = require('../../lib/validation');
 
 const router = express.Router();
 
@@ -55,7 +56,7 @@ router.get('/packages', async (req, res) => {
  * type=soul_pass    → Stripe subscription checkout (price_id required)
  * type=soul_tokens  → Stripe one-time payment (package_id required)
  */
-router.post('/stripe/checkout', async (req, res) => {
+router.post('/stripe/checkout', validate(schemas.payments.checkout), async (req, res) => {
   if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'Stripe not configured' });
 
   const user = await getUserFromToken(req);

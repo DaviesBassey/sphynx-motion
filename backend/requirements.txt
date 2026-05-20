@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+langgraph
+pydantic[email]
+pydantic-settings
+opik
+sentry-sdk[fastapi]
+groq
+jinaai
+stripe
+supabase
+python-multipart

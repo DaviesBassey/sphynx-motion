@@ -1,6 +1,7 @@
 const express = require('express');
 const { supabaseAdmin } = require('../../lib/supabase');
 const { requireRole } = require('../../middleware/roles');
+const { validate, schemas } = require('../../lib/validation');
 
 const router = express.Router();
 
@@ -43,13 +44,8 @@ router.get('/transactions', async (req, res) => {
 });
 
 // POST /api/admin/tokens/grant  — manual token grant (admin+)
-router.post('/grant', requireRole('admin'), async (req, res) => {
+router.post('/grant', requireRole('admin'), validate(schemas.tokens.grant), async (req, res) => {
   const { user_id, amount, reason } = req.body;
-
-  const MAX_GRANT = 100_000;
-  if (!user_id || !amount || amount <= 0 || amount > MAX_GRANT) {
-    return res.status(400).json({ error: `user_id and amount (1–${MAX_GRANT}) are required` });
-  }
 
   // Resolve email to UUID if needed
   let resolvedId = user_id;
@@ -78,12 +74,8 @@ router.post('/grant', requireRole('admin'), async (req, res) => {
 });
 
 // POST /api/admin/tokens/deduct  — manual deduction (superadmin only)
-router.post('/deduct', requireRole('superadmin'), async (req, res) => {
+router.post('/deduct', requireRole('superadmin'), validate(schemas.tokens.deduct), async (req, res) => {
   const { user_id, amount, reason } = req.body;
-
-  if (!user_id || !amount || amount <= 0) {
-    return res.status(400).json({ error: 'user_id and positive amount are required' });
-  }
 
   const { data, error } = await supabaseAdmin.rpc('deduct_soul_tokens', {
     p_user_id:  user_id,
