@@ -121,7 +121,7 @@ function page(title, subtitle, body, opts = {}) {
 </nav>
 
 <div class="hero">
-  <div class="hero-eyebrow">SphynxPlay (Pty) Ltd</div>
+  <div class="hero-eyebrow">Sphynx Motion (Pty) Ltd</div>
   <h1 class="hero-title">${title}</h1>
   <p class="hero-sub">${subtitle}</p>
 </div>
@@ -144,7 +144,7 @@ function page(title, subtitle, body, opts = {}) {
 </div>
 
 <footer class="footer">
-  &copy; 2026 SphynxPlay (Pty) Ltd · South Africa ·
+  &copy; 2026 Sphynx Motion (Pty) Ltd · South Africa ·
   <a href="mailto:info@sphynxplay.com">info@sphynxplay.com</a>
 </footer>
 
@@ -157,10 +157,10 @@ router.get('/privacy', (req, res) => res.send(page(
   'Privacy Policy',
   'How SphynxPlay collects, uses, and protects your personal information — POPIA & GDPR compliant.',
   `
-  <p class="effective">Effective: 21 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd &nbsp;·&nbsp; Governed by POPIA &amp; GDPR</p>
+  <p class="effective">Effective: 21 April 2026 &nbsp;·&nbsp; Sphynx Motion (Pty) Ltd &nbsp;·&nbsp; Governed by POPIA &amp; GDPR</p>
 
   <h2>1. Who We Are</h2>
-  <p>SphynxPlay (Pty) Ltd operates the SphynxPlay streaming platform — a vertical African drama service available on iOS, Android, and the web. By using the Service you agree to this policy.</p>
+  <p>Sphynx Motion (Pty) Ltd operates the SphynxPlay streaming platform — a vertical African drama service available on iOS, Android, and the web. By using the Service you agree to this policy.</p>
 
   <h2>2. Information We Collect</h2>
   <p><strong>You provide:</strong> name, email address, password, profile display name, and payment details. We never store card numbers — payments are processed entirely by Apple (App Store) or Google (Play Store).</p>
@@ -234,7 +234,7 @@ router.get('/privacy', (req, res) => res.send(page(
   <div class="contact-grid">
     <div class="contact-card"><div class="icon">🔒</div><div class="label">Privacy Officer</div><div class="value"><a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a></div></div>
     <div class="contact-card"><div class="icon">📧</div><div class="label">General</div><div class="value"><a href="mailto:info@sphynxplay.com">info@sphynxplay.com</a></div></div>
-    <div class="contact-card"><div class="icon">🏢</div><div class="label">Registered</div><div class="value">SphynxPlay (Pty) Ltd · South Africa</div></div>
+    <div class="contact-card"><div class="icon">🏢</div><div class="label">Registered</div><div class="value">Sphynx Motion (Pty) Ltd · South Africa</div></div>
   </div>
   <p>We aim to respond to all privacy requests within 5 business days.</p>
   `,
@@ -246,7 +246,7 @@ router.get('/terms', (req, res) => res.send(page(
   'Terms of Use',
   'The rules and conditions governing your use of the SphynxPlay platform.',
   `
-  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd &nbsp;·&nbsp; Republic of South Africa</p>
+  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; Sphynx Motion (Pty) Ltd &nbsp;·&nbsp; Republic of South Africa</p>
 
   <h2>1. Acceptance</h2>
   <p>By accessing or using SphynxPlay — on the web, iOS app, or Android app — you agree to be bound by these Terms of Use and our <a href="/privacy">Privacy Policy</a>. If you do not agree, do not use the Service.</p>
@@ -269,7 +269,7 @@ router.get('/terms', (req, res) => res.send(page(
   <p>Soul Tokens are a virtual in-app currency with no monetary value. They are non-transferable, cannot be exchanged for cash, and are forfeited upon account closure or termination. See the full <a href="/soul-token-terms">Soul Token Terms</a>.</p>
 
   <h2>6. Intellectual Property</h2>
-  <p>All content on SphynxPlay — series, episodes, artwork, logos, software, and UI — is the property of SphynxPlay (Pty) Ltd or its licensors and is protected by copyright and intellectual property law. You may not reproduce, redistribute, scrape, or resell any content without express written permission.</p>
+  <p>All content on SphynxPlay — series, episodes, artwork, logos, software, and UI — is the property of Sphynx Motion (Pty) Ltd or its licensors and is protected by copyright and intellectual property law. You may not reproduce, redistribute, scrape, or resell any content without express written permission.</p>
 
   <h2>7. Acceptable Use</h2>
   <p>You agree not to:</p>
@@ -308,7 +308,7 @@ router.get('/content-policy', (req, res) => res.send(page(
   'Content Policy',
   'SphynxPlay\'s standards for the content we publish and the behaviour we expect from creators and viewers.',
   `
-  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd</p>
+  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; Sphynx Motion (Pty) Ltd</p>
 
   <h2>Our Commitment</h2>
   <p>SphynxPlay is dedicated to authentic African storytelling. We are committed to maintaining a platform that is safe, inclusive, and respectful for all viewers and creators. This policy describes what content we allow, what we prohibit, and how violations are handled.</p>
@@ -379,7 +379,7 @@ router.get('/soul-token-terms', (req, res) => res.send(page(
   'Soul Token Terms',
   'The rules governing Soul Tokens — SphynxPlay\'s in-app virtual currency.',
   `
-  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd</p>
+  <p class="effective">Effective: 1 April 2026 &nbsp;·&nbsp; Sphynx Motion (Pty) Ltd</p>
 
   <div class="highlight-box">
     <strong>Important:</strong> Soul Tokens are a virtual in-app currency only. They have no monetary value, cannot be exchanged for cash, and are not redeemable outside of SphynxPlay. All Soul Token purchases are processed by Apple App Store or Google Play — not directly by SphynxPlay.
@@ -441,7 +441,7 @@ router.get('/soul-token-terms', (req, res) => res.send(page(
   <p>No compensation is provided for forfeited tokens except where required by applicable law.</p>
 
   <h2>10. Changes to the Soul Token System</h2>
-  <p>SphynxPlay reserves the right to modify earning rates, spend costs, available rewards, or any other aspect of the Soul Token system at any time. Material changes will be communicated in-app with at least 14 days notice. Continued use of Soul Tokens after the change takes effect constitutes acceptance.</p>
+  <p>Sphynx Motion (Pty) Ltd reserves the right to modify earning rates, spend costs, available rewards, or any other aspect of the Soul Token system at any time. Material changes will be communicated in-app with at least 14 days notice. Continued use of Soul Tokens after the change takes effect constitutes acceptance.</p>
 
   <h2>11. Contact</h2>
   <p>Questions about Soul Tokens: <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a></p>
@@ -580,7 +580,7 @@ router.get('/faq', (req, res) => res.send(page(
   'Frequently Asked Questions',
   'Answers to the most common questions about SphynxPlay — accounts, subscriptions, Soul Tokens, and playback.',
   `
-  <p class="effective">Last updated: May 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd</p>
+  <p class="effective">Last updated: May 2026 &nbsp;·&nbsp; Sphynx Motion (Pty) Ltd</p>
 
   <h2>Getting Started</h2>
 
