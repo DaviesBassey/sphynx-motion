@@ -41,3 +41,10 @@ CLAUDE.md
 
 # ── APP STORE ASSETS (local design exports, not source) ───────────────────────
 appstore-screenshots/
+
+# ── REACT CLIENT (secrets + build output) ─────────────────────────────────────
+client/.env
+client/.env.local
+client/.env.*.local
+client/dist/
+client/node_modules/

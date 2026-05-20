@@ -329,9 +329,23 @@ app.delete('/api/account', _accountDeleteLimiter, async (req, res) => {
 app.use('/', legalRouter);
 
 // ── SPA FALLBACK ──────────────────────────────────────────────────────────────
-// Any unmatched route → serve the public app
+// When SERVE_REACT=1, serve the compiled React app instead of index.html.
+// Run `npm run build:react` first, then set SERVE_REACT=1 in server/.env.
+const REACT_DIST = path.join(ROOT, 'client', 'dist');
+const serveReact = process.env.SERVE_REACT === '1' && (() => {
+  try { require('fs').statSync(REACT_DIST); return true; } catch { return false; }
+})();
+
+if (serveReact) {
+  app.use(express.static(REACT_DIST, { dotfiles: 'ignore' }));
+}
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
+  if (serveReact) {
+    res.sendFile(path.join(REACT_DIST, 'index.html'));
+  } else {
+    res.sendFile(path.join(ROOT, 'index.html'));
+  }
 });
 
 // ── GLOBAL EXPRESS ERROR HANDLER ──────────────────────────────────────────────

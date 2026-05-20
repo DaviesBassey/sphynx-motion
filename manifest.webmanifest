@@ -68,12 +68,12 @@
   "related_applications": [
     {
       "platform": "itunes",
-      "url": "https://apps.apple.com/app/sphynxmotion/id0000000000"
+      "url": "https://apps.apple.com/app/sphynxplay/id0000000000"
     },
     {
       "platform": "play",
-      "url": "https://play.google.com/store/apps/details?id=com.sphynxmotion.app",
-      "id": "com.sphynxmotion.app"
+      "url": "https://play.google.com/store/apps/details?id=com.sphynxplay.app",
+      "id": "com.sphynxplay.app"
     }
   ],
   "prefer_related_applications": false

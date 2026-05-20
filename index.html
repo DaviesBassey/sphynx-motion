@@ -2251,7 +2251,7 @@ svg defs { position: absolute; width: 0; height: 0; }
     </defs>
   </svg>
 
-  <!-- SPLASH — Netflix-style cover art loading screen -->
+  <!-- SPLASH — full-bleed cover art loading screen -->
   <div class="splash" id="splash">
     <div class="splash-bg"></div>
     <div class="splash-grad"></div>
@@ -2315,6 +2315,16 @@ svg defs { position: absolute; width: 0; height: 0; }
 
       <!-- Tab strip hidden per design system — content rows replace tabs -->
       <div class="atv-tab-strip" id="homeTabStrip" style="display:none"></div>
+
+      <!-- Most Trending — 3-column grid, first section after hero -->
+      <div class="trending-section" id="homeTrendSection">
+        <div class="trending-title" data-i18n="home.most_trending">Most Trending</div>
+        <div class="trending-grid" id="homeTrendGrid">
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
+        </div>
+      </div>
 
       <!-- Card grid — filled by JS, genre-grouped horizontal rows -->
       <div class="atv-grid-wrap" id="homeGrid">
@@ -2451,8 +2461,8 @@ svg defs { position: absolute; width: 0; height: 0; }
       <div class="member-get-app" style="margin:16px 16px 0;padding:16px;background:var(--surface2);border-radius:16px;text-align:center">
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Get the App</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button onclick="window.open('https://www.sphynxplay.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <span style="font-size:14px">🌐</span> sphynxplay.com
+          <button onclick="window.open('https://www.sphynxmotion.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">🌐</span> sphynxmotion.com
           </button>
           <button onclick="installPWA()" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
             <span style="font-size:14px">📲</span> Add to Home Screen
@@ -3452,12 +3462,12 @@ const modalContent = {
     <div style="text-align:center;padding:10px 0">
       <div style="font-size:36px;margin-bottom:12px">📲</div>
       <div class="modal-title">Get the App</div>
-      <div class="modal-sub" style="margin-bottom:16px">Install SphynxPlay on your home screen for the full experience — offline access, push notifications, and full-screen mode.</div>
+      <div class="modal-sub" style="margin-bottom:16px">Add SphynxPlay to your home screen for instant access — push notifications, full-screen mode, and a native app feel.</div>
       <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.15);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-dim);line-height:1.8;text-align:left">
-        ✓ Works offline<br>
+        ✓ Launch from your home screen<br>
         ✓ Push notifications<br>
-        ✓ Full-screen mode<br>
-        ✓ No App Store download required
+        ✓ Full-screen immersive mode<br>
+        ✓ Always up to date
       </div>
     </div>
     <button class="btn-generate" onclick="closeModal();installPWA()">Add to Home Screen →</button>
@@ -3711,9 +3721,9 @@ const modalContent = {
     <div style="margin-bottom:14px">
       ${[
         ['📧','Email Support','support@sphynxplay.com','mailto:support@sphynxplay.com'],
-        ['🌐','Website','www.sphynxplay.com','https://www.sphynxplay.com'],
-        ['📱','Instagram','@sphynxplay','https://www.sphynxplay.com'],
-        ['❓','FAQ','Browse common questions','https://www.sphynxplay.com'],
+        ['🌐','Website','www.sphynxmotion.com','https://www.sphynxmotion.com'],
+        ['📱','Instagram','@sphynxplay','https://www.instagram.com/sphynxplay'],
+        ['❓','FAQ','Browse common questions','https://www.sphynxmotion.com/support'],
       ].map(([icon,label,value,href]) => `
         <div onclick="window.open('${href}','_system')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">
           <div style="font-size:20px;width:32px;text-align:center">${icon}</div>
@@ -3963,16 +3973,27 @@ function openModal(key) {
   if (_currentLang !== 'en') _applyTransToEl(content);
 }
 
+function _syncSoulDisplays(soul) {
+  const fmt = soul.toLocaleString();
+  const el  = document.getElementById('walletBalance');
+  if (el) el.textContent = fmt;
+  const tok = document.getElementById('statusBarTokens');
+  if (tok) tok.textContent = '◈ ' + fmt;
+  const wv  = document.getElementById('profWalletValue');
+  if (wv) wv.textContent = fmt + ' Soul';
+}
+
 async function loadWalletBalance() {
   const el = document.getElementById('walletBalance');
-  if (!el || !_sb || !_currentUser) return;
+  if (!el) return;
+  // Show the already-known balance immediately — no flash of a different number
+  _syncSoulDisplays(_currentSoul);
+  if (!_sb || !_currentUser) return;
   try {
-    const { data } = await _sb.from('profiles').select('soul_balance').eq('id', _currentUser.id).single();
-    if (data) {
-      const bal = (data.soul_balance ?? 0).toLocaleString();
-      el.textContent = bal;
-      const sb = document.getElementById('statusBarTokens');
-      if (sb) sb.textContent = '◈ ' + bal;
+    const { data, error } = await _sb.from('profiles').select('soul_balance').eq('id', _currentUser.id).single();
+    if (!error && data) {
+      _currentSoul = data.soul_balance ?? 0;
+      _syncSoulDisplays(_currentSoul);
     }
   } catch {}
 }
@@ -4177,6 +4198,7 @@ function handleVersionTap() {
 let _sb = null;
 let isLoggedIn = false;
 let _currentUser = null;
+let _currentSoul = 0;
 let _currentEpisodeId = null;
 let _currentSeriesId  = null;
 
@@ -4277,14 +4299,10 @@ async function _loadProfileData() {
     // Persist so the next page load renders the correct rank instantly from cache
     try { localStorage.setItem('_soulCache', JSON.stringify({ soul })); } catch {}
     _lastProfileLoad = Date.now();
+    _currentSoul = soul;
 
-    // Wallet
-    const walletVal = document.getElementById('profWalletValue');
-    if (walletVal) walletVal.textContent = soul.toLocaleString() + ' Soul';
-    const walletBal = document.getElementById('walletBalance');
-    if (walletBal) walletBal.textContent = soul.toLocaleString();
-    const statusTok = document.getElementById('statusBarTokens');
-    if (statusTok) statusTok.textContent = '◈ ' + soul.toLocaleString();
+    // Wallet — keep all three displays in sync from one source
+    _syncSoulDisplays(soul);
 
     // Avatar — profile screen + topbar
     const topbarAv = document.getElementById('topbarAvatar');
@@ -5022,11 +5040,16 @@ async function loadContent() {
       initFyScroll();
     }
 
-    // Trending grid
+    // Trending grid (mylist screen + home screen)
     const trendCards = trending.length ? trending : liveSeries.slice(0, 6);
     if (trendGrid) {
       trendGrid.innerHTML = trendCards.map((s, i) => renderTCard(s, i + 1)).join('');
       _i18nEl(trendGrid);
+    }
+    const homeTrendGrid = document.getElementById('homeTrendGrid');
+    if (homeTrendGrid) {
+      const homeCards = trendCards.slice(0, 3);
+      homeTrendGrid.innerHTML = homeCards.map((s, i) => renderTCard(s, i + 1)).join('');
     }
 
     // Content loaded — dismiss splash early if animation already done
