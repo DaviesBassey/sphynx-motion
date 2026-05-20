@@ -14,6 +14,7 @@ const path         = require('path');
 const cors         = require('cors');
 const helmet       = require('helmet');
 const cookieParser = require('cookie-parser');
+const rateLimit    = require('express-rate-limit');
 
 const { requireAuth } = require('./middleware/auth');
 const { requireRole } = require('./middleware/roles');
@@ -57,6 +58,15 @@ const ROOT = path.join(__dirname, '..');
 // Trust the first hop (Cloudflare / any reverse proxy) so that
 // X-Forwarded-For is used for real-IP detection and rate-limiting.
 app.set('trust proxy', 1);
+
+// Redirect HTTP → HTTPS in production (Cloudflare terminates TLS so
+// x-forwarded-proto is 'http' for plain requests that slip through).
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] === 'http') {
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  }
+  next();
+});
 
 // ── MIDDLEWARE ────────────────────────────────────────────────────────────────
 // Security headers — disable frameguard for the embedded player iframe
@@ -154,7 +164,7 @@ app.get('/api/admin/env-check', async (req, res) => {
     const { supabaseAdmin: sb } = require('./lib/supabase');
     const { error } = await sb.from('profiles').select('id').limit(1);
     results.db = error ? `ERROR: ${error.message}` : 'OK';
-    const { data, error: ae } = await sb.auth.signInWithPassword({ email: '__probe__', password: '__probe__' });
+    const { error: ae } = await sb.auth.signInWithPassword({ email: '__probe__', password: '__probe__' });
     results.auth_endpoint = ae?.message?.includes('Invalid') ? 'REACHABLE' : (ae ? `ERROR: ${ae.message}` : 'OK');
   } catch (e) {
     results.db = `THROW: ${e.message}`;
@@ -237,6 +247,33 @@ app.get('/review', (req, res) => {
 });
 
 // ── ADMIN PAGE ROUTES (server-side auth + role check) ────────────────────────
+// GET /bust — force-clears SW + all caches then redirects to app
+app.get('/bust', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Clearing cache…</title>
+<style>body{background:#08080A;color:#F0EDE8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;flex-direction:column;gap:12px;}
+p{color:#6B6872;font-size:13px;}</style>
+</head><body>
+<div>Clearing cache…</div><p id="s">Working…</p>
+<script>
+(async()=>{
+  const s=document.getElementById('s');
+  try{
+    const regs=await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r=>r.unregister()));
+    s.textContent='SW unregistered ('+regs.length+')…';
+  }catch(e){s.textContent='SW: '+e.message;}
+  try{
+    const keys=await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+    s.textContent='Caches cleared. Redirecting…';
+  }catch(e){s.textContent='Cache: '+e.message;}
+  setTimeout(()=>location.replace('/'),800);
+})();
+</script></body></html>`);
+});
+
 // GET /admin/ → redirect to /admin/login
 app.get('/admin', (req, res) => res.redirect('/admin/login'));
 
@@ -273,7 +310,8 @@ app.use('/api/admin/creators',   requireAuth, requireRole('admin'), creatorsRout
 // ── USER SELF-SERVICE ACCOUNT DELETION ───────────────────────────────────────
 // DELETE /api/account  — requires valid user Bearer token; deletes own account.
 // Apple App Store compliance: must exist for any app with account creation.
-app.delete('/api/account', async (req, res) => {
+const _accountDeleteLimiter = rateLimit({ windowMs: 60 * 60_000, max: 5, standardHeaders: true, legacyHeaders: false });
+app.delete('/api/account', _accountDeleteLimiter, async (req, res) => {
   const token = (req.headers.authorization || '').replace('Bearer ', '').trim();
   if (!token) return res.status(401).json({ error: 'Authentication required' });
 
@@ -291,9 +329,23 @@ app.delete('/api/account', async (req, res) => {
 app.use('/', legalRouter);
 
 // ── SPA FALLBACK ──────────────────────────────────────────────────────────────
-// Any unmatched route → serve the public app
+// When SERVE_REACT=1, serve the compiled React app instead of index.html.
+// Run `npm run build:react` first, then set SERVE_REACT=1 in server/.env.
+const REACT_DIST = path.join(ROOT, 'client', 'dist');
+const serveReact = process.env.SERVE_REACT === '1' && (() => {
+  try { require('fs').statSync(REACT_DIST); return true; } catch { return false; }
+})();
+
+if (serveReact) {
+  app.use(express.static(REACT_DIST, { dotfiles: 'ignore' }));
+}
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
+  if (serveReact) {
+    res.sendFile(path.join(REACT_DIST, 'index.html'));
+  } else {
+    res.sendFile(path.join(ROOT, 'index.html'));
+  }
 });
 
 // ── GLOBAL EXPRESS ERROR HANDLER ──────────────────────────────────────────────

@@ -316,15 +316,28 @@
 
     <!-- ════ MODERATION ════ -->
     <div class="page" id="page-moderation">
-      <div class="page-hdr"><div class="page-title">Moderation Queue</div><div class="page-sub">Review creator submissions and flagged content</div></div>
+      <div class="page-hdr"><div class="page-title">Moderation</div><div class="page-sub">Review creator submissions and user-reported content</div></div>
+
+      <!-- Creator Submissions -->
       <div class="card">
         <div class="card-hdr">
-          <div class="card-title">Pending Items</div>
+          <div class="card-title">Creator Submissions</div>
           <select class="form-select" style="width:120px;padding:7px 12px;font-size:12px" onchange="loadModeration(this.value)">
             <option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
           </select>
         </div>
         <div id="modList"><div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No items in queue ✓</div></div>
+      </div>
+
+      <!-- User Reports -->
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">User Reports <span id="reportCount" style="font-size:11px;color:var(--text-faint);font-weight:400;margin-left:6px"></span></div>
+          <select class="form-select" id="reportStatusFilter" style="width:120px;padding:7px 12px;font-size:12px" onchange="loadReports()">
+            <option value="pending">Pending</option><option value="resolved">Resolved</option>
+          </select>
+        </div>
+        <div id="reportList"><div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">Loading…</div></div>
       </div>
     </div>
 
@@ -839,6 +852,58 @@ async function moderationAction(id, action) {
     document.getElementById('mod-'+id)?.remove();
     toast(`${action.charAt(0).toUpperCase()+action.slice(1)} ✓`, 'ok');
     loadModBadge();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── USER REPORTS ───────────────────────────────────────────────────────────────
+async function loadReports() {
+  const status = document.getElementById('reportStatusFilter')?.value || 'pending';
+  const el = document.getElementById('reportList');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">Loading…</div>';
+  try {
+    const data = await api('GET', `/api/admin/moderation/reports?status=${status}`);
+    const reports = data.reports || [];
+    const countEl = document.getElementById('reportCount');
+    if (countEl) countEl.textContent = reports.length ? `(${reports.length})` : '';
+    if (!reports.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:32px;font-size:13px">No reports ✓</div>';
+      return;
+    }
+    el.innerHTML = reports.map(r => `
+      <div class="mod-item" id="rep-${r.id}" style="align-items:flex-start">
+        <div class="mod-icon" style="margin-top:2px">🚩</div>
+        <div style="flex:1;min-width:0">
+          <div class="mod-text">
+            <strong style="color:var(--danger)">${r.reason}</strong> —
+            ${r.content_type || 'content'} reported by
+            <strong>${r.reporter?.display_name || 'user'}</strong>
+          </div>
+          <div class="mod-meta" style="margin-top:3px">
+            Content ID: <code style="font-size:10px;background:var(--surface2);padding:1px 5px;border-radius:4px">${r.content_id || '—'}</code>
+            · ${fmtDate(r.created_at)}
+            ${r.resolution ? ' · <span style="color:var(--green)">'+r.resolution+'</span>' : ''}
+          </div>
+          ${r.resolved_at ? '' : `
+          <div class="mod-btns" style="margin-top:8px">
+            <button class="btn btn-danger btn-sm" onclick="reportAction('${r.id}','remove_content')">Remove Content</button>
+            <button class="btn btn-secondary btn-sm" onclick="reportAction('${r.id}','warn_user')">Warn User</button>
+            <button class="btn btn-secondary btn-sm" onclick="reportAction('${r.id}','suspend_user')">Suspend User</button>
+            <button class="btn btn-secondary btn-sm" onclick="reportAction('${r.id}','dismiss')">Dismiss</button>
+          </div>`}
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    el.innerHTML = `<div style="text-align:center;color:var(--danger);padding:32px;font-size:13px">${e.message}</div>`;
+  }
+}
+
+async function reportAction(id, action) {
+  const labels = { remove_content:'Content removed', warn_user:'User warned', suspend_user:'User suspended', dismiss:'Report dismissed' };
+  try {
+    await api('POST', `/api/admin/moderation/reports/${id}/action`, { action });
+    document.getElementById('rep-'+id)?.remove();
+    toast(labels[action] || action, 'ok');
   } catch (e) { toast(e.message, 'error'); }
 }
 

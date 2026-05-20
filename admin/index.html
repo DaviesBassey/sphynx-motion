@@ -49,20 +49,20 @@
     <h1>Sign in to Admin</h1>
     <p>Admin and superadmin accounts only. Access is verified server-side.</p>
 
-    <label for="email">Email</label>
-    <input type="email" id="email" placeholder="Enter admin email" autocomplete="username"
-      onkeydown="if(event.key==='Enter')login()">
+    <form id="loginForm" onsubmit="login(event)" novalidate>
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Enter admin email" autocomplete="username">
 
-    <label for="password">Password</label>
-    <div class="pw-wrap">
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')login()">
-      <button type="button" class="pw-toggle" id="pwToggle" onclick="togglePw()" aria-label="Show password" title="Show/hide password">
-        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
-    </div>
+      <label for="password">Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+        <button type="button" class="pw-toggle" id="pwToggle" onclick="togglePw()" aria-label="Show password" title="Show/hide password">
+          <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
 
-    <button class="btn" id="loginBtn" onclick="login()">Sign In →</button>
+      <button type="submit" class="btn" id="loginBtn">Sign In →</button>
+    </form>
 
     <div id="errMsg"></div>
     <div id="successMsg">Signed in — redirecting…</div>
@@ -105,7 +105,8 @@
     500: 'Server error. Please try again.',
   };
 
-  async function login() {
+  async function login(e) {
+    if (e) e.preventDefault();
     const email    = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const btn      = document.getElementById('loginBtn');

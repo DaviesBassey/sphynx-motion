@@ -4,6 +4,7 @@
 <style>html,body{background:#08080A!important}</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SphynxPlay">
@@ -11,7 +12,11 @@
 <meta name="description" content="SphynxPlay — African vertical drama streaming. Stories That Watch Back.">
 <meta property="og:title" content="SphynxPlay">
 <meta property="og:description" content="Stories That Watch Back. African vertical drama streaming on SphynxPlay.">
-<meta property="og:image" content="assets/posters/image-11.jpg">
+<meta property="og:image" content="/assets/posters/image-12.jpg">
+<meta property="og:image:width" content="480">
+<meta property="og:image:height" content="720">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="/assets/posters/image-12.jpg">
 <meta property="og:type" content="website">
 <title>SphynxPlay</title>
 <link rel="icon" type="image/png" href="SPHYNXPLAY_FAV.png">
@@ -19,7 +24,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
 <script>
 // One-time SW cache bust for v7 — runs once, then never again
 if ('serviceWorker' in navigator && localStorage.getItem('sw_bust') !== 'v7') {
@@ -75,26 +82,37 @@ window._track = function(event, props) {
 /* ─── TOKENS ─────────────────────────────────────────────────────────────── */
 :root {
   --obsidian:   #08080A;
-  --surface:    #130E0E;
-  --surface2:   #1A1010;
-  --surface3:   #221414;
+  --surface:    #111114;
+  --surface2:   #1A1A1F;
+  --surface3:   #22222A;
+  --surface-el: #1A1A1F;
   --red:        #E61E24;
+  --accent:     #E61E24;
   --red-bright: #FF3040;
   --red-dark:   #B5121A;
   --text:       #F0EDE8;
-  --text-dim:   #9A9096;
+  --text-dim:   #6B6872;
+  --muted:      #6B6872;
   --text-faint: rgba(255,255,255,.38);
   --danger:     #E61E24;
-  --success:    #50C878;
+  --error:      #FF4D4D;
+  --success:    #1DB87E;
+  --live:       #1DB87E;
+  --token-gold: #C9A84C;
+  --token-dim:  rgba(201,168,76,.12);
+  --border:     rgba(255,255,255,.06);
 
   --r-phone: 44px;
-  --r-card:  16px;
+  --r-card:  10px;
   --r-pill:  100px;
+  --r-sm:    6px;
+  --r-md:    8px;
+  --r-lg:    12px;
 }
 
 /* ─── RESET ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #05050A; font-family: 'Inter', sans-serif; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: #05050A; font-family: 'Geist Sans', 'Plus Jakarta Sans', sans-serif; overflow: hidden; -webkit-tap-highlight-color: transparent; }
 button { -webkit-tap-highlight-color: transparent; }
 
 /* ─── MOBILE: fill the real screen, drop the desktop frame ──────────────── */
@@ -135,7 +153,7 @@ body::after {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: radial-gradient(ellipse at 30% 20%, #1A0404 0%, #05050A 60%);
+  background: #08080A;
 }
 
 /* ─── PHONE SHELL ────────────────────────────────────────────────────────── */
@@ -147,10 +165,9 @@ body::after {
   border-radius: var(--r-phone);
   overflow: hidden;
   box-shadow:
-    0 0 0 1px #2a2a3a,
-    0 0 0 3px #16161E,
-    0 40px 120px rgba(0,0,0,.9),
-    0 0 80px rgba(230,30,36,.12);
+    0 0 0 1px rgba(255,255,255,.08),
+    0 0 0 3px #0d0d10,
+    0 40px 100px rgba(0,0,0,.85);
 }
 
 /* ─── STATUS BAR ─────────────────────────────────────────────────────────── */
@@ -208,12 +225,13 @@ body::after {
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 80px;
-  background: linear-gradient(to top, var(--obsidian) 60%, transparent);
+  background: linear-gradient(to top, rgba(5,5,10,.98) 55%, transparent);
   display: flex;
   align-items: flex-start;
   justify-content: space-around;
-  padding-top: 8px;
+  padding-top: 10px;
   z-index: 200;
+  border-top: 1px solid rgba(255,255,255,.04);
 }
 .nav-btn {
   display: flex;
@@ -221,23 +239,31 @@ body::after {
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  padding: 8px 6px;
+  padding: 6px 4px;
   border-radius: 12px;
-  transition: all .2s ease;
+  transition: all .18s ease;
   background: none;
   border: none;
-  color: var(--text-faint);
+  color: rgba(255,255,255,.38);
   flex: 1;
   min-width: 0;
 }
-.nav-btn:hover { color: var(--text-dim); background: rgba(255,255,255,.04); }
-.nav-btn.active { color: var(--red); }
+.nav-btn:active { transform: scale(.9); }
+.nav-btn.active { color: var(--accent); }
 .nav-btn svg { width: 22px; height: 22px; }
-.nav-btn span { font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
-.nav-btn.active .nav-icon-bg {
-  background: rgba(230,30,36,.12);
-  border-radius: 12px;
+.nav-btn > span:last-child { font-size: 9px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-family: 'Plus Jakarta Sans', sans-serif; }
+.nav-btn.active svg { filter: drop-shadow(0 0 6px rgba(230,30,36,.5)); }
+.nav-icon {
+  font-size: 20px;
+  line-height: 1;
+  display: block;
 }
+.nav-icon--soul {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--token-gold);
+}
+.nav-btn.active .nav-icon { filter: drop-shadow(0 0 6px rgba(230,30,36,.5)); }
+.nav-btn.active .nav-icon--soul { filter: drop-shadow(0 0 6px rgba(201,168,76,.5)); }
 
 /* ─── TYPOGRAPHY ─────────────────────────────────────────────────────────── */
 .screen-header {
@@ -247,7 +273,7 @@ body::after {
   align-items: center;
 }
 .screen-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Fraunces', serif;
   font-size: 22px;
   font-weight: 700;
   color: var(--text);
@@ -378,7 +404,7 @@ body::after {
   display: block;
 }
 .hero-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Fraunces', serif;
   font-size: 26px; font-weight: 700;
   color: var(--text); letter-spacing: -.02em;
   line-height: 1.1;
@@ -432,47 +458,6 @@ body::after {
   letter-spacing: .1em;
   text-transform: uppercase;
 }
-.ep-row {
-  display: flex;
-  gap: 12px;
-  padding: 0 20px 20px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.ep-row::-webkit-scrollbar { display: none; }
-.ep-card {
-  flex-shrink: 0;
-  width: 120px;
-  cursor: pointer;
-}
-.ep-thumb {
-  width: 120px; height: 160px;
-  border-radius: 12px;
-  margin-bottom: 7px;
-  position: relative;
-  overflow: hidden;
-}
-.ep-thumb-inner {
-  width: 100%; height: 100%;
-}
-.ep-number {
-  position: absolute;
-  top: 7px; left: 7px;
-  font-size: 9px; font-weight: 800;
-  color: var(--text-dim);
-  background: rgba(8,8,14,.7);
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: .06em;
-}
-.ep-lock {
-  position: absolute;
-  inset: 0;
-  background: rgba(8,8,14,.6);
-  display: flex; align-items: center; justify-content: center;
-}
-.ep-title { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.3; }
-.ep-dur { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 /*  SCREEN 2 — THE VAULT                                                     */
@@ -497,7 +482,7 @@ body::after {
   line-height: 1;
 }
 .vault-hero-label { font-size: 9px; font-weight: 800; letter-spacing: .14em; color: var(--red-bright); text-transform: uppercase; margin-bottom: 8px; }
-.vault-hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 8px; }
+.vault-hero-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 8px; }
 .vault-stats { display: flex; gap: 16px; }
 .vault-stat { text-align: center; }
 .vault-stat-n { font-size: 18px; font-weight: 800; color: var(--red); display: block; }
@@ -545,7 +530,7 @@ body::after {
   padding: 12px 14px;
 }
 .uni-world { font-size: 8px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--red); margin-bottom: 4px; }
-.uni-name { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.uni-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
 .uni-series { font-size: 10px; color: var(--text-faint); margin-top: 3px; }
 .uni-live {
   position: absolute;
@@ -563,107 +548,6 @@ body::after {
 /* ══════════════════════════════════════════════════════════════════════════ */
 #forge { background: var(--obsidian); padding-bottom: 20px; }
 
-.forge-hero {
-  margin: 0 20px 20px;
-  padding: 22px 20px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #180808 0%, #0A0808 100%);
-  border: 1px solid rgba(230,30,36,.25);
-  position: relative;
-  overflow: hidden;
-}
-.forge-hero::after {
-  content: '';
-  position: absolute;
-  top: -30px; right: -30px;
-  width: 120px; height: 120px;
-  background: radial-gradient(circle, rgba(230,30,36,.3) 0%, transparent 70%);
-}
-.forge-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-.forge-sub { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 14px; }
-.btn-forge-start {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 18px;
-  background: linear-gradient(135deg, var(--red-dark), var(--red));
-  color: white;
-  border: none;
-  border-radius: var(--r-pill);
-  font-size: 12px; font-weight: 700;
-  cursor: pointer;
-  transition: all .2s;
-}
-.btn-forge-start:hover { filter: brightness(1.1); }
-
-.tool-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  padding: 0 20px;
-}
-.tool-card {
-  background: var(--surface2);
-  border-radius: 16px;
-  padding: 16px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all .2s;
-  position: relative;
-  overflow: hidden;
-}
-.tool-card:hover { border-color: rgba(230,30,36,.2); background: var(--surface3); }
-.tool-card.featured { grid-column: span 2; }
-.tool-icon {
-  width: 40px; height: 40px;
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-.icon-script   { background: rgba(230,30,36,.12); }
-.icon-scene    { background: rgba(181,18,26,.15); }
-.icon-voice    { background: rgba(230,30,36,.08); }
-.icon-grade    { background: rgba(80,200,120,.15); }
-.icon-edit     { background: rgba(230,30,36,.1); }
-.icon-publish  { background: rgba(230,30,36,.15); }
-
-.tool-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.tool-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
-.tool-badge { margin-top: 8px; }
-
-/* Script Oracle Interactive */
-.oracle-input-area {
-  margin: 16px 20px 0;
-  background: var(--surface2);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid rgba(230,30,36,.1);
-}
-.oracle-input-label { font-size: 10px; font-weight: 700; color: var(--red); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
-.genre-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.genre-pill {
-  padding: 5px 12px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--surface3);
-  font-size: 11px; font-weight: 600;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: all .2s;
-  background: transparent;
-}
-.genre-pill.selected {
-  border-color: var(--red);
-  color: var(--red-bright);
-  background: rgba(230,30,36,.1);
-}
-.fake-input {
-  background: var(--surface3);
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 12px;
-  color: var(--text-faint);
-  margin-bottom: 10px;
-  border: 1px solid rgba(255,255,255,.05);
-}
 .btn-generate {
   width: 100%;
   padding: 11px;
@@ -721,7 +605,7 @@ body::after {
   display: flex; align-items: center; justify-content: center;
   font-size: 28px;
 }
-.soul-name { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.soul-name { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .soul-handle { font-size: 12px; color: var(--text-faint); margin-bottom: 12px; }
 .soul-score-display {
   background: var(--surface2);
@@ -730,7 +614,7 @@ body::after {
   border: 1px solid rgba(230,30,36,.15);
   margin-bottom: 14px;
 }
-.soul-score-n { font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 800; color: var(--red-bright); line-height: 1; }
+.soul-score-n { font-family: 'JetBrains Mono', monospace; font-size: 38px; font-weight: 800; color: var(--red-bright); line-height: 1; }
 .soul-score-l { font-size: 9px; font-weight: 700; color: var(--text-faint); letter-spacing: .14em; text-transform: uppercase; margin-top: 4px; }
 
 .soul-rank-badge {
@@ -760,185 +644,7 @@ body::after {
 .soul-stat-n { font-size: 20px; font-weight: 800; color: var(--text); display: block; margin-bottom: 4px; }
 .soul-stat-l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; }
 
-/* Fingerprint */
-.fingerprint-section { padding: 0 20px 16px; }
-.section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.section-head-title { font-size: 13px; font-weight: 700; color: var(--text); }
-.fingerprint-bars { display: flex; flex-direction: column; gap: 8px; }
-.fp-bar-row { display: flex; align-items: center; gap: 10px; }
-.fp-bar-label { font-size: 10px; color: var(--text-dim); width: 80px; flex-shrink: 0; }
-.fp-bar-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-.fp-bar-fill { height: 100%; border-radius: 3px; animation: fpFill .8s ease-out; }
-@keyframes fpFill { from { width: 0; } }
-.fp-val { font-size: 10px; font-weight: 700; color: var(--text-faint); width: 30px; text-align: right; }
 
-/* Badges */
-.badges-section { padding: 0 20px 16px; }
-.badges-grid { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
-.badge-card {
-  flex-shrink: 0;
-  background: var(--surface2);
-  border-radius: 14px;
-  padding: 12px 14px;
-  text-align: center;
-  border: 1px solid rgba(255,255,255,.04);
-  width: 90px;
-}
-.badge-icon { font-size: 24px; margin-bottom: 5px; display: block; }
-.badge-name { font-size: 9px; color: var(--text-dim); font-weight: 600; line-height: 1.3; }
-
-/* ══════════════════════════════════════════════════════════════════════════ */
-/*  SCREEN 5 — ECHO HUB                                                      */
-/* ══════════════════════════════════════════════════════════════════════════ */
-#echo { background: var(--obsidian); padding-bottom: 20px; }
-
-.echo-live-banner {
-  margin: 0 20px 16px;
-  padding: 16px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #1A0808, #300A0A);
-  border: 1px solid rgba(224,80,80,.3);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-  overflow: hidden;
-}
-.echo-live-banner::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(224,80,80,.5), transparent);
-}
-.live-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--danger);
-  flex-shrink: 0;
-  animation: livePulse 1.4s ease-in-out infinite;
-}
-@keyframes livePulse {
-  0%,100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(224,80,80,.5); }
-  50%      { opacity: .8; transform: scale(1.1); box-shadow: 0 0 0 6px rgba(224,80,80,0); }
-}
-.live-text { flex: 1; }
-.live-label { font-size: 9px; font-weight: 800; color: var(--danger); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 2px; }
-.live-sub { font-size: 11px; color: var(--text-dim); }
-.countdown {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 18px; font-weight: 800;
-  color: var(--danger);
-  text-align: right;
-}
-.countdown-l { font-size: 8px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; }
-
-/* ECHO Event Card */
-.echo-event-card {
-  margin: 0 20px 16px;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-}
-.echo-thumb {
-  height: 180px;
-  background: linear-gradient(160deg, #1A0800 0%, #5C2A00 50%, #C68642 100%);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-}
-.echo-thumb-glyph {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 120px;
-  opacity: .05;
-}
-.echo-thumb-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(8,8,14,.95) 0%, transparent 60%);
-}
-.echo-thumb-meta {
-  position: relative;
-  padding: 14px;
-  z-index: 1;
-}
-.echo-series { font-size: 9px; font-weight: 800; color: var(--red); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
-.echo-question {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 15px; font-weight: 700;
-  color: var(--text);
-  line-height: 1.3;
-}
-
-/* Vote Choices */
-.vote-section {
-  background: var(--surface2);
-  padding: 16px;
-  border-radius: 0 0 20px 20px;
-  border: 1px solid rgba(255,255,255,.04);
-  border-top: none;
-}
-.vote-label { font-size: 10px; font-weight: 700; color: var(--text-faint); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; }
-.vote-choices { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-.vote-choice {
-  position: relative;
-  padding: 11px 14px;
-  background: var(--surface3);
-  border-radius: 12px;
-  border: 1.5px solid transparent;
-  cursor: pointer;
-  transition: all .2s;
-  overflow: hidden;
-}
-.vote-choice.voted { border-color: var(--red); }
-.vote-fill {
-  position: absolute;
-  top: 0; left: 0; bottom: 0;
-  background: rgba(230,30,36,.08);
-  border-radius: 12px;
-  transition: width .6s ease;
-}
-.vote-choice-text {
-  position: relative;
-  font-size: 12px; font-weight: 600;
-  color: var(--text);
-  z-index: 1;
-}
-.vote-pct {
-  position: absolute;
-  right: 14px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px; font-weight: 800;
-  color: var(--red);
-  z-index: 1;
-  opacity: 0;
-  transition: opacity .3s;
-}
-.vote-choice.voted ~ * .vote-pct,
-.voted-reveal .vote-pct { opacity: 1; }
-.vote-soul-cost {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 0 0;
-  border-top: 1px solid rgba(255,255,255,.05);
-}
-.soul-cost-info { font-size: 11px; color: var(--text-dim); }
-.soul-cost-n { color: var(--red); font-weight: 700; }
-.btn-vote {
-  padding: 9px 20px;
-  background: linear-gradient(135deg, var(--red), var(--red-dark));
-  color: var(--obsidian);
-  border: none;
-  border-radius: var(--r-pill);
-  font-size: 11px; font-weight: 800;
-  cursor: pointer;
-  transition: all .2s;
-  letter-spacing: .04em;
-}
-.btn-vote:hover { filter: brightness(1.1); }
 
 /* ─── LOADING SKELETONS ──────────────────────────────────────────────────── */
 @keyframes shimmer {
@@ -978,62 +684,6 @@ body::after {
 .g-thumb:active .report-btn { opacity: 1; }
 @media (hover: none) { .report-btn { opacity: 1; } }
 
-/* Community reactions */
-.community-strip {
-  margin: 0 20px 14px;
-  padding: 14px;
-  background: var(--surface2);
-  border-radius: 16px;
-}
-.community-label { font-size: 10px; font-weight: 700; color: var(--text-faint); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
-.avatars-row { display: flex; align-items: center; gap: -4px; margin-bottom: 8px; }
-.mini-avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 2px solid var(--surface2);
-  margin-left: -6px;
-  font-size: 12px;
-  display: flex; align-items: center; justify-content: center;
-}
-.mini-avatar:first-child { margin-left: 0; }
-.avatar-c1 { background: linear-gradient(135deg, #C68642, #8B4513); }
-.avatar-c2 { background: linear-gradient(135deg, #0088CC, #003050); }
-.avatar-c3 { background: linear-gradient(135deg, #7B2020, #3A0808); }
-.avatar-c4 { background: linear-gradient(135deg, #50C878, #1A3A10); }
-.avatar-c5 { background: linear-gradient(135deg, #E05050, #8B2020); }
-.votes-total { font-size: 11px; color: var(--text-dim); margin-left: 8px; }
-.reaction-row { display: flex; gap: 6px; }
-.reaction-chip {
-  padding: 4px 10px;
-  background: var(--surface3);
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all .2s;
-  border: 1px solid transparent;
-}
-.reaction-chip:hover { border-color: rgba(255,255,255,.1); }
-
-/* Upcoming Events */
-.upcoming-section { padding: 0 20px; }
-.upcoming-card {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255,255,255,.04);
-  cursor: pointer;
-}
-.upcoming-thumb {
-  width: 60px; height: 70px;
-  border-radius: 10px;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.upcoming-info { flex: 1; }
-.upcoming-series { font-size: 9px; font-weight: 700; color: var(--red-bright); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; }
-.upcoming-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 5px; }
-.upcoming-time { font-size: 10px; color: var(--text-faint); }
-.upcoming-soul { font-size: 10px; color: var(--red); font-weight: 700; }
 
 /* ─── MODAL OVERLAY ──────────────────────────────────────────────────────── */
 .modal-overlay {
@@ -1077,7 +727,7 @@ body::after {
   border-radius: 2px;
   margin: 0 auto 16px;
 }
-.modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.modal-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
 .modal-sub { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
 .modal-close {
   position: absolute;
@@ -1174,7 +824,7 @@ body::after {
 
 /* Tagline — matches cvr-1.png typography exactly */
 .splash-tagline {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 10px;
   font-weight: 400;
   color: rgba(255,255,255,.72);
@@ -1225,7 +875,6 @@ body::after {
 }
 
 /* ─── MISC UTILS ─────────────────────────────────────────────────────────── */
-.divider { height: 1px; background: rgba(255,255,255,.04); margin: 0 20px; }
 .spacer { height: 16px; }
 svg defs { position: absolute; width: 0; height: 0; }
 
@@ -1392,17 +1041,68 @@ svg defs { position: absolute; width: 0; height: 0; }
 .video-overlay.show-controls .vp-rail { opacity: 1; pointer-events: all; }
 .vp-rail-btn {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
-  background: none; border: none; cursor: pointer; color: #fff; padding: 0;
+  background: none; border: none; cursor: pointer; color: #fff;
+  padding: 8px 6px; min-width: 58px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .12s ease;
 }
+.vp-rail-btn:active { transform: scale(.88); }
 .vp-rail-icon {
-  width: 46px; height: 46px; border-radius: 50%;
-  background: rgba(255,255,255,.12); backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,.15);
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,.14); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.2);
   display: flex; align-items: center; justify-content: center;
   transition: background .15s, border-color .15s;
 }
-.vp-rail-icon.active { background: rgba(230,30,36,.35); border-color: rgba(230,30,36,.5); }
-.vp-rail-label { font-size: 10px; color: rgba(255,255,255,.6); font-weight: 500; }
+.vp-rail-btn:active .vp-rail-icon { background: rgba(255,255,255,.28); }
+.vp-rail-icon.active { background: rgba(230,30,36,.45); border-color: rgba(230,30,36,.7); }
+.vp-rail-label { font-size: 10px; color: rgba(255,255,255,.7); font-weight: 600; letter-spacing: .02em; }
+
+/* Share sheet */
+.share-sheet-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:9000; opacity:0; transition:opacity .22s ease; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+.share-sheet-backdrop.open { opacity:1; }
+.share-sheet {
+  position:fixed; bottom:0; left:0; right:0; z-index:9001;
+  background:var(--surface2);
+  border-radius:22px 22px 0 0;
+  border-top:1px solid rgba(230,30,36,.18);
+  padding:0 0 env(safe-area-inset-bottom,20px);
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.32,1,.23,1);
+  box-shadow:0 -8px 40px rgba(0,0,0,.6), 0 -1px 0 rgba(230,30,36,.12);
+}
+.share-sheet.open { transform:translateY(0); }
+.share-sheet-handle { width:36px; height:3px; background:rgba(230,30,36,.35); border-radius:2px; margin:12px auto 0; }
+.share-sheet-title {
+  font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--red); text-align:center;
+  padding:12px 16px 12px;
+  border-bottom:1px solid rgba(230,30,36,.1);
+}
+.share-sheet-title strong { display:block; font-size:16px; color:var(--text); font-weight:800; letter-spacing:-.02em; margin-bottom:3px; text-transform:none; }
+.share-sheet-options { display:flex; gap:0; flex-direction:column; }
+.share-sheet-option {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 20px; cursor:pointer;
+  border-bottom:1px solid rgba(230,30,36,.07);
+  transition:background .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.share-sheet-option:last-child { border-bottom:none; }
+.share-sheet-option:active { background:rgba(230,30,36,.08); }
+.share-sheet-opt-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; border:1px solid rgba(255,255,255,.06); }
+.share-sheet-opt-label { font-size:15px; font-weight:700; color:var(--text); letter-spacing:-.01em; }
+.share-sheet-opt-sub { font-size:11px; color:var(--text-faint); margin-top:2px; font-weight:500; }
+.share-sheet-cancel {
+  display:block; width:calc(100% - 32px); margin:10px 16px 0;
+  padding:14px; background:rgba(230,30,36,.1);
+  border:1px solid rgba(230,30,36,.2); border-radius:14px;
+  color:var(--red); font-size:15px; font-weight:800;
+  cursor:pointer; text-align:center; letter-spacing:.02em;
+  -webkit-tap-highlight-color:transparent;
+}
+.share-sheet-cancel:active { background:rgba(230,30,36,.2); }
 
 /* Bottom bar */
 .vp-bottom {
@@ -1428,7 +1128,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   background: var(--red); border: none; color: #fff;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.video-time { font-size: 11px; color: rgba(255,255,255,.7); font-family: 'Space Grotesk',sans-serif; flex: 1; }
+.video-time { font-size: 11px; color: rgba(255,255,255,.7); font-family: 'JetBrains Mono',monospace; flex: 1; }
 .video-close {
   width: 32px; height: 32px; border-radius: 50%;
   background: rgba(255,255,255,.1); border: none; color: #fff;
@@ -1667,7 +1367,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 .rec-label {
   padding: 0 16px 8px;
   font-size: 13px; font-weight: 700; color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   display: flex; align-items: center; gap: 6px;
 }
 .rec-label-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
@@ -1757,7 +1457,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   display: flex; align-items: center; gap: 6px;
 }
 .fy-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Fraunces', serif;
   font-size: 20px; font-weight: 700;
   color: #fff; line-height: 1.2;
   margin-bottom: 6px;
@@ -1817,7 +1517,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   font-size: 100px; opacity: .06; line-height: 1;
 }
 .member-banner-label { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.7); margin-bottom: 4px; }
-.member-banner-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.member-banner-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
 .member-banner-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-bottom: 14px; }
 .member-banner-row { display: flex; align-items: center; gap: 10px; }
 .member-join-btn {
@@ -1878,7 +1578,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   letter-spacing: .06em;
 }
 .plan-name { font-size: 11px; font-weight: 700; color: var(--text-dim); margin-bottom: 6px; }
-.plan-price { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 2px; }
+.plan-price { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 2px; }
 .plan-period { font-size: 10px; color: var(--text-faint); margin-bottom: 10px; }
 .plan-features { font-size: 10px; color: var(--text-dim); line-height: 1.8; }
 .plan-button {
@@ -1944,7 +1644,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   min-width: 70px;
 }
 .soul-pkg:hover, .soul-pkg.active { border-color: var(--red); background: rgba(230,30,36,.08); }
-.soul-pkg-n { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); display: block; }
+.soul-pkg-n { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: var(--text); display: block; }
 .soul-pkg-label { font-size: 9px; color: var(--text-faint); display: block; margin-bottom: 4px; }
 .soul-pkg-price { font-size: 10px; font-weight: 700; color: var(--red); }
 
@@ -2001,7 +1701,7 @@ svg defs { position: absolute; width: 0; height: 0; }
 .follow-genres { font-size: 10px; color: var(--text-faint); margin-bottom: 6px; }
 .follow-ep { font-size: 11px; color: var(--text-dim); font-weight: 600; }
 .trending-section { padding: 16px 16px 0; }
-.trending-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.trending-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
 .trending-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .t-card { cursor: pointer; position: relative; transition: transform .18s ease; }
 .t-card:hover { transform: translateY(-2px); }
@@ -2057,7 +1757,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   border: 2px solid rgba(255,255,255,.08);
 }
 .prof-login-btn {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 16px; font-weight: 700;
   color: var(--text);
   display: flex; align-items: center; gap: 4px;
@@ -2078,7 +1778,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   position: absolute; right: -8px; top: -12px;
   font-size: 80px; opacity: .07; line-height: 1;
 }
-.pmb-label { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; font-family: 'Space Grotesk', sans-serif; }
+.pmb-label { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; font-family: 'Fraunces', serif; }
 .pmb-sub { font-size: 11px; color: rgba(255,255,255,.7); margin-bottom: 12px; }
 .pmb-perks { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
 .pmb-perk { text-align: center; }
@@ -2141,9 +1841,399 @@ svg defs { position: absolute; width: 0; height: 0; }
   font-size: 14px;
 }
 .psr-info { flex: 1; }
-.psr-score { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.psr-score { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
 .psr-label { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .1em; }
 .psr-rank { font-size: 11px; color: var(--red); font-weight: 700; margin-top: 3px; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  APPLE TV-STYLE HOME UI                                                    */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── FULL-BLEED HERO ────────────────────────────────────────────────────── */
+.atv-hero {
+  position: relative;
+  width: 100%;
+  height: 60vh;
+  min-height: 360px;
+  overflow: hidden;
+  background: #000;
+  flex-shrink: 0;
+}
+.atv-hero-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.atv-hero-grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,.15) 0%,
+    rgba(0,0,0,.05) 30%,
+    rgba(0,0,0,.4)  60%,
+    rgba(0,0,0,.92) 90%,
+    #000            100%
+  );
+}
+/* Transparent topbar overlaid on hero */
+.atv-hero-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  padding: 12px 14px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.app-wordmark-hero {
+  flex: 1;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: -.3px;
+  line-height: 1;
+  cursor: default;
+}
+.atv-topbar-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px; font-weight: 700;
+  color: #fff;
+  cursor: pointer; flex-shrink: 0;
+  transition: opacity .15s;
+}
+.atv-topbar-avatar:active { opacity: .7; }
+.atv-search-pill {
+  flex: 1;
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 12px;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.atv-search-pill span { font-size: 12px; color: rgba(255,255,255,.5); flex: 1; }
+.atv-topbar-btn {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  position: relative;
+  transition: background .15s;
+}
+.atv-topbar-btn:active { background: rgba(230,30,36,.35); }
+/* Hero content — bottom overlay */
+.atv-hero-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 0 16px 16px;
+  z-index: 10;
+}
+.atv-hero-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10px; font-weight: 600;
+  color: var(--accent);
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.atv-hero-desc {
+  font-family: 'Geist Sans', 'Geist', sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.atv-hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: 34px; font-weight: 900;
+  color: #fff;
+  line-height: 1.04;
+  letter-spacing: -.03em;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 12px rgba(0,0,0,.6);
+}
+.atv-hero-meta {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px; font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 14px;
+  letter-spacing: .01em;
+}
+.atv-hero-actions {
+  display: flex; gap: 10px; align-items: center;
+}
+.atv-hero-play {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  letter-spacing: .01em;
+  transition: opacity .15s;
+  flex-shrink: 0;
+}
+.atv-hero-play:active { opacity: .8; }
+.atv-hero-add {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 300;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.atv-hero-add:active { background: rgba(230,30,36,.25); border-color: var(--accent); }
+.atv-hero-skeleton {
+  width: 100%; height: 100%;
+  background: linear-gradient(160deg, #1A0A0A 0%, #0D0808 100%);
+}
+
+/* ─── PILL TAB STRIP ─────────────────────────────────────────────────────── */
+.atv-tab-strip {
+  display: flex; gap: 8px;
+  padding: 12px 16px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.atv-tab-strip::-webkit-scrollbar { display: none; }
+.atv-tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.65);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.atv-tab:hover { color: rgba(255,255,255,.9); background: rgba(255,255,255,.12); }
+.atv-tab.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+/* ─── SECTION HEADERS ────────────────────────────────────────────────────── */
+.atv-section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 8px;
+}
+.atv-section-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 17px; font-weight: 800;
+  color: #fff;
+  letter-spacing: -.02em;
+}
+.atv-section-see-all {
+  display: flex; align-items: center; gap: 2px;
+  font-size: 12px; font-weight: 600;
+  color: var(--red);
+  cursor: pointer;
+  padding: 4px 0;
+}
+.atv-section-see-all:active { opacity: .7; }
+
+/* ─── HORIZONTAL POSTER SCROLL ───────────────────────────────────────────── */
+.atv-grid-wrap { flex-shrink: 0; }
+.atv-genre-row { margin-bottom: 6px; }
+.atv-scroll {
+  display: flex; gap: 10px;
+  overflow-x: auto; overflow-y: visible;
+  padding: 0 16px 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.atv-scroll::-webkit-scrollbar { display: none; }
+.atv-poster {
+  flex-shrink: 0;
+  width: 112px;
+  cursor: pointer;
+  transition: transform .18s ease;
+}
+.atv-poster:active { transform: scale(.96); }
+.atv-poster-thumb {
+  width: 112px; height: 168px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: var(--surface2);
+  margin-bottom: 6px;
+}
+.atv-poster-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.atv-poster-badge {
+  position: absolute;
+  top: 6px; left: 6px;
+  font-size: 8px; font-weight: 800;
+  letter-spacing: .06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+  text-transform: uppercase;
+}
+.atv-poster-title {
+  font-size: 11px; font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.atv-poster-genre {
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── TOP 10 NUMBERED CARDS ──────────────────────────────────────────────── */
+.atv-top10-scroll {
+  display: flex; gap: 0;
+  overflow-x: auto;
+  padding: 0 16px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.atv-top10-scroll::-webkit-scrollbar { display: none; }
+.atv-top10-item {
+  flex-shrink: 0;
+  width: 108px;
+  cursor: pointer;
+  position: relative;
+  margin-left: -2px;
+  transition: transform .18s ease;
+}
+.atv-top10-item:first-child { margin-left: 0; }
+.atv-top10-item:active { transform: scale(.96); }
+.atv-top10-num {
+  position: absolute;
+  bottom: 26px; left: -4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 72px; font-weight: 900;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 2.5px rgba(255,255,255,.55);
+  z-index: 2;
+  pointer-events: none;
+  letter-spacing: -.04em;
+}
+.atv-top10-thumb {
+  margin-left: 26px;
+  border-radius: 8px;
+  height: 148px;
+  width: 80px;
+  overflow: hidden;
+  position: relative;
+  background: var(--surface2);
+  margin-bottom: 5px;
+}
+.atv-top10-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.atv-top10-title {
+  font-size: 10px; font-weight: 600;
+  color: var(--text);
+  padding-left: 26px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── CONTINUE WATCHING — LANDSCAPE ─────────────────────────────────────── */
+.atv-cw-scroll {
+  display: flex; gap: 10px;
+  overflow-x: auto;
+  padding: 0 16px 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.atv-cw-scroll::-webkit-scrollbar { display: none; }
+.atv-cw-card {
+  flex-shrink: 0;
+  width: 155px;
+  cursor: pointer;
+  transition: transform .18s ease;
+}
+.atv-cw-card:active { transform: scale(.96); }
+.atv-cw-thumb {
+  width: 155px; height: 100px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: var(--surface2);
+  margin-bottom: 6px;
+}
+.atv-cw-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.atv-cw-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: rgba(255,255,255,.15);
+}
+.atv-cw-bar-fill {
+  height: 100%;
+  background: var(--red);
+  border-radius: 0 2px 2px 0;
+}
+.atv-cw-play {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.3);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.atv-cw-card:hover .atv-cw-play { opacity: 1; }
+.atv-cw-title {
+  font-size: 11px; font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.atv-cw-sub {
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
 </style>
 </head>
 <body style="background:#08080A">
@@ -2161,7 +2251,7 @@ svg defs { position: absolute; width: 0; height: 0; }
     </defs>
   </svg>
 
-  <!-- SPLASH — Netflix-style cover art loading screen -->
+  <!-- SPLASH — full-bleed cover art loading screen -->
   <div class="splash" id="splash">
     <div class="splash-bg"></div>
     <div class="splash-grad"></div>
@@ -2186,6 +2276,7 @@ svg defs { position: absolute; width: 0; height: 0; }
   <div class="status-bar">
     <span>9:41</span>
     <div class="notch"></div>
+    <span id="statusBarTokens" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--token-gold);letter-spacing:.01em;position:absolute;left:50%;transform:translateX(-50%) translateX(30px);">◈ —</span>
     <div class="status-icons">
       <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
         <rect x="1" y="5" width="2" height="8" rx="1" opacity=".4"/>
@@ -2207,56 +2298,69 @@ svg defs { position: absolute; width: 0; height: 0; }
     <!-- ── HOME ─────────────────────────────────────────────────────── -->
     <div class="screen active" id="home">
 
-      <!-- Top bar -->
-      <div class="home-topbar">
-        <div class="search-field" onclick="openModal('search')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span class="search-placeholder">Search series, genres, creators...</span>
+      <!-- Full-bleed Apple TV-style hero -->
+      <div class="atv-hero" id="homeHero">
+        <!-- Transparent topbar overlaid on hero -->
+        <div class="atv-hero-topbar">
+          <div style="flex:1"></div>
+          <div class="atv-topbar-btn" onclick="openModal('notifications')" aria-label="Notifications" role="button" tabindex="0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="topbar-badge" id="notifBadge" style="display:none">0</span>
+          </div>
+          <div class="atv-topbar-avatar" id="topbarAvatar" onclick="switchScreen('profile', null)" aria-label="Profile" role="button" tabindex="0">AM</div>
         </div>
-        <div class="topbar-icon" onclick="openModal('notifications')" aria-label="Notifications" role="button" tabindex="0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="topbar-badge" id="notifBadge" style="display:none">0</span>
-        </div>
-        <div class="topbar-icon" onclick="openModal('settings')" aria-label="Settings" role="button" tabindex="0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <!-- Hero content populated by JS -->
+        <div class="atv-hero-skeleton" id="heroSkeleton"></div>
+      </div>
+
+      <!-- Tab strip hidden per design system — content rows replace tabs -->
+      <div class="atv-tab-strip" id="homeTabStrip" style="display:none"></div>
+
+      <!-- Most Trending — 3-column grid, first section after hero -->
+      <div class="trending-section" id="homeTrendSection">
+        <div class="trending-title" data-i18n="home.most_trending">Most Trending</div>
+        <div class="trending-grid" id="homeTrendGrid">
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
+          <div class="t-card-skeleton"></div>
         </div>
       </div>
 
-      <!-- Tab strip -->
-      <div class="tab-strip" id="homeTabStrip">
-        <button class="tab-btn active" onclick="switchHomeTab(this,'popular')">Popular</button>
-        <button class="tab-btn" onclick="switchHomeTab(this,'new')">New</button>
-        <button class="tab-btn" onclick="switchHomeTab(this,'rankings')">Rankings</button>
-        <button class="tab-btn" onclick="switchHomeTab(this,'categories')">Categories</button>
-        <button class="tab-btn" onclick="switchHomeTab(this,'all')">All</button>
+      <!-- Card grid — filled by JS, genre-grouped horizontal rows -->
+      <div class="atv-grid-wrap" id="homeGrid">
+        <!-- Skeleton rows -->
+        <div style="padding:14px 0 4px">
+          <div style="height:17px;width:120px;margin:0 16px 10px;border-radius:6px;background:var(--surface2);animation:skel-shimmer 1.4s infinite;background-size:200% 100%"></div>
+          <div style="display:flex;gap:10px;padding:0 16px">
+            <div style="flex-shrink:0;width:112px;height:168px;border-radius:10px;background:var(--surface2);animation:skel-shimmer 1.4s infinite;background-size:200% 100%"></div>
+            <div style="flex-shrink:0;width:112px;height:168px;border-radius:10px;background:var(--surface2);animation:skel-shimmer 1.4s infinite;background-size:200% 100%"></div>
+            <div style="flex-shrink:0;width:112px;height:168px;border-radius:10px;background:var(--surface2);animation:skel-shimmer 1.4s infinite;background-size:200% 100%"></div>
+          </div>
+        </div>
       </div>
 
-      <!-- Section title -->
-      <div id="homeSectionTitle" style="padding:10px 16px 2px;font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase">Most Popular</div>
-
-      <!-- Card grid — filled by loadContent() from Supabase -->
-      <div class="series-list" id="homeGrid">
-        <div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:70%"></span><span style="width:90%"></span><span style="width:85%"></span><span style="width:45%"></span></div></div>
-        <div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:55%"></span><span style="width:95%"></span><span style="width:80%"></span><span style="width:40%"></span></div></div>
-        <div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:65%"></span><span style="width:88%"></span><span style="width:75%"></span><span style="width:50%"></span></div></div>
-
-      </div>
-
-      <!-- Continue Watching — populated by loadRecommendations() for logged-in users -->
+      <!-- Continue Watching — Apple TV landscape cards -->
       <div class="rec-section" id="cwSection" style="display:none">
-        <div class="rec-label"><span class="rec-label-dot"></span>Continue Watching</div>
-        <div class="rec-scroll" id="cwScroll"></div>
+        <div class="atv-section-hdr">
+          <span class="atv-section-title">Continue Watching</span>
+        </div>
+        <div class="atv-cw-scroll" id="cwScroll"></div>
       </div>
 
-      <!-- Similar to What You Watched — same genre as last-watched series -->
+      <!-- More Like This -->
       <div class="rec-section" id="simSection" style="display:none">
-        <div class="rec-label"><span class="rec-label-dot"></span><span id="simLabel">More Like This</span></div>
+        <div class="atv-section-hdr">
+          <span class="atv-section-title" id="simLabel">More Like This</span>
+          <span class="atv-section-see-all" onclick="switchHomeTab(document.querySelector('.tab-btn'),'all')">See All <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
         <div class="rec-scroll" id="simScroll"></div>
       </div>
 
-      <!-- In Your Language — filtered by selected UI language -->
+      <!-- In Your Language -->
       <div class="rec-section" id="langSection" style="display:none">
-        <div class="rec-label"><span class="rec-label-dot"></span><span id="langLabel">In Your Language</span></div>
+        <div class="atv-section-hdr">
+          <span class="atv-section-title" id="langLabel">In Your Language</span>
+        </div>
         <div class="rec-scroll" id="langScroll"></div>
       </div>
 
@@ -2357,8 +2461,8 @@ svg defs { position: absolute; width: 0; height: 0; }
       <div class="member-get-app" style="margin:16px 16px 0;padding:16px;background:var(--surface2);border-radius:16px;text-align:center">
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Get the App</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button onclick="window.open('https://www.sphynxplay.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <span style="font-size:14px">🌐</span> sphynxplay.com
+          <button onclick="window.open('https://www.sphynxmotion.com','_system')" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">🌐</span> sphynxmotion.com
           </button>
           <button onclick="installPWA()" style="background:var(--obsidian);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
             <span style="font-size:14px">📲</span> Add to Home Screen
@@ -2380,8 +2484,8 @@ svg defs { position: absolute; width: 0; height: 0; }
         <button class="list-tab active" onclick="switchListTab(this,'following')">Following</button>
         <button class="list-tab" onclick="switchListTab(this,'history')">History</button>
         <button class="list-tab" onclick="switchListTab(this,'reminder')">Reminders</button>
-        <button onclick="openListFilter()" style="margin-left:auto;display:flex;align-items:center;padding:0 4px 12px;background:none;border:none;cursor:pointer" aria-label="Sort & filter">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+        <button onclick="openListFilter()" style="margin-left:auto;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 10px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent" aria-label="Sort & filter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
         </button>
       </div>
 
@@ -2694,36 +2798,20 @@ svg defs { position: absolute; width: 0; height: 0; }
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
     <button class="nav-btn active" onclick="switchScreen('home', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
+      <span class="nav-icon">⌂</span>
       <span data-i18n="nav.home">Home</span>
     </button>
     <button class="nav-btn" onclick="switchScreen('foryou', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <rect x="2" y="3" width="20" height="14" rx="2"/><polygon points="8 21 16 21 12 17"/>
-        <circle cx="12" cy="10" r="3" fill="currentColor" opacity=".5"/>
-      </svg>
+      <span class="nav-icon">◎</span>
       <span data-i18n="nav.discover">Discover</span>
     </button>
     <button class="nav-btn" onclick="switchScreen('member', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-      </svg>
-      <span data-i18n="nav.soul_pass">Soul Pass</span>
+      <span class="nav-icon nav-icon--soul">◈</span>
+      <span data-i18n="nav.soul">Soul</span>
     </button>
     <button class="nav-btn" onclick="switchScreen('mylist', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-      </svg>
-      <span data-i18n="nav.watchlist">Watchlist</span>
-    </button>
-    <button class="nav-btn" onclick="switchScreen('profile', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-      <span data-i18n="nav.profile">Profile</span>
-      <div style="position:absolute;top:6px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--obsidian)"></div>
+      <span class="nav-icon">◫</span>
+      <span data-i18n="nav.library">Library</span>
     </button>
   </div>
 
@@ -2831,6 +2919,7 @@ function switchScreen(id, btn) {
   if (id !== 'foryou') document.querySelectorAll('#fyStack video').forEach(v => v.pause());
   if (id === 'foryou') fyPlayCurrent();
   if (id === 'mylist') loadWatchlist();
+  if (id === 'profile' && typeof _loadProfileData === 'function' && Date.now() - _lastProfileLoad > 30000) _loadProfileData();
 }
 
 /* ─── HOME TABS ──────────────────────────────────────────────────────────── */
@@ -2857,33 +2946,53 @@ function switchListTab(btn, tab) {
 function openListFilter() {
   document.getElementById('listSortSheet')?.remove();
   document.getElementById('listSortOverlay')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'listSortOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:599';
+
+  const opts = [
+    { key:'recent', label:'Recently Added', icon:'🕐' },
+    { key:'az',     label:'A – Z',          icon:'🔤' },
+    { key:'genre',  label:'By Genre',       icon:'🎭' },
+  ];
+
+  const backdrop = document.createElement('div');
+  backdrop.id = 'listSortOverlay';
+  backdrop.className = 'share-sheet-backdrop';
+  backdrop.onclick = _closeListSort;
+
   const sheet = document.createElement('div');
   sheet.id = 'listSortSheet';
-  sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--surface2);border-radius:20px 20px 0 0;padding:20px;z-index:600';
-  const opts = [
-    { key:'recent', label:'Recently Added' },
-    { key:'az',     label:'A – Z' },
-    { key:'genre',  label:'By Genre' },
-  ];
+  sheet.className = 'share-sheet';
   sheet.innerHTML = `
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px"></div>
-      <div style="font-size:14px;font-weight:700;color:var(--text)">Sort Watchlist</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px">
+    <div class="share-sheet-handle"></div>
+    <div class="share-sheet-title"><strong>Sort Watchlist</strong></div>
+    <div class="share-sheet-options">
       ${opts.map(o => `
-        <button onclick="loadWatchlist('${o.key}');document.getElementById('listSortSheet')?.remove();document.getElementById('listSortOverlay')?.remove();"
-          style="padding:14px 16px;background:${_listSort===o.key?'rgba(230,30,36,.15)':'var(--surface3)'};border:none;border-radius:12px;color:${_listSort===o.key?'var(--red)':'var(--text)'};font-size:14px;font-weight:600;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-          ${o.label}${_listSort===o.key?' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
-        </button>`).join('')}
+        <div class="share-sheet-option" onclick="_applyListSort('${o.key}')">
+          <div class="share-sheet-opt-icon" style="background:${_listSort===o.key?'rgba(230,30,36,.2)':'rgba(255,255,255,.06)'};font-size:18px">${o.icon}</div>
+          <div>
+            <div class="share-sheet-opt-label" style="color:${_listSort===o.key?'var(--red)':'#fff'}">${o.label}</div>
+          </div>
+          ${_listSort===o.key?'<svg style="margin-left:auto" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
+        </div>`).join('')}
     </div>
-    <div style="height:max(16px,env(safe-area-inset-bottom,0px))"></div>`;
-  overlay.onclick = () => { sheet.remove(); overlay.remove(); };
-  document.body.appendChild(overlay);
+    <button class="share-sheet-cancel" onclick="_closeListSort()">Cancel</button>`;
+
+  document.body.appendChild(backdrop);
   document.body.appendChild(sheet);
+  requestAnimationFrame(() => { backdrop.classList.add('open'); sheet.classList.add('open'); });
+}
+
+function _closeListSort() {
+  const backdrop = document.getElementById('listSortOverlay');
+  const sheet    = document.getElementById('listSortSheet');
+  if (!sheet) return;
+  sheet.classList.remove('open');
+  backdrop?.classList.remove('open');
+  setTimeout(() => { sheet.remove(); backdrop?.remove(); }, 300);
+}
+
+function _applyListSort(key) {
+  _closeListSort();
+  loadWatchlist(key);
 }
 
 /* ─── WATCHLIST (Supabase-backed) ────────────────────────────────────────── */
@@ -3179,10 +3288,12 @@ function selectPkg(el) {
 function initFyScroll() {
   const stack = document.getElementById('fyStack');
   if (!stack) return;
-  stack.addEventListener('scroll', () => {
+  if (window._fyScrollHandler) stack.removeEventListener('scroll', window._fyScrollHandler);
+  window._fyScrollHandler = () => {
     clearTimeout(window._fyTimer);
     window._fyTimer = setTimeout(fyPlayCurrent, 120);
-  }, { passive: true });
+  };
+  stack.addEventListener('scroll', window._fyScrollHandler, { passive: true });
 }
 
 function fyPlayCurrent() {
@@ -3221,29 +3332,67 @@ function fyBookmark(el, seriesId) {
     }
   }
 }
-function fyShare() {
-  const url = window.location.href;
+function fyShare(seriesId, title) {
+  const url       = window.location.origin + (seriesId ? '?s=' + encodeURIComponent(seriesId) : '');
+  const shareText = 'Watch "' + (title || 'SphynxPlay') + '" on SphynxPlay';
+
+  // Reuse the same sheet infrastructure as vpShare
+  document.getElementById('shareSheet')?.remove();
+  document.getElementById('shareBackdrop')?.remove();
+
+  const options = [
+    { icon: '📋', bg: '#2a2a2a', label: 'Copy Link',  sub: 'Copy to clipboard',   action: 'copy' },
+    { icon: '💬', bg: '#25D366', label: 'WhatsApp',    sub: 'Share via WhatsApp',   action: 'whatsapp' },
+    { icon: '✕',  bg: '#000',    label: 'X (Twitter)', sub: 'Post to X',            action: 'twitter' },
+    { icon: '📘', bg: '#1877F2', label: 'Facebook',    sub: 'Share to Facebook',    action: 'facebook' },
+  ];
   if (navigator.share) {
-    navigator.share({ title: 'SphynxPlay', url }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(url).then(() => toast('📋 Link copied!', 'success')).catch(() => toast('📋 Copied!', 'success'));
+    options.unshift({ icon: '⬆️', bg: '#333', label: 'Share…', sub: 'Open system share sheet', action: 'native' });
   }
+
+  const backdrop = document.createElement('div');
+  backdrop.id = 'shareBackdrop';
+  backdrop.className = 'share-sheet-backdrop';
+  backdrop.onclick = _closeShareSheet;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'shareSheet';
+  sheet.className = 'share-sheet';
+  sheet.innerHTML = `
+    <div class="share-sheet-handle"></div>
+    <div class="share-sheet-title">
+      <strong>${esc(title || 'SphynxPlay')}</strong>Share this series
+    </div>
+    <div class="share-sheet-options">
+      ${options.map(o => `
+        <div class="share-sheet-option" onclick="_shareAction('${o.action}','${encodeURIComponent(url)}','${encodeURIComponent(shareText)}')">
+          <div class="share-sheet-opt-icon" style="background:${o.bg}">${o.icon}</div>
+          <div><div class="share-sheet-opt-label">${o.label}</div><div class="share-sheet-opt-sub">${o.sub}</div></div>
+        </div>`).join('')}
+    </div>
+    <button class="share-sheet-cancel" onclick="_closeShareSheet()">Cancel</button>`;
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(sheet);
+  requestAnimationFrame(() => { backdrop.classList.add('open'); sheet.classList.add('open'); });
 }
 
 /* ─── GENRE PILLS ────────────────────────────────────────────────────────── */
-function toggleGenre(el) {
-  el.classList.toggle('selected');
-}
-
 /* ─── VOTING SYSTEM (fixed) ──────────────────────────────────────────────── */
 const voteState = { selected: -1, cast: false };
 
 function initVoting() {
   document.querySelectorAll('.vote-choice').forEach((el, idx) => {
-    el.addEventListener('click', () => selectVoteChoice(el, idx));
+    if (el._voteHandler) el.removeEventListener('click', el._voteHandler);
+    el._voteHandler = () => selectVoteChoice(el, idx);
+    el.addEventListener('click', el._voteHandler);
   });
   const btn = document.querySelector('.btn-vote');
-  if (btn) btn.addEventListener('click', confirmVote);
+  if (btn) {
+    if (btn._voteSubmitHandler) btn.removeEventListener('click', btn._voteSubmitHandler);
+    btn._voteSubmitHandler = confirmVote;
+    btn.addEventListener('click', btn._voteSubmitHandler);
+  }
 }
 
 function selectVoteChoice(el, idx) {
@@ -3300,34 +3449,6 @@ async function confirmVote() {
 
 /* ─── REACTIONS ──────────────────────────────────────────────────────────── */
 const reactionCounts = {};
-function reactEcho(el) {
-  const key = el.dataset.key || (el.dataset.key = Math.random().toString(36).slice(2));
-  const parts = el.textContent.trim().split(' ');
-  const emoji = parts[0];
-  if (!reactionCounts[key]) {
-    const raw = parts[1] || '0';
-    reactionCounts[key] = raw.endsWith('k') ? parseFloat(raw) * 1000 : parseInt(raw) || 0;
-  }
-  reactionCounts[key]++;
-  const n = reactionCounts[key];
-  el.textContent = emoji + ' ' + (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n);
-  el.style.borderColor = 'rgba(230,30,36,.5)';
-  el.style.color = 'var(--red)';
-  setTimeout(() => { el.style.borderColor = ''; el.style.color = ''; }, 600);
-}
-
-/* ─── COUNTDOWN ──────────────────────────────────────────────────────────── */
-let countdownSecs = 14 * 60 + 22;
-setInterval(() => {
-  countdownSecs = Math.max(0, countdownSecs - 1);
-  const el = document.getElementById('countdown');
-  if (!el) return;
-  if (countdownSecs === 0) { el.textContent = 'CLOSED'; return; }
-  const m = Math.floor(countdownSecs / 60).toString().padStart(2, '0');
-  const s = (countdownSecs % 60).toString().padStart(2, '0');
-  el.textContent = m + ':' + s;
-}, 1000);
-
 /* ─── MODALS ─────────────────────────────────────────────────────────────── */
 const modalContent = {
   'coming': `
@@ -3341,12 +3462,12 @@ const modalContent = {
     <div style="text-align:center;padding:10px 0">
       <div style="font-size:36px;margin-bottom:12px">📲</div>
       <div class="modal-title">Get the App</div>
-      <div class="modal-sub" style="margin-bottom:16px">Install SphynxPlay on your home screen for the full experience — offline access, push notifications, and full-screen mode.</div>
+      <div class="modal-sub" style="margin-bottom:16px">Add SphynxPlay to your home screen for instant access — push notifications, full-screen mode, and a native app feel.</div>
       <div style="background:rgba(230,30,36,.08);border:1px solid rgba(230,30,36,.15);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-dim);line-height:1.8;text-align:left">
-        ✓ Works offline<br>
+        ✓ Launch from your home screen<br>
         ✓ Push notifications<br>
-        ✓ Full-screen mode<br>
-        ✓ No App Store download required
+        ✓ Full-screen immersive mode<br>
+        ✓ Always up to date
       </div>
     </div>
     <button class="btn-generate" onclick="closeModal();installPWA()">Add to Home Screen →</button>
@@ -3379,7 +3500,7 @@ const modalContent = {
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Soul Tokens</div>
         <div class="modal-title">${pkg.soul.toLocaleString()} Soul</div>
-        <div style="font-size:32px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;margin:10px 0 4px">${pkg.price}</div>
+        <div style="font-size:32px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;margin:10px 0 4px">${pkg.price}</div>
         <div style="font-size:11px;color:var(--text-faint)">One-time purchase · No subscription</div>
       </div>
       <div style="background:rgba(255,36,48,.06);border:1px solid rgba(255,36,48,.2);border-radius:12px;padding:14px;margin-bottom:16px">
@@ -3404,7 +3525,7 @@ const modalContent = {
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Soul Pass</div>
         <div class="modal-title">${isAnnual ? 'Annual Plan' : 'Monthly Plan'}</div>
-        <div style="font-size:32px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;margin:10px 0 4px">
+        <div style="font-size:32px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;margin:10px 0 4px">
           ${isAnnual ? 'R59<span style="font-size:14px;font-weight:400">/mo · R708/yr</span>' : 'R89<span style="font-size:14px;font-weight:400">/month</span>'}
         </div>
         <div style="font-size:11px;color:var(--text-faint)">${isAnnual ? 'Save 29% vs monthly · Billed annually' : 'Billed monthly · Cancel anytime'}</div>
@@ -3440,12 +3561,12 @@ const modalContent = {
     <div class="modal-title">Join Soul Pass</div>
     <div class="modal-sub">Unlock all series, earn double Soul Tokens, and support African storytelling.</div>
     <div style="background:linear-gradient(135deg,var(--red-dark),var(--red));border-radius:12px;padding:16px;margin-bottom:10px;text-align:center;cursor:pointer" onclick="startSoulPassCheckout('month')">
-      <div style="font-size:28px;font-weight:800;color:#fff;font-family:'Space Grotesk',sans-serif">R59<span style="font-size:14px;font-weight:400">/month</span></div>
+      <div style="font-size:28px;font-weight:800;color:#fff;font-family:'JetBrains Mono',monospace">R59<span style="font-size:14px;font-weight:400">/month</span></div>
       <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Billed monthly · Cancel anytime</div>
     </div>
     <div style="background:var(--surface2);border:1px solid rgba(230,30,36,.3);border-radius:12px;padding:14px;margin-bottom:14px;text-align:center;cursor:pointer;position:relative" onclick="startSoulPassCheckout('year')">
       <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.06em">BEST VALUE</div>
-      <div style="font-size:22px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif">R499<span style="font-size:12px;font-weight:400;color:var(--text-dim)">/year</span></div>
+      <div style="font-size:22px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace">R499<span style="font-size:12px;font-weight:400;color:var(--text-dim)">/year</span></div>
       <div style="font-size:11px;color:var(--red);margin-top:4px;font-weight:600">Save 29% — that's R209 off</div>
     </div>
     <button class="btn-generate" id="joinBtn" onclick="startSoulPassCheckout('month')">Subscribe Now →</button>
@@ -3455,15 +3576,16 @@ const modalContent = {
     <div class="modal-title">Log in to SphynxPlay</div>
     <div class="modal-sub">Sign in to sync your Soul Score, history, and memberships across devices.</div>
     <div id="loginError" style="display:none;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:10px;padding:10px 12px;font-size:12px;color:#FF453A;margin-bottom:12px"></div>
+    <form autocomplete="on" onsubmit="loginUser();return false">
     <input id="loginEmail" type="email" placeholder="Email" autocomplete="email"
       style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
     <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password"
-      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:6px"
-      onkeydown="if(event.key==='Enter')loginUser()">
+      style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:6px">
     <div style="text-align:right;margin-bottom:14px">
       <a href="#" onclick="forgotPassword();return false" style="font-size:12px;color:var(--text-faint)">Forgot password?</a>
     </div>
-    <button class="btn-generate" onclick="loginUser()" id="loginSubmitBtn">Sign in →</button>
+    <button type="submit" class="btn-generate" id="loginSubmitBtn">Sign in →</button>
+    </form>
     <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-faint)">
       Don't have an account? <a href="#" onclick="openModal('signup');return false" style="color:var(--red);font-weight:600">Create one →</a>
     </div>
@@ -3472,13 +3594,15 @@ const modalContent = {
     <div class="modal-title">Create Account</div>
     <div class="modal-sub">Join SphynxPlay — Africa's vertical drama platform.</div>
     <div id="signupError" style="display:none;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:10px;padding:10px 12px;font-size:12px;color:#FF453A;margin-bottom:12px"></div>
+    <form autocomplete="on" onsubmit="signupUser();return false">
     <input id="signupName" type="text" placeholder="Display name" autocomplete="name"
       style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
     <input id="signupEmail" type="email" placeholder="Email" autocomplete="email"
       style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px">
     <input id="signupPassword" type="password" placeholder="Password (min 8 chars)" autocomplete="new-password"
       style="width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:14px">
-    <button class="btn-generate" onclick="signupUser()">Create Account →</button>
+    <button type="submit" class="btn-generate">Create Account →</button>
+    </form>
     <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-faint)">
       Already have an account? <a href="#" onclick="openModal('login');return false" style="color:var(--red);font-weight:600">Log in →</a>
     </div>
@@ -3486,7 +3610,7 @@ const modalContent = {
   'wallet': () => `
     <div class="modal-title">My Wallet</div>
     <div style="background:var(--surface2);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px;border:1px solid rgba(230,30,36,.15)">
-      <div style="font-size:38px;font-weight:800;color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1" id="walletBalance">—</div>
+      <div style="font-size:38px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1" id="walletBalance">—</div>
       <div style="font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.12em;text-transform:uppercase;margin-top:4px">Soul Tokens</div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text-dim);margin-bottom:10px">Top Up</div>
@@ -3597,9 +3721,9 @@ const modalContent = {
     <div style="margin-bottom:14px">
       ${[
         ['📧','Email Support','support@sphynxplay.com','mailto:support@sphynxplay.com'],
-        ['🌐','Website','www.sphynxplay.com','https://www.sphynxplay.com'],
-        ['📱','Instagram','@sphynxplay','https://www.sphynxplay.com'],
-        ['❓','FAQ','Browse common questions','https://www.sphynxplay.com'],
+        ['🌐','Website','www.sphynxmotion.com','https://www.sphynxmotion.com'],
+        ['📱','Instagram','@sphynxplay','https://www.instagram.com/sphynxplay'],
+        ['❓','FAQ','Browse common questions','https://www.sphynxmotion.com/support'],
       ].map(([icon,label,value,href]) => `
         <div onclick="window.open('${href}','_system')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">
           <div style="font-size:20px;width:32px;text-align:center">${icon}</div>
@@ -3727,7 +3851,7 @@ const modalContent = {
         <span class="pmi-icon">🌍</span><span class="pmi-label">Language</span>
         <div class="pmi-right"><span class="pmi-value">${(_availableLangs||[]).find(l=>l.code===_currentLang)?.native_name||document.getElementById('langDisplayName')?.textContent||'English'}</span><span class="pmi-chevron">›</span></div>
       </div>
-      <div class="prof-menu-item" onclick="closeModal();openModal('coming')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <div class="prof-menu-item" onclick="closeModal();openModal('notifications')" style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.05)">
         <span class="pmi-icon">🔔</span><span class="pmi-label">Notifications</span>
         <div class="pmi-right"><span class="pmi-chevron">›</span></div>
       </div>
@@ -3824,8 +3948,12 @@ function openModal(key) {
   // Allow independent scroll inside modal on iOS Capacitor (scrollEnabled:false)
   const sheet = document.querySelector('.modal-sheet');
   if (sheet) {
-    sheet.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
-    sheet.addEventListener('touchmove',  e => e.stopPropagation(), { passive: true });
+    if (sheet._tsHandler) sheet.removeEventListener('touchstart', sheet._tsHandler);
+    if (sheet._tmHandler) sheet.removeEventListener('touchmove',  sheet._tmHandler);
+    sheet._tsHandler = e => e.stopPropagation();
+    sheet._tmHandler = e => e.stopPropagation();
+    sheet.addEventListener('touchstart', sheet._tsHandler, { passive: true });
+    sheet.addEventListener('touchmove',  sheet._tmHandler, { passive: true });
   }
   if (key === 'wallet')   loadWalletBalance();
   if (key === 'rewards')  setTimeout(() => loadEarnSoulState().then(() => _i18nEl(content)), 50);
@@ -3845,12 +3973,28 @@ function openModal(key) {
   if (_currentLang !== 'en') _applyTransToEl(content);
 }
 
+function _syncSoulDisplays(soul) {
+  const fmt = soul.toLocaleString();
+  const el  = document.getElementById('walletBalance');
+  if (el) el.textContent = fmt;
+  const tok = document.getElementById('statusBarTokens');
+  if (tok) tok.textContent = '◈ ' + fmt;
+  const wv  = document.getElementById('profWalletValue');
+  if (wv) wv.textContent = fmt + ' Soul';
+}
+
 async function loadWalletBalance() {
   const el = document.getElementById('walletBalance');
-  if (!el || !_sb || !_currentUser) return;
+  if (!el) return;
+  // Show the already-known balance immediately — no flash of a different number
+  _syncSoulDisplays(_currentSoul);
+  if (!_sb || !_currentUser) return;
   try {
-    const { data } = await _sb.from('profiles').select('soul_balance').eq('id', _currentUser.id).single();
-    if (data) el.textContent = (data.soul_balance ?? 0).toLocaleString();
+    const { data, error } = await _sb.from('profiles').select('soul_balance').eq('id', _currentUser.id).single();
+    if (!error && data) {
+      _currentSoul = data.soul_balance ?? 0;
+      _syncSoulDisplays(_currentSoul);
+    }
   } catch {}
 }
 
@@ -3973,7 +4117,7 @@ function toggleVideoControls() {
   overlay.classList.toggle('show-controls');
   clearTimeout(controlsTimeout);
   if (overlay.classList.contains('show-controls')) {
-    controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 3500);
+    controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 5000);
   }
 }
 
@@ -3981,9 +4125,10 @@ function toggleVideoControls() {
 // enough for the user to press another button without re-tapping to show them.
 function _resetControlsTimer() {
   const overlay = document.getElementById('videoOverlay');
-  if (!overlay?.classList.contains('show-controls')) return;
+  if (!overlay) return;
+  overlay.classList.add('show-controls');
   clearTimeout(controlsTimeout);
-  controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 3500);
+  controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 5000);
 }
 
 /* ─── GENERATE BUTTONS (fixed — all .btn-generate wired up) ─────────────── */
@@ -4018,38 +4163,6 @@ function handleGenerate(btn) {
 }
 
 /* ─── GRADE PICKER (single-select fixed) ─────────────────────────────────── */
-function selectGrade(el) {
-  document.querySelectorAll('.grade-option').forEach(g => g.classList.remove('selected'));
-  el.classList.add('selected');
-  toast('✓ ' + (el.dataset.grade || 'Look') + ' applied', 'success');
-}
-
-/* ─── VOICE PREVIEW (playing state fixed) ────────────────────────────────── */
-let activeVoiceRow = null;
-function previewVoice(el, name) {
-  if (activeVoiceRow === el) {
-    el.classList.remove('playing');
-    el.querySelector('.voice-play-btn').textContent = '▶';
-    activeVoiceRow = null;
-    return;
-  }
-  if (activeVoiceRow) {
-    activeVoiceRow.classList.remove('playing');
-    activeVoiceRow.querySelector('.voice-play-btn').textContent = '▶';
-  }
-  el.classList.add('playing');
-  el.querySelector('.voice-play-btn').textContent = '■';
-  activeVoiceRow = el;
-  toast('▶ Previewing: ' + name);
-  setTimeout(() => {
-    if (activeVoiceRow === el) {
-      el.classList.remove('playing');
-      el.querySelector('.voice-play-btn').textContent = '▶';
-      activeVoiceRow = null;
-    }
-  }, 3200);
-}
-
 /* ─── IMAGE FALLBACKS ────────────────────────────────────────────────────── */
 function initImages() {
   document.querySelectorAll('img').forEach(img => {
@@ -4085,6 +4198,7 @@ function handleVersionTap() {
 let _sb = null;
 let isLoggedIn = false;
 let _currentUser = null;
+let _currentSoul = 0;
 let _currentEpisodeId = null;
 let _currentSeriesId  = null;
 
@@ -4103,12 +4217,20 @@ async function initSupabase() {
         isLoggedIn = !!session;
         _currentUser = session?.user || null;
         if (session) document.cookie = `sphynx_session=${session.access_token};path=/;SameSite=Lax${location.protocol==='https:'?';Secure':''}`;
-        else document.cookie = 'sphynx_session=;path=/;max-age=0';
+        else {
+          document.cookie = 'sphynx_session=;path=/;max-age=0';
+          const av = document.getElementById('topbarAvatar');
+          if (av) { av.innerHTML = ''; av.style.background = 'rgba(255,255,255,.1)'; }
+          const sb = document.getElementById('statusBarTokens');
+          if (sb) sb.textContent = '◈ —';
+        }
         updateProfileUI();
         if (event === 'SIGNED_IN') setTimeout(claimDailyLogin, 1500);
       });
     }
-  } catch {}
+  } catch (e) {
+    console.error('[initSupabase]', e);
+  }
 }
 
 function updateProfileUI() {
@@ -4136,54 +4258,79 @@ function updateProfileUI() {
   if (typeof _loadContinueWatching === 'function') _loadContinueWatching();
 }
 
+function _soulRank(soul) {
+  return soul >= 5000 ? '✦ Soul Master' : soul >= 2000 ? '✦ Deep Watcher' : soul >= 500 ? '✦ Echo Seeker' : '✦ New Soul';
+}
+
+let _lastProfileLoad = 0;
+
 async function _loadProfileData() {
   if (!_sb || !_currentUser) return;
+
+  // Paint cached rank immediately — never show a blank while the fetch is in flight
+  const rankEl = document.getElementById('profSoulRank');
+  if (rankEl) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('_soulCache') || 'null');
+      rankEl.textContent = cached?.soul !== undefined ? _soulRank(cached.soul) : '✦ New Soul';
+    } catch { rankEl.textContent = '✦ New Soul'; }
+  }
+
   try {
-    const [profileRes, epRes, voteRes] = await Promise.all([
+    // Supabase never throws on DB/RLS errors — they come back as { data: null, error: {...} }.
+    // Promise.allSettled prevents one failing query from killing the others.
+    const [profileRes, epRes, voteRes] = await Promise.allSettled([
       _sb.from('profiles').select('soul_balance, subscription_status, display_name, avatar_url').eq('id', _currentUser.id).single(),
       _sb.from('episode_progress').select('id', { count: 'exact', head: true }).eq('user_id', _currentUser.id).eq('completed', true),
       _sb.from('echo_votes').select('id', { count: 'exact', head: true }).eq('user_id', _currentUser.id),
     ]);
 
-    const data = profileRes.data;
+    // Explicitly check the Supabase-level error — this is what catch{} never saw
+    const profileErr = profileRes.value?.error;
+    if (profileErr) { console.error('[profile query]', profileErr.message, profileErr.code); return; }
+
+    const data = profileRes.value?.data;
     if (!data) return;
 
-    const soul = data.soul_balance ?? 0;
-    const eps  = epRes.count  ?? 0;
-    const votes = voteRes.count ?? 0;
+    const soul  = data.soul_balance ?? 0;
+    const eps   = epRes.value?.count  ?? 0;
+    const votes = voteRes.value?.count ?? 0;
 
-    // Wallet
-    const walletVal = document.getElementById('profWalletValue');
-    if (walletVal) walletVal.textContent = soul.toLocaleString() + ' Soul';
-    const walletBal = document.getElementById('walletBalance');
-    if (walletBal) walletBal.textContent = soul.toLocaleString();
+    // Persist so the next page load renders the correct rank instantly from cache
+    try { localStorage.setItem('_soulCache', JSON.stringify({ soul })); } catch {}
+    _lastProfileLoad = Date.now();
+    _currentSoul = soul;
 
-    // Avatar
+    // Wallet — keep all three displays in sync from one source
+    _syncSoulDisplays(soul);
+
+    // Avatar — profile screen + topbar
+    const topbarAv = document.getElementById('topbarAvatar');
     if (data.avatar_url) {
       const inner = document.getElementById('profAvatarInner');
       if (inner) inner.innerHTML = `<img src="${esc(data.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      if (topbarAv) { topbarAv.innerHTML = `<img src="${esc(data.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; topbarAv.style.background = 'transparent'; }
+    } else if (topbarAv && data.display_name) {
+      topbarAv.innerHTML = '';
+      topbarAv.textContent = data.display_name.slice(0, 2).toUpperCase();
+      topbarAv.style.background = 'var(--accent)';
     }
 
     // Name
     const nameEl = document.getElementById('profDisplayName');
     if (nameEl && data.display_name) nameEl.textContent = data.display_name;
 
-    // Stats
+    // Soul score + arc ring
     const scoreEl = document.getElementById('profSoulScore');
     if (scoreEl) scoreEl.textContent = soul.toLocaleString();
 
     const arcEl = document.getElementById('profSoulArc');
     if (arcEl) {
-      // Arc: max display at 5000 soul; dashoffset 132→0 as soul increases
       const ratio = Math.min(soul / 5000, 1);
       arcEl.setAttribute('stroke-dashoffset', String(Math.round(132 - ratio * 132)));
     }
 
-    const rankEl = document.getElementById('profSoulRank');
-    if (rankEl) {
-      const rank = soul >= 5000 ? '✦ Soul Master' : soul >= 2000 ? '✦ Deep Watcher' : soul >= 500 ? '✦ Echo Seeker' : '✦ New Soul';
-      rankEl.textContent = rank;
-    }
+    if (rankEl) rankEl.textContent = _soulRank(soul);
 
     const epEl = document.getElementById('profEpCount');
     if (epEl) epEl.textContent = eps;
@@ -4191,11 +4338,12 @@ async function _loadProfileData() {
     const voteEl = document.getElementById('profVoteCount');
     if (voteEl) voteEl.textContent = votes;
 
-    // Hide "Join Soul Pass" banner if already subscribed
     const banner = document.getElementById('profMemberBanner');
     if (banner) banner.style.display = data.subscription_status === 'active' ? 'none' : '';
 
-  } catch {}
+  } catch (e) {
+    console.error('[loadProfileData]', e);
+  }
 }
 
 async function loginUser() {
@@ -4278,6 +4426,10 @@ async function logoutUser() {
   isLoggedIn = false;
   _currentUser = null;
   document.cookie = 'sphynx_session=;path=/;max-age=0';
+  const av = document.getElementById('topbarAvatar');
+  if (av) { av.textContent = ''; av.style.background = 'rgba(255,255,255,.1)'; }
+  const sb = document.getElementById('statusBarTokens');
+  if (sb) sb.textContent = '◈ —';
   toast('Logged out');
   updateProfileUI();
 }
@@ -4360,7 +4512,7 @@ function openVideoPlayer(src, seriesTitle, epLabel, type) {
   overlay.classList.add('open', 'show-controls');
   document.body.style.overflow = 'hidden';
   clearTimeout(controlsTimeout);
-  controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 3500);
+  controlsTimeout = setTimeout(() => overlay.classList.remove('show-controls'), 5000);
 
   if (!src) {
     if (!video.src || video.error) { _videoShowComingSoon(); return; }
@@ -4455,32 +4607,120 @@ function _prevEpisode() {
 }
 
 function vpToggleWatchlist() {
-  if (!isLoggedIn) { openModal('login'); return; }
+  if (!isLoggedIn) { closeVideoPlayer(); openModal('login'); return; }
   const sid = _currentSeriesId;
-  if (!sid) return;
+  if (!sid) { toast('No series loaded'); return; }
   _vpWatchlisted = !_vpWatchlisted;
   const icon = document.getElementById('vpWatchlistIcon');
   icon?.classList.toggle('active', _vpWatchlisted);
+  toast(_vpWatchlisted ? '✓ Saved to My List' : 'Removed from My List');
   fetch('/api/engage/watchlist/' + sid, {
     method: _vpWatchlisted ? 'POST' : 'DELETE',
     credentials: 'include',
-  }).then(() => {
-    toast(_vpWatchlisted ? 'Added to watchlist' : 'Removed from watchlist');
   }).catch(() => {
     _vpWatchlisted = !_vpWatchlisted;
     icon?.classList.toggle('active', _vpWatchlisted);
+    toast('Could not save — try again');
   });
 }
 
 function vpShare() {
   const title = document.getElementById('videoTitle')?.textContent || 'SphynxPlay';
   const ep    = document.getElementById('videoEp')?.textContent || '';
-  const url   = window.location.origin;
+  const url   = window.location.href;
+  const shareText = 'Watch on SphynxPlay: ' + title + (ep ? ' · ' + ep : '');
+
+  // Remove any existing sheet
+  document.getElementById('shareSheet')?.remove();
+  document.getElementById('shareBackdrop')?.remove();
+
+  const encoded = encodeURIComponent(url);
+  const encodedText = encodeURIComponent(shareText);
+
+  const options = [
+    { icon: '📋', bg: '#2a2a2a', label: 'Copy Link',   sub: 'Copy to clipboard',        action: 'copy' },
+    { icon: '💬', bg: '#25D366', label: 'WhatsApp',     sub: 'Share via WhatsApp',        action: 'whatsapp' },
+    { icon: '✕',  bg: '#000',    label: 'X (Twitter)',  sub: 'Post to X',                 action: 'twitter' },
+    { icon: '📘', bg: '#1877F2', label: 'Facebook',     sub: 'Share to Facebook',         action: 'facebook' },
+  ];
+
   if (navigator.share) {
-    navigator.share({ title: title + (ep ? ' · ' + ep : ''), text: 'Watch on SphynxPlay', url }).catch(() => {});
-  } else {
-    navigator.clipboard?.writeText(url).then(() => toast('Link copied!')).catch(() => {});
+    options.unshift({ icon: '⬆️', bg: '#333', label: 'Share…', sub: 'Open system share sheet', action: 'native' });
   }
+
+  const backdrop = document.createElement('div');
+  backdrop.id = 'shareBackdrop';
+  backdrop.className = 'share-sheet-backdrop';
+  backdrop.onclick = _closeShareSheet;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'shareSheet';
+  sheet.className = 'share-sheet';
+  sheet.innerHTML = `
+    <div class="share-sheet-handle"></div>
+    <div class="share-sheet-title">
+      <strong>${esc(title)}</strong>${ep ? esc(ep) : 'Share this episode'}
+    </div>
+    <div class="share-sheet-options">
+      ${options.map(o => `
+        <div class="share-sheet-option" onclick="_shareAction('${o.action}','${encodeURIComponent(url)}','${encodeURIComponent(shareText)}')">
+          <div class="share-sheet-opt-icon" style="background:${o.bg}">${o.icon}</div>
+          <div><div class="share-sheet-opt-label">${o.label}</div><div class="share-sheet-opt-sub">${o.sub}</div></div>
+        </div>`).join('')}
+    </div>
+    <button class="share-sheet-cancel" onclick="_closeShareSheet()">Cancel</button>`;
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(sheet);
+  requestAnimationFrame(() => { backdrop.classList.add('open'); sheet.classList.add('open'); });
+}
+
+function _closeShareSheet() {
+  const backdrop = document.getElementById('shareBackdrop');
+  const sheet    = document.getElementById('shareSheet');
+  if (!sheet) return;
+  sheet.classList.remove('open');
+  backdrop?.classList.remove('open');
+  setTimeout(() => { sheet.remove(); backdrop?.remove(); }, 300);
+}
+
+function _shareAction(action, encodedUrl, encodedText) {
+  const url  = decodeURIComponent(encodedUrl);
+  const text = decodeURIComponent(encodedText);
+  _closeShareSheet();
+  switch (action) {
+    case 'native':
+      navigator.share({ title: text, text: 'Watch on SphynxPlay', url }).catch(() => _copyToClipboard(url));
+      break;
+    case 'copy':
+      _copyToClipboard(url);
+      break;
+    case 'whatsapp':
+      window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank');
+      break;
+    case 'twitter':
+      window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank');
+      break;
+    case 'facebook':
+      window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
+      break;
+  }
+}
+
+function _copyToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => toast('Link copied!')).catch(() => _fallbackCopy(text));
+  } else {
+    _fallbackCopy(text);
+  }
+}
+
+function _fallbackCopy(text) {
+  const el = document.createElement('textarea');
+  el.value = text; el.style.position = 'fixed'; el.style.opacity = '0';
+  document.body.appendChild(el); el.focus(); el.select();
+  try { document.execCommand('copy'); toast('Link copied!'); } catch { toast('Copy link: ' + text); }
+  document.body.removeChild(el);
 }
 
 function _initSwipe() {
@@ -4507,12 +4747,17 @@ function _initSwipe() {
   overlay.addEventListener('touchend', e => {
     document.getElementById('vpSwipeNext')?.classList.remove('show');
     document.getElementById('vpSwipePrev')?.classList.remove('show');
-    // If the touch ended on an interactive control, let its own click handler fire —
-    // don't call toggleVideoControls() which would strip pointer-events before the
-    // synthetic click event arrives (iOS fires click ~0ms after touchend).
-    if (e.target.closest('.vp-rail-btn,.vp-close-btn,.vp-bottom,.vp-rail,.video-state,.vp-end-card')) return;
+    // Use elementFromPoint on the *end* position — e.target is the start element
+    // on iOS, which causes false misses when the finger drifts onto a button.
+    const touch  = e.changedTouches[0];
+    const endEl  = document.elementFromPoint(touch.clientX, touch.clientY);
+    const INTERACTIVE = '.vp-rail-btn,.vp-close-btn,.vp-bottom,.vp-rail,.video-state,.vp-end-card,.video-progress,.vp-ctrl-row';
+    // Only defer to the button if controls are actually visible (pointer-events:all).
+    // elementFromPoint ignores pointer-events:none so we'd get false positives when
+    // controls are hidden — the button is in the DOM but not tappable yet.
+    if (overlay.classList.contains('show-controls') && endEl?.closest(INTERACTIVE)) return;
     if (!swiping) { toggleVideoControls(); return; }
-    const dy = e.changedTouches[0].clientY - startY;
+    const dy = touch.clientY - startY;
     if      (dy < -80) _nextEpisode();
     else if (dy >  80) _prevEpisode();
   }, { passive: true });
@@ -4632,33 +4877,76 @@ async function playEpisode(episodeId, seriesTitle, epLabel) {
 }
 
 /* ─── LIVE CONTENT LOADING ──────────────────────────────────────────────── */
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) {
+  // Encodes for HTML text, HTML attributes (double AND single quoted), and
+  // inline JS string literals inside onclick="fn('${esc(val)}')" patterns.
+  return (s == null ? '' : String(s))
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#x27;')
+    .replace(/`/g,  '&#x60;');
+}
 
 // Apply translations to a container immediately after dynamic innerHTML injection
 function _i18nEl(el) { if (el && _currentLang !== 'en') _applyTransToEl(el); }
 
-function renderCard(s) {
-  const poster  = s.poster_url || 'assets/posters/image-11.jpg';
-  const views   = s.views ? (s.views > 999 ? (s.views/1000).toFixed(1)+'K' : s.views) : null;
-  const epCount = Array.isArray(s.episodes) ? (s.episodes[0]?.count ?? null) : null;
-  const badge   = s.is_featured ? 'Hot' : (s.is_trending ? 'Trending' : 'New');
-  const badgeCls= s.is_featured ? 'g-badge--hot' : (s.is_trending ? 'g-badge--hot' : 'g-badge--new');
-  const desc    = s.description || '';
+/* Apple TV-style horizontal poster card */
+function renderAtvCard(s) {
+  const poster = s.poster_url || 'assets/posters/image-11.jpg';
+  const badge  = s.is_featured ? 'HOT' : (s.is_trending ? 'TRENDING' : 'NEW');
+  const badgeBg= s.is_featured ? 'var(--red)' : (s.is_trending ? '#E67E00' : '#1A9E4A');
   return `
-    <div class="series-row" onclick="playSeries('${esc(s.id)}')">
-      <div class="series-row-thumb">
-        <img src="${esc(poster)}" alt="${esc(s.title)}" loading="lazy">
-        <div class="g-badge ${badgeCls}" style="position:absolute;top:6px;left:6px;font-size:8px">${badge}</div>
-        ${views ? `<div class="series-row-views">▶ ${views}</div>` : ''}
+    <div class="atv-poster" onclick="playSeries('${esc(s.id)}')">
+      <div class="atv-poster-thumb">
+        <img src="${esc(poster)}" alt="${esc(s.title)}">
+        <div class="atv-poster-badge" style="background:${badgeBg}">${badge}</div>
       </div>
-      <div class="series-row-info">
-        <div class="series-row-title">${esc(s.title)}</div>
-        ${desc ? `<div class="series-row-desc">${esc(desc)}</div>` : ''}
-        <div class="series-row-meta">
-          <span>${esc(s.genre || '')}</span>
-          ${s.age_rating ? `<span class="age-badge" style="font-size:9px">${esc(s.age_rating)}</span>` : ''}
-          ${epCount !== null ? `<span class="series-row-eps">${epCount} Episodes</span>` : ''}
-        </div>
+      <div class="atv-poster-title">${esc(s.title)}</div>
+      <div class="atv-poster-genre">${esc(s.genre || '')}</div>
+    </div>`;
+}
+
+/* Apple TV Top 10 numbered card */
+function renderTop10Card(s, rank) {
+  const poster = s.poster_url || 'assets/posters/image-11.jpg';
+  return `
+    <div class="atv-top10-item" onclick="playSeries('${esc(s.id)}')">
+      <div class="atv-top10-num">${rank}</div>
+      <div class="atv-top10-thumb">
+        <img src="${esc(poster)}" alt="${esc(s.title)}">
+      </div>
+      <div class="atv-top10-title">${esc(s.title)}</div>
+    </div>`;
+}
+
+/* Full-bleed hero for featured series */
+function renderHomeHero(s) {
+  const poster      = s.poster_url || 'assets/posters/image-11.jpg';
+  const badgeLabel  = s.is_featured ? '▶ Featured Series' : (s.is_trending ? '▶ Trending Now' : '▶ New Release');
+  const epCount     = s.episodes?.[0]?.count ?? s.episodes?.length ?? null;
+  const metaParts   = [
+    epCount ? `${epCount} Episode${epCount !== 1 ? 's' : ''}` : null,
+    s.genre,
+    s.age_rating,
+  ].filter(Boolean);
+  const meta = metaParts.join(' · ');
+  const desc = s.description || '';
+  return `
+    <img class="atv-hero-img" src="${esc(poster)}" alt="${esc(s.title)}">
+    <div class="atv-hero-grad"></div>
+    <div class="atv-hero-content">
+      <div class="atv-hero-badge">${badgeLabel}</div>
+      <div class="atv-hero-title">${esc(s.title)}</div>
+      ${desc ? `<div class="atv-hero-desc">${esc(desc)}</div>` : ''}
+      ${meta ? `<div class="atv-hero-meta">${esc(meta)}</div>` : ''}
+      <div class="atv-hero-actions">
+        <button class="atv-hero-play" onclick="event.stopPropagation();playSeries('${esc(s.id)}')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+          Watch Now
+        </button>
+        <button class="atv-hero-add" onclick="event.stopPropagation();(isLoggedIn?fetch('/api/engage/watchlist/${esc(s.id)}',{method:'POST',credentials:'include'}).then(()=>toast('Added to My List')):openModal('login'))" title="Add to My List">+</button>
       </div>
     </div>`;
 }
@@ -4674,7 +4962,7 @@ function renderSlide(s) {
           <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
           <div class="fy-action-count">—</div>
         </div>
-        <div class="fy-action" onclick="fyShare()">
+        <div class="fy-action" onclick="fyShare('${esc(s.id)}','${esc(s.title)}')">
           <div class="fy-action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
           <div class="fy-action-count" data-i18n="card.share">Share</div>
         </div>
@@ -4730,6 +5018,15 @@ async function loadContent() {
     window._featuredList = featured;
     window._trendingList = trending;
 
+    // Populate the Apple TV full-bleed hero (skeleton sits behind topbar)
+    const skeletonEl = document.getElementById('heroSkeleton');
+    if (skeletonEl) {
+      const heroSeries = featured[0] || trending[0] || liveSeries[0];
+      if (heroSeries) {
+        skeletonEl.outerHTML = renderHomeHero(heroSeries);
+      }
+    }
+
     // Render the initial (popular) home grid
     _renderHomeGrid(_activeHomeTab);
 
@@ -4743,11 +5040,16 @@ async function loadContent() {
       initFyScroll();
     }
 
-    // Trending grid
+    // Trending grid (mylist screen + home screen)
     const trendCards = trending.length ? trending : liveSeries.slice(0, 6);
     if (trendGrid) {
       trendGrid.innerHTML = trendCards.map((s, i) => renderTCard(s, i + 1)).join('');
       _i18nEl(trendGrid);
+    }
+    const homeTrendGrid = document.getElementById('homeTrendGrid');
+    if (homeTrendGrid) {
+      const homeCards = trendCards.slice(0, 3);
+      homeTrendGrid.innerHTML = homeCards.map((s, i) => renderTCard(s, i + 1)).join('');
     }
 
     // Content loaded — dismiss splash early if animation already done
@@ -4791,6 +5093,14 @@ function retryConnection() {
 
 const _listSkeleton = () => `<div class="series-row-skeleton"><div class="series-row-skeleton-thumb"></div><div class="series-row-skeleton-lines"><span style="width:70%"></span><span style="width:90%"></span><span style="width:80%"></span><span style="width:45%"></span></div></div>`.repeat(4);
 
+const _atvSkeleton = () => `
+  <div style="padding:14px 0 4px">
+    <div style="height:17px;width:120px;margin:0 16px 10px;border-radius:6px;background:var(--surface2);animation:skel-shimmer 1.4s infinite;background-size:200% 100%"></div>
+    <div style="display:flex;gap:10px;padding:0 16px">
+      ${'<div style="flex-shrink:0;width:112px;height:168px;border-radius:10px;background:var(--surface2);animation:skel-shimmer 1.4s infinite;background-size:200% 100%"></div>'.repeat(3)}
+    </div>
+  </div>`.repeat(2);
+
 function _renderHomeGrid(tab) {
   const homeGrid = document.getElementById('homeGrid');
   if (!homeGrid) return;
@@ -4802,31 +5112,59 @@ function _renderHomeGrid(tab) {
     return;
   }
 
-  homeGrid.className = 'series-list';
+  homeGrid.className = 'atv-grid-wrap';
 
   if (!window._allSeries) {
-    homeGrid.innerHTML = _listSkeleton();
+    homeGrid.innerHTML = _atvSkeleton();
     return;
   }
 
   const all      = window._allSeries    || [];
   const trending = window._trendingList || [];
 
+  if (tab === 'rankings') {
+    const sorted = [...all].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10);
+    homeGrid.innerHTML = sorted.length
+      ? `<div class="atv-section-hdr"><span class="atv-section-title">Top 10 This Week</span></div>
+         <div class="atv-top10-scroll">${sorted.map((s, i) => renderTop10Card(s, i + 1)).join('')}</div>`
+      : '<div style="text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No rankings yet.</div>';
+    _i18nEl(homeGrid);
+    return;
+  }
+
   let cards;
   if (tab === 'popular') {
     const trendIds = new Set(trending.map(s => s.id));
     cards = [...trending, ...all.filter(s => !trendIds.has(s.id))];
   } else if (tab === 'new') {
-    cards = all;
-  } else if (tab === 'rankings') {
-    cards = [...all].sort((a, b) => (b.views || 0) - (a.views || 0));
+    cards = [...all].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   } else {
     cards = all;
   }
 
-  homeGrid.innerHTML = cards.length
-    ? cards.map(s => renderCard(s)).join('')
-    : '<div style="text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No series published yet.</div>';
+  if (!cards.length) {
+    homeGrid.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No series published yet.</div>';
+    return;
+  }
+
+  // Group by genre for Apple TV multi-row layout
+  const byGenre = {};
+  cards.forEach(s => {
+    const g = s.genre || 'Drama';
+    if (!byGenre[g]) byGenre[g] = [];
+    byGenre[g].push(s);
+  });
+
+  homeGrid.innerHTML = Object.entries(byGenre).map(([genre, series]) => `
+    <div class="atv-genre-row">
+      <div class="atv-section-hdr">
+        <span class="atv-section-title">${esc(genre)}</span>
+        <span class="atv-section-see-all" onclick="filterByGenre('${esc(genre)}')">
+          See All <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+      </div>
+      <div class="atv-scroll">${series.map(s => renderAtvCard(s)).join('')}</div>
+    </div>`).join('');
   _i18nEl(homeGrid);
 }
 
@@ -4852,16 +5190,15 @@ function _renderCategoriesGrid(container, all) {
 async function filterByGenre(genre) {
   _activeHomeTab = 'all';
   document.querySelectorAll('#homeTabStrip .tab-btn').forEach(b => b.classList.remove('active'));
-  const titleEl = document.getElementById('homeSectionTitle');
-  if (titleEl) titleEl.textContent = genre;
   const homeGrid = document.getElementById('homeGrid');
-  if (homeGrid) { homeGrid.className = 'series-list'; homeGrid.innerHTML = _listSkeleton(); }
+  if (homeGrid) { homeGrid.className = 'atv-grid-wrap'; homeGrid.innerHTML = _atvSkeleton(); }
   try {
     const res = await fetch(`/api/content/series?genre=${encodeURIComponent(genre)}&limit=48`);
     const { series = [] } = res.ok ? await res.json() : {};
     if (homeGrid) {
       homeGrid.innerHTML = series.length
-        ? series.map(s => renderCard(s)).join('')
+        ? `<div class="atv-section-hdr"><span class="atv-section-title">${esc(genre)}</span></div>
+           <div class="atv-scroll">${series.map(s => renderAtvCard(s)).join('')}</div>`
         : `<div style="text-align:center;padding:40px 0;color:var(--text-faint);font-size:13px">No ${esc(genre)} series yet.</div>`;
       _i18nEl(homeGrid);
     }
@@ -4909,13 +5246,16 @@ async function _loadContinueWatching() {
     if (items[0].language) _lastWatchedLang  = items[0].language;
 
     scroll.innerHTML = items.map(item => `
-      <div class="rec-card" onclick="playSeries('${esc(item.series_id)}')">
-        <img src="${esc(item.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(item.series_title)}" loading="lazy">
-        <div class="rec-progress"><div class="rec-progress-fill" style="width:${item.progress_pct}%"></div></div>
-        <div class="rec-card-info">
-          <div class="rec-card-title">${esc(item.series_title)}</div>
-          <div class="rec-card-sub">E${item.episode_number} · ${item.progress_pct}% <span data-i18n="history.watched">watched</span></div>
+      <div class="atv-cw-card" onclick="playSeries('${esc(item.series_id)}')">
+        <div class="atv-cw-thumb">
+          <img src="${esc(item.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(item.series_title)}">
+          <div class="atv-cw-play">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,.9)"><polygon points="5,3 19,12 5,21"/></svg>
+          </div>
+          <div class="atv-cw-bar"><div class="atv-cw-bar-fill" style="width:${item.progress_pct}%"></div></div>
         </div>
+        <div class="atv-cw-title">${esc(item.series_title)}</div>
+        <div class="atv-cw-sub">E${item.episode_number} · ${item.progress_pct}% watched</div>
       </div>`).join('');
     _i18nEl(scroll);
 
@@ -4944,14 +5284,8 @@ async function _loadSimilarRow() {
     if (!series.length) { section.style.display = 'none'; return; }
 
     if (label) label.textContent = `More ${genre}`;
-    scroll.innerHTML = series.map(s => `
-      <div class="rec-card" onclick="playSeries('${esc(s.id)}')">
-        <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(s.title)}" loading="lazy">
-        <div class="rec-card-info">
-          <div class="rec-card-title">${esc(s.title)}</div>
-          <div class="rec-card-sub">${esc(s.genre || '')}</div>
-        </div>
-      </div>`).join('');
+    scroll.innerHTML = series.map(s => renderAtvCard(s)).join('');
+    scroll.className = 'rec-scroll atv-scroll';
     _i18nEl(scroll);
 
     section.style.display = '';
@@ -4978,14 +5312,8 @@ async function _loadLanguageRow() {
 
     const langName = _availableLangs.find(l => l.code === lang)?.native_name || lang.toUpperCase();
     if (label) label.textContent = `In ${langName}`;
-    scroll.innerHTML = series.map(s => `
-      <div class="rec-card" onclick="playSeries('${esc(s.id)}')">
-        <img src="${esc(s.poster_url || 'assets/posters/image-11.jpg')}" alt="${esc(s.title)}" loading="lazy">
-        <div class="rec-card-info">
-          <div class="rec-card-title">${esc(s.title)}</div>
-          <div class="rec-card-sub">${esc(s.genre || '')}</div>
-        </div>
-      </div>`).join('');
+    scroll.innerHTML = series.map(s => renderAtvCard(s)).join('');
+    scroll.className = 'rec-scroll atv-scroll';
     _i18nEl(scroll);
 
     section.style.display = '';
@@ -5286,45 +5614,17 @@ function buyTokens(packageId) {
   openModal('token-checkout');
 }
 
-function _submitPayfastForm(data) {
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = data.action;
-  for (const [name, value] of Object.entries(data.fields || {})) {
-    const inp = document.createElement('input');
-    inp.type = 'hidden'; inp.name = name; inp.value = value;
-    form.appendChild(inp);
-  }
-  document.body.appendChild(form);
-  form.submit();
-}
 </script>
 
 <!-- PWA Install Banner -->
 <div id="installBanner">
-  <img src="SPHYNXPLAY_FAV.png" class="ib-icon" alt="">
+  <img src="SPHYNXPLAY_FAV.png" class="ib-icon" alt="" loading="lazy">
   <div class="ib-text">
     <div class="ib-title">Add to Home Screen</div>
     <div class="ib-sub">Install for the best SphynxPlay experience</div>
   </div>
   <button class="ib-btn" onclick="installPWA()">Install</button>
   <button class="ib-dismiss" onclick="dismissInstallBanner()">✕</button>
-</div>
-
-</body>
-</html></button>
-</div>
-
-</body>
-</html></button>
-</div>
-
-</body>
-</html></button>
-</div>
-
-</body>
-</html></button>
 </div>
 
 </body>

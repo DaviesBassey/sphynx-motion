@@ -43,6 +43,10 @@ router.get('/', requireRole('admin'), async (req, res) => {
 
 // PATCH /api/admin/creators/:id — approve / suspend
 router.patch('/:id', requireRole('admin'), async (req, res) => {
+  if (req.params.id === req.user.id) {
+    return res.status(403).json({ error: 'Cannot approve your own creator application' });
+  }
+
   const { status, revenue_share } = req.body;
   const updates = {};
   if (status) updates.status = status;
@@ -51,7 +55,8 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
     updates.approved_at = new Date().toISOString();
     updates.approved_by = req.user.id;
     // Promote profile role to creator
-    await supabaseAdmin.from('profiles').update({ role: 'creator' }).eq('id', req.params.id);
+    const { error: promoteErr } = await supabaseAdmin.from('profiles').update({ role: 'creator' }).eq('id', req.params.id);
+    if (promoteErr) return res.status(500).json({ error: 'Failed to promote user role: ' + promoteErr.message });
   }
   const { data, error } = await supabaseAdmin.from('creators').update(updates).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });

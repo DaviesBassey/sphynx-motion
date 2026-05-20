@@ -1,10 +1,11 @@
-const CACHE = 'sphynx-v8';
+const CACHE = 'sphynx-v19';
 const PRECACHE = [
   '/manifest.webmanifest',
   '/SPHYNXPLAY_LOGO_WHITE.png',
   '/SPHYNXPLAY_FAV.png',
   '/App_Cvr_Art.png',
   '/assets/posters/image-11.jpg',
+  '/assets/posters/image-12.jpg',
   '/assets/posters/image-13.jpg',
   '/assets/posters/image-14.jpg',
   '/assets/posters/image-15.jpg',
@@ -13,6 +14,11 @@ const PRECACHE = [
   '/assets/posters/image-18.jpg',
   '/assets/posters/image-19.jpg',
   '/assets/posters/image-20.jpg',
+  '/assets/posters/image-21.jpg',
+  '/assets/posters/image-22.jpg',
+  '/assets/posters/image-23.jpg',
+  '/assets/posters/image-24.jpg',
+  '/assets/posters/the-distance-poster.jpg',
 ];
 
 self.addEventListener('install', e => {

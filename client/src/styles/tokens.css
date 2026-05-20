@@ -1,0 +1,22 @@
+:root {
+  /* Colors */
+  --bg: #08080A;
+  --bg-card: #111114;
+  --bg-surface: #18181C;
+  --border: #2A2A30;
+  --text: #F0F0F2;
+  --text-muted: #8A8A94;
+  --accent: #E61E24;
+  --accent-hover: #FF2D33;
+  --token-gold: #C9A84C;
+
+  /* Fonts */
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+
+  /* Spacing */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+}

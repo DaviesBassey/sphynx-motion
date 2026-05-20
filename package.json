@@ -5,8 +5,16 @@
   "description": "SphynxPlay — African vertical drama streaming PWA + native app",
   "scripts": {
     "start": "cd server && npm start",
+    "predev": "lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null; sleep 0.3; true",
     "dev": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev:all": "concurrently -n \"api,react\" -c \"blue,green\" \"npm run dev\" \"npm run dev:client\"",
     "build": "echo 'Static app — no build step required'",
+    "build:react": "cd client && npm run build",
+    "lint": "cd server && npx eslint .",
+    "lint:fix": "cd server && npx eslint . --fix",
+    "typecheck": "cd server && npx tsc --project tsconfig.json",
+    "test": "cd server && node --test test/api.test.js",
     "cap:sync": "npx cap sync",
     "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android",
@@ -22,5 +30,8 @@
     "@capacitor/push-notifications": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

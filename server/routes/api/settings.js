@@ -20,6 +20,12 @@ router.get('/', async (req, res) => {
   res.json({ settings });
 });
 
+const ALLOWED_SETTING_KEYS = new Set([
+  'maintenance_mode', 'allow_signups', 'allow_payments', 'site_name', 'support_email',
+  'free_episode_limit', 'soul_token_daily_cap', 'soul_earn_rate', 'featured_series_limit',
+  'trending_series_limit', 'default_language', 'content_moderation_enabled',
+]);
+
 // PATCH /api/admin/settings
 router.patch('/', async (req, res) => {
   const updates = req.body;  // { key: value, ... }
@@ -27,6 +33,9 @@ router.patch('/', async (req, res) => {
   if (!updates || typeof updates !== 'object') {
     return res.status(400).json({ error: 'Request body must be a settings object' });
   }
+
+  const unknown = Object.keys(updates).filter(k => !ALLOWED_SETTING_KEYS.has(k));
+  if (unknown.length) return res.status(400).json({ error: `Unknown setting keys: ${unknown.join(', ')}` });
 
   const rows = Object.entries(updates).map(([key, value]) => ({
     key,

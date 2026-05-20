@@ -28,13 +28,16 @@ function stripe() {
 async function getUserFromToken(req) {
   const token = (req.headers.authorization || '').replace('Bearer ', '') || req.cookies?.sphynx_session;
   if (!token) return null;
-  const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-  return user || null;
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !data?.user) return null;
+  return data.user;
 }
 
 async function ensureStripeCustomer(user) {
-  const { data: profile } = await supabaseAdmin.from('profiles').select('stripe_customer_id, email').eq('id', user.id).single();
-  if (profile?.stripe_customer_id) return profile.stripe_customer_id;
+  const { data: profile, error } = await supabaseAdmin.from('profiles').select('stripe_customer_id, email').eq('id', user.id).single();
+  if (error) throw new Error('Failed to fetch profile: ' + error.message);
+  if (!profile) throw new Error('Profile not found for user ' + user.id);
+  if (profile.stripe_customer_id) return profile.stripe_customer_id;
   const customer = await stripe().customers.create({ email: profile.email || user.email, metadata: { supabase_uid: user.id } });
   await supabaseAdmin.from('profiles').update({ stripe_customer_id: customer.id }).eq('id', user.id);
   return customer.id;
@@ -346,12 +349,14 @@ router.post('/revenuecat/webhook', express.json(), async (req, res) => {
   // Verify shared secret with constant-time comparison to prevent timing attacks
   const authHeader = req.headers.authorization || '';
   const secret     = process.env.REVENUECAT_WEBHOOK_SECRET || '';
-  if (secret) {
-    const a = Buffer.from(authHeader.padEnd(secret.length));
-    const b = Buffer.from(secret);
-    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-      return res.status(401).send('Unauthorized');
-    }
+  if (!secret) {
+    console.error('[revenuecat] REVENUECAT_WEBHOOK_SECRET is not set — rejecting all webhook requests');
+    return res.status(503).send('Webhook auth not configured');
+  }
+  const a = Buffer.from(authHeader.padEnd(secret.length));
+  const b = Buffer.from(secret);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).send('Unauthorized');
   }
 
   const { event } = req.body;

@@ -177,15 +177,18 @@ router.post('/categories', requireRole('admin'), async (req, res) => {
 // ── STATS ─────────────────────────────────────────────────────────────────────
 
 router.get('/stats', async (req, res) => {
-  const [{ count: seriesCount }, { count: episodeCount }, viewsResult] = await Promise.all([
+  const [seriesRes, episodeRes, viewsRes] = await Promise.all([
     supabaseAdmin.from('series').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('episodes').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('episodes').select('views').limit(1000),
   ]);
 
-  const totalViews = (viewsResult.data || []).reduce((s, r) => s + (r.views || 0), 0);
+  if (seriesRes.error)  return res.status(500).json({ error: seriesRes.error.message });
+  if (episodeRes.error) return res.status(500).json({ error: episodeRes.error.message });
 
-  res.json({ series: seriesCount, episodes: episodeCount, totalViews });
+  const totalViews = (viewsRes.data || []).reduce((s, r) => s + (r.views || 0), 0);
+
+  res.json({ series: seriesRes.count || 0, episodes: episodeRes.count || 0, totalViews });
 });
 
 module.exports = router;

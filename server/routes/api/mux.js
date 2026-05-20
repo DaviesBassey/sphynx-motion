@@ -58,9 +58,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
   const [, ts] = (sig.match(/t=(\d+)/) || []);
   const [, v1] = (sig.match(/v1=([a-f0-9]+)/) || []);
+  if (!ts || !v1) return res.status(401).send('Bad signature');
   const hmac     = crypto.createHmac('sha256', process.env.MUX_WEBHOOK_SECRET);
   const expected = hmac.update(`${ts}.${body.toString()}`).digest('hex');
-  if (!ts || !v1 || !crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(expected))) {
+  const bufV1  = Buffer.from(v1, 'hex');
+  const bufExp = Buffer.from(expected, 'hex');
+  if (bufV1.length !== bufExp.length || !crypto.timingSafeEqual(bufV1, bufExp)) {
     return res.status(401).send('Bad signature');
   }
 

@@ -58,28 +58,32 @@ router.post('/trailer', requireRole('admin'), memStorage.single('file'), async (
   res.json({ url: publicUrl, path: data.path });
 });
 
-// POST /api/admin/uploads/video  — large file, streamed to Supabase Storage
+// POST /api/admin/uploads/video  — large file, read from disk then clean up
 router.post('/video', requireRole('admin'), diskStorage.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file provided' });
   if (!ALLOWED_VIDEO.includes(req.file.mimetype)) {
     return res.status(400).json({ error: 'Only MP4 and MOV files allowed' });
   }
 
-  const fs   = require('fs');
-  const path = `episodes/${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`;
+  const fs      = require('fs');
+  const storagePath = `episodes/${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`;
 
-  const fileBuffer = fs.readFileSync(req.file.path);
-  fs.unlinkSync(req.file.path);  // Clean up temp file
+  let fileBuffer;
+  try {
+    fileBuffer = fs.readFileSync(req.file.path);
+  } finally {
+    try { fs.unlinkSync(req.file.path); } catch {}
+  }
 
   const { data, error } = await supabaseAdmin.storage
     .from(process.env.STORAGE_BUCKET_VIDEOS || 'videos')
-    .upload(path, fileBuffer, { contentType: 'video/mp4', upsert: false });
+    .upload(storagePath, fileBuffer, { contentType: 'video/mp4', upsert: false });
 
   if (error) return res.status(500).json({ error: error.message });
 
   const { data: { publicUrl } } = supabaseAdmin.storage
     .from(process.env.STORAGE_BUCKET_VIDEOS || 'videos')
-    .getPublicUrl(path);
+    .getPublicUrl(storagePath);
 
   res.json({ url: publicUrl, path: data.path });
 });

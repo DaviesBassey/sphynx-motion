@@ -115,7 +115,7 @@ function page(title, subtitle, body, opts = {}) {
   <div class="nav-links">
     <a href="/privacy">Privacy</a>
     <a href="/terms">Terms</a>
-    <a href="/content-policy">Content Policy</a>
+    <a href="/faq">FAQ</a>
     <a href="/support">Support</a>
   </div>
 </nav>
@@ -136,6 +136,7 @@ function page(title, subtitle, body, opts = {}) {
       ['/terms','Terms of Use'],
       ['/content-policy','Content Policy'],
       ['/soul-token-terms','Soul Token Terms'],
+      ['/faq','FAQ'],
       ['/support','Help & Support'],
       ['/delete-account','Delete Account'],
     ].map(([href, label]) => `<a href="${href}" class="nav-pill${opts.active === href ? ' active' : ''}">${label}</a>`).join('')}
@@ -572,6 +573,110 @@ router.get('/delete-account', (req, res) => res.send(page(
   <p>You can also request a copy of your data before deletion by emailing <a href="mailto:privacy@sphynxplay.com">privacy@sphynxplay.com</a>.</p>
   `,
   { active: '/delete-account' }
+)));
+
+// ── /faq ──────────────────────────────────────────────────────────────────────
+router.get('/faq', (req, res) => res.send(page(
+  'Frequently Asked Questions',
+  'Answers to the most common questions about SphynxPlay — accounts, subscriptions, Soul Tokens, and playback.',
+  `
+  <p class="effective">Last updated: May 2026 &nbsp;·&nbsp; SphynxPlay (Pty) Ltd</p>
+
+  <h2>Getting Started</h2>
+
+  <p><strong>What is SphynxPlay?</strong><br>
+  SphynxPlay is an African vertical drama streaming platform. We host original and curated African series in a short-form, mobile-first format. Watch on iOS, Android, or the web at <a href="https://app.sphynxplay.com">app.sphynxplay.com</a>.</p>
+
+  <p><strong>Is SphynxPlay free?</strong><br>
+  Yes — you can sign up for free and watch free episodes immediately. Premium episodes require Soul Tokens to unlock. A Soul Pass subscription grants enhanced daily token rewards and early access to new releases.</p>
+
+  <p><strong>What devices is SphynxPlay available on?</strong><br>
+  SphynxPlay is available on iPhone (iOS 16+), Android (8.0+), and any modern web browser. The experience is optimised for mobile in portrait orientation.</p>
+
+  <p><strong>How do I create an account?</strong><br>
+  Download the SphynxPlay app from the App Store or Google Play, tap <strong>Sign Up</strong>, enter your email and a password, and confirm your email address. Account creation is free.</p>
+
+  <h2>Soul Tokens</h2>
+
+  <p><strong>What are Soul Tokens?</strong><br>
+  Soul Tokens (◈) are SphynxPlay's virtual in-app currency. They have no monetary value and cannot be exchanged for cash. You use them to unlock premium episodes and cast Echo Votes in interactive series.</p>
+
+  <p><strong>How do I earn Soul Tokens?</strong><br>
+  You earn Soul Tokens for free through:</p>
+  <ul>
+    <li>Logging in daily</li>
+    <li>Completing episodes</li>
+    <li>Sharing series with friends</li>
+    <li>Participating in platform challenges and events</li>
+    <li>Soul Pass members earn an enhanced daily bonus</li>
+  </ul>
+
+  <p><strong>How do I buy more Soul Tokens?</strong><br>
+  On iOS, open <strong>Wallet</strong> → select a Soul Token package → purchase via Apple IAP. On Android, the same flow uses Google Play Billing. On the web, purchase via secure card checkout. SphynxPlay does not store your card details.</p>
+
+  <p><strong>Can I transfer Soul Tokens to another account?</strong><br>
+  No. Soul Tokens are non-transferable, tied to the account they were earned or purchased on, and cannot be moved between accounts.</p>
+
+  <p><strong>Do Soul Tokens expire?</strong><br>
+  Your tokens are safe as long as you use your account. Tokens expire only if your account is inactive (no logins) for 12 consecutive months. You will receive an in-app warning before expiry.</p>
+
+  <p><strong>I bought tokens but they haven't appeared.</strong><br>
+  Purchases can occasionally take a few minutes to process. Close and reopen the app. If tokens still haven't appeared after 30 minutes, email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> with your account email and proof of purchase.</p>
+
+  <h2>Soul Pass Subscription</h2>
+
+  <p><strong>What is Soul Pass?</strong><br>
+  Soul Pass is a premium subscription that gives members an enhanced daily Soul Token bonus, early access to new episodes, and an exclusive Soul Pass badge on their profile.</p>
+
+  <p><strong>How do I subscribe to Soul Pass?</strong><br>
+  Open <strong>Wallet</strong> in the app → tap <strong>Soul Pass</strong> → complete the subscription through the App Store or Google Play.</p>
+
+  <p><strong>How do I cancel Soul Pass?</strong><br>
+  Subscriptions are managed by the App Store or Google Play — not directly by SphynxPlay.</p>
+  <ul>
+    <li><strong>iOS:</strong> Settings → [Your Name] → Subscriptions → SphynxPlay → Cancel Subscription</li>
+    <li><strong>Android:</strong> Google Play → Profile → Payments &amp; subscriptions → Subscriptions → SphynxPlay → Cancel</li>
+  </ul>
+  <p>Cancellation takes effect at the end of your current billing period. You keep access until then.</p>
+
+  <p><strong>Will I lose my Soul Tokens if I cancel?</strong><br>
+  No. Your accumulated Soul Token balance is not affected by cancelling Soul Pass. Only the enhanced daily bonus stops at the end of the billing period.</p>
+
+  <h2>Content &amp; Playback</h2>
+
+  <p><strong>Why can't I play a video?</strong><br>
+  Check your internet connection first. On mobile, Wi-Fi is recommended for HD playback. If the issue persists, close and reopen the app. Still stuck? Email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> with your device model, OS version, and the episode name.</p>
+
+  <p><strong>What video quality does SphynxPlay stream?</strong><br>
+  SphynxPlay uses adaptive bitrate streaming (HLS). Quality adjusts automatically based on your connection speed — from 360p on slow connections up to 1080p on fast Wi-Fi.</p>
+
+  <p><strong>Can I download episodes to watch offline?</strong><br>
+  Offline downloads are not available at this time. All content requires an internet connection.</p>
+
+  <p><strong>Why does an episode cost Soul Tokens?</strong><br>
+  Some episodes are marked as premium content and require Soul Tokens to unlock. The cost is shown clearly before you confirm. Free episodes are always available at no token cost.</p>
+
+  <p><strong>How do I report inappropriate content?</strong><br>
+  Tap the <strong>⋯ menu</strong> on any content card and select <strong>Report</strong>. Or email <a href="mailto:moderation@sphynxplay.com">moderation@sphynxplay.com</a>. All reports are reviewed within 24 hours on business days.</p>
+
+  <h2>Account &amp; Security</h2>
+
+  <p><strong>I forgot my password.</strong><br>
+  On the login screen, tap <strong>Forgot password?</strong>, enter your email address, and check your inbox for a reset link. The link expires after 60 minutes.</p>
+
+  <p><strong>How do I change my display name?</strong><br>
+  Email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> from your registered email address with the new display name you'd like. We'll update it within 2 business days.</p>
+
+  <p><strong>How do I delete my account?</strong><br>
+  Open the app → <strong>Profile</strong> → <strong>Delete Account</strong>. Account deletion is permanent and immediate. See the full <a href="/delete-account">Account Deletion page</a> for details.</p>
+
+  <p><strong>Is my data secure?</strong><br>
+  All data is encrypted in transit (TLS 1.2+) and at rest. We do not sell your personal data. See our full <a href="/privacy">Privacy Policy</a> for details.</p>
+
+  <h2>Still Need Help?</h2>
+  <p>Email <a href="mailto:support@sphynxplay.com">support@sphynxplay.com</a> — our team responds within 48 hours on business days. For urgent account security issues, include <strong>URGENT</strong> in the subject line.</p>
+  `,
+  { active: '/faq' }
 )));
 
 module.exports = router;
